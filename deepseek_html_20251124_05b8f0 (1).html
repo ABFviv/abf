@@ -604,6 +604,33 @@
             </div>
         </div>
 
+    <!-- Period Filter Section -->
+    <div class="period-filter">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="periodType" class="form-label">هەڵبژاردنی کات</label>
+                <select class="form-select" id="periodType">
+                    <option value="all">سەرجەم کاتەکان</option>
+                    <option value="custom">کاتێکی دیاریکراو</option>
+                </select>
+            </div>
+            <div class="col-md-3 custom-period" style="display: none;">
+                <label for="startPeriod" class="form-label">کاتی دەستپێک</label>
+                <input type="date" class="form-control" id="startPeriod">
+            </div>
+            <div class="col-md-3 custom-period" style="display: none;">
+                <label for="endPeriod" class="form-label">کاتی کۆتایی</label>
+                <input type="date" class="form-control" id="endPeriod">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" id="applyPeriodBtn">
+                    <i class="bi bi-funnel"></i> جێبەجێکردنی کات
+                </button>
+            </div>
+        </div>
+    </div>
+        
         <div class="filter-section">
             <div class="row g-3">
                 <div class="col-md-3">
@@ -656,6 +683,9 @@
                     </button>
                     <button class="btn btn-success ms-2 electrical-mechanical-only" id="specialDailyWorkBtn" style="display: none;">
                         <i class="bi bi-plus-circle"></i> کاری ڕۆژانەی تایبەت
+                    </button>
+                    <button class="btn btn-success ms-2 quick-record-only" id="quickRecordBtn" style="display: none;">
+                        <i class="bi bi-plus-circle"></i> زیادکردنی تۆماری ڕۆژانە
                     </button>
                 </div>
             </div>
@@ -1227,6 +1257,47 @@
         </div>
     </div>
 
+    <!-- Quick Record Modal -->
+<div class="modal fade" id="quickRecordModal" tabindex="-1" aria-labelledby="quickRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickRecordModalLabel">زیادکردنی تۆماری خێرا</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickRecordForm">
+                    <div class="mb-3">
+                        <label for="quickRecordDate" class="form-label">بەروار</label>
+                        <input type="date" class="form-control" id="quickRecordDate" required>
+                    </div>
+                    <div class="mb-3" id="quickRecordFieldContainer">
+                        <label for="quickRecordField" class="form-label" id="quickRecordFieldLabel">ژمارەی عەرەبانەکان</label>
+                        <input type="number" class="form-control" id="quickRecordField" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickRecordRating" class="form-label">هەڵسەنگاندن (-100 بۆ 100)</label>
+                        <input type="range" class="form-range" id="quickRecordRating" min="-100" max="100" value="0" required>
+                        <div class="d-flex justify-content-between">
+                            <span>-100</span>
+                            <span id="quickRecordRatingValue">0</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickRecordNote" class="form-label">تێبینی</label>
+                        <textarea class="form-control" id="quickRecordNote" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">پاشتگەستبوونەوە</button>
+                <button type="button" class="btn btn-primary" id="saveQuickRecordBtn">تۆمارکردن</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
     <!-- Toast Notification -->
     <div class="toast-container">
         <div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true">
@@ -1269,6 +1340,11 @@
         let employeeToDelete = null;
         let notificationToConfirm = null;
         let notificationToReject = null;
+        let periodFilter = {
+        type: 'all',
+        startDate: null,
+        endDate: null
+              };
         
         // User credentials
         const users = {
@@ -1515,6 +1591,9 @@
             // Filter buttons
             document.getElementById('filterBtn').addEventListener('click', applyFilters);
             document.getElementById('resetBtn').addEventListener('click', resetFilters);
+            // Period filter
+            document.getElementById('periodType').addEventListener('change', toggleCustomPeriod);
+            document.getElementById('applyPeriodBtn').addEventListener('click', applyPeriodFilter);
             
             // Refresh button
             document.getElementById('refreshBtn').addEventListener('click', refreshData);
@@ -1530,6 +1609,11 @@
             
             // Print button
             document.getElementById('printBtn').addEventListener('click', printData);
+            document.getElementById('quickRecordBtn').addEventListener('click', openQuickRecordModal);
+            document.getElementById('saveQuickRecordBtn').addEventListener('click', saveQuickRecord);
+            document.getElementById('quickRecordRating').addEventListener('input', function() {
+            document.getElementById('quickRecordRatingValue').textContent = this.value;  
+            });
             
             // Save employee button
             document.getElementById('saveEmployeeBtn').addEventListener('click', saveEmployee);
@@ -1699,6 +1783,13 @@
             const adminAndSupervisorElements = document.querySelectorAll('.admin-and-supervisor-only');
             adminAndSupervisorElements.forEach(element => {
                 element.style.display = (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
+            });
+
+            // Show quick record button for specific departments
+            const quickRecordElements = document.querySelectorAll('.quick-record-only');
+            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting'].includes(currentUser.department);
+            quickRecordElements.forEach(element => {
+           element.style.display = showQuickRecord ? 'inline-block' : 'none';
             });
             
             // Show electrical/mechanical only elements
@@ -2029,28 +2120,45 @@
             });
         }
 
-        // Calculate overall rating
-        function calculateOverallRating(employee) {
-            let totalRating = 0;
-            let count = 0;
-            
-            // For mechanical and electrical-ac, use both daily and other work
-            if (employee.dailyWork && employee.dailyWork.length > 0) {
-                const dailySum = employee.dailyWork.reduce((sum, work) => sum + parseInt(work.rate), 0);
-                totalRating += dailySum / employee.dailyWork.length;
-                count++;
-            }
-            
-            if (employee.otherWork && employee.otherWork.length > 0) {
-                const otherSum = employee.otherWork.reduce((sum, work) => sum + parseInt(work.rate), 0);
-                totalRating += otherSum / employee.otherWork.length;
-                count++;
-            }
-            
-            // Return average or 0 if no ratings
-            return count > 0 ? totalRating / count : 0;
-        }
-
+        // Calculate overall rating with period filter
+function calculateOverallRating(employee) {
+    let totalRating = 0;
+    let count = 0;
+    
+    // Filter daily work by period if needed
+    let filteredDailyWork = employee.dailyWork || [];
+    if (periodFilter.type === 'custom' && filteredDailyWork.length > 0) {
+        filteredDailyWork = filteredDailyWork.filter(work => {
+            const workDate = work.date;
+            return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
+        });
+    }
+    
+    // Filter other work by period if needed
+    let filteredOtherWork = employee.otherWork || [];
+    if (periodFilter.type === 'custom' && filteredOtherWork.length > 0) {
+        filteredOtherWork = filteredOtherWork.filter(work => {
+            const workDate = work.date;
+            return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
+        });
+    }
+    
+    // For mechanical and electrical-ac, use both daily and other work
+    if (filteredDailyWork.length > 0) {
+        const dailySum = filteredDailyWork.reduce((sum, work) => sum + parseInt(work.rate), 0);
+        totalRating += dailySum / filteredDailyWork.length;
+        count++;
+    }
+    
+    if (filteredOtherWork.length > 0) {
+        const otherSum = filteredOtherWork.reduce((sum, work) => sum + parseInt(work.rate), 0);
+        totalRating += otherSum / filteredOtherWork.length;
+        count++;
+    }
+    
+    // Return average or 0 if no ratings
+    return count > 0 ? totalRating / count : 0;
+}
         // Get rating class for styling
         function getRatingClass(rating) {
             if (rating >= 50) return 'rating-excellent';
@@ -2569,18 +2677,22 @@
         }
 
         // Get department display name
-        function getDepartmentDisplayName(department) {
+           function getDepartmentDisplayName(department) {
             const departmentNames = {
-                'crushing-prep': 'هاڕین و ئامادەکردن',
-                'cutting-setting': 'بڕین و بارکردن',
-                'klin': 'فڕن',
-                'unsetting': 'داگرتن',
-                'mechanical': 'میکانیک',
-                'electrical-ac': 'کارەبا',
-                'engineering': 'ئەندازیاریی',
-                'management': 'لێپرسراوەکان',
-                'line-one': 'هێڵی یەک'
-            };
+          'crushing-prep': 'هاڕین و ئامادەکردن',
+          'cutting-setting': 'بڕین و بارکردن',
+          'klin': 'فڕن',
+          'unsetting': 'داگرتن',
+          'mechanical': 'میکانیک',
+          'electrical-ac': 'کارەبا',
+          'engineering': 'ئەندازیاریی',
+          'management': 'لێپرسراوەکان',
+          'line-one': 'هێڵی یەک',
+          'line-two-general': 'گشتی هێڵی دوو'
+        };
+    
+    return departmentNames[department] || department;
+}
             
             return departmentNames[department] || department;
         }
@@ -2661,35 +2773,36 @@
 
         // Update special work departments dropdown
         function updateSpecialWorkDepartments() {
-            const departmentSelect = document.getElementById('specialWorkDepartment');
-            
-            // Clear existing options except the first one
-            while (departmentSelect.children.length > 1) {
-                departmentSelect.removeChild(departmentSelect.lastChild);
+        const departmentSelect = document.getElementById('specialWorkDepartment');
+    
+        // Clear existing options except the first one
+         while (departmentSelect.children.length > 1) {
+           departmentSelect.removeChild(departmentSelect.lastChild);
+       }
+    
+        // Add departments based on user type
+        const departments = [
+          'crushing-prep',
+           'cutting-setting',
+           'klin',
+           'unsetting',
+           'mechanical',
+          'electrical-ac'
+         ];
+    
+       // Add هێڵی یەک and گشتی هێڵی دوو for electrical supervisor
+        if (currentUser.department === 'electrical-ac') {
+            departments.push('line-one');
+           departments.push('line-two-general');
             }
-            
-            // Add departments based on user type
-            const departments = [
-                'crushing-prep',
-                'cutting-setting',
-                'klin',
-                'unsetting',
-                'mechanical',
-                'electrical-ac'
-            ];
-            
-            // Add هێڵی یەک for electrical supervisor
-            if (currentUser.department === 'electrical-ac') {
-                departments.push('line-one');
-            }
-            
-            departments.forEach(department => {
-                const option = document.createElement('option');
-                option.value = department;
-                option.textContent = getDepartmentDisplayName(department);
-                departmentSelect.appendChild(option);
-            });
-        }
+    
+        departments.forEach(department => {
+        const option = document.createElement('option');
+        option.value = department;
+        option.textContent = getDepartmentDisplayName(department);
+        departmentSelect.appendChild(option);
+    });
+}
 
         // Update employee ratings when employees are selected
         function updateEmployeeRatings() {
@@ -3730,19 +3843,28 @@
                     `;
                 }
                 
-                // Add edit/delete buttons for admin and supervisors regardless of status
-                if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
-                    actionsHtml += `
-                        <div class="notification-actions mt-2">
-                            <button class="btn btn-sm btn-warning edit-notification-btn" data-id="${notification.id}">
-                                <i class="bi bi-pencil"></i> چاککردن
-                            </button>
-                            <button class="btn btn-sm btn-danger delete-notification-btn ms-1" data-id="${notification.id}">
-                                <i class="bi bi-trash"></i> سڕینەوە
-                            </button>
-                        </div>
-                    `;
-                }
+             // Add edit/delete buttons - only admin can edit
+if (currentUser.role === 'admin') {
+    actionsHtml += `
+        <div class="notification-actions mt-2">
+            <button class="btn btn-sm btn-warning edit-notification-btn" data-id="${notification.id}">
+                <i class="bi bi-pencil"></i> چاککردن
+            </button>
+            <button class="btn btn-sm btn-danger delete-notification-btn ms-1" data-id="${notification.id}">
+                <i class="bi bi-trash"></i> سڕینەوە
+            </button>
+        </div>
+    `;
+} else if (currentUser.role === 'supervisor') {
+    // Supervisors can only delete
+    actionsHtml += `
+        <div class="notification-actions mt-2">
+            <button class="btn btn-sm btn-danger delete-notification-btn" data-id="${notification.id}">
+                <i class="bi bi-trash"></i> سڕینەوە
+            </button>
+        </div>
+    `;
+}
                 
                 notificationDiv.innerHTML = `
                     <h6>${notification.title}</h6>
@@ -4067,6 +4189,121 @@
             const bsToast = new bootstrap.Toast(toast);
             bsToast.show();
         }
+
+        // Toggle custom period fields
+function toggleCustomPeriod() {
+    const periodType = document.getElementById('periodType').value;
+    const customPeriodFields = document.querySelectorAll('.custom-period');
+    
+    if (periodType === 'custom') {
+        customPeriodFields.forEach(field => {
+            field.style.display = 'block';
+        });
+    } else {
+        customPeriodFields.forEach(field => {
+            field.style.display = 'none';
+        });
+    }
+}
+
+// Apply period filter
+function applyPeriodFilter() {
+    const periodType = document.getElementById('periodType').value;
+    
+    if (periodType === 'all') {
+        periodFilter.type = 'all';
+        periodFilter.startDate = null;
+        periodFilter.endDate = null;
+    } else {
+        const startDate = document.getElementById('startPeriod').value;
+        const endDate = document.getElementById('endPeriod').value;
+        
+        if (!startDate || !endDate) {
+            showNotification('تکایە هەردوو بەرواری دەستپێک و کۆتایی دیاری بکە', 'danger');
+            return;
+        }
+        
+        if (startDate > endDate) {
+            showNotification('بەرواری دەستپێک دەبێت لە کۆتایی بچووکتر بێت', 'danger');
+            return;
+        }
+        
+        periodFilter.type = 'custom';
+        periodFilter.startDate = startDate;
+        periodFilter.endDate = endDate;
+    }
+    
+    renderEmployeeTable();
+    showNotification('فیلتەری کات جێبەجێ کرا', 'success');
+}
+
+// Open quick record modal
+function openQuickRecordModal() {
+    document.getElementById('quickRecordForm').reset();
+    document.getElementById('quickRecordRatingValue').textContent = '0';
+    document.getElementById('quickRecordDate').valueAsDate = new Date();
+    
+    // Set field label based on department
+    const fieldLabel = document.getElementById('quickRecordFieldLabel');
+    if (currentUser.department === 'crushing-prep') {
+        fieldLabel.textContent = 'ژمارەی طەنی خۆڵ';
+    } else {
+        fieldLabel.textContent = 'ژمارەی عەرەبانەکان';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('quickRecordModal'));
+    modal.show();
+}
+
+// Save quick record
+async function saveQuickRecord() {
+    const date = document.getElementById('quickRecordDate').value;
+    const fieldValue = document.getElementById('quickRecordField').value;
+    const rate = document.getElementById('quickRecordRating').value;
+    const note = document.getElementById('quickRecordNote').value;
+    
+    // Get all employees from the current user's department
+    const departmentEmployees = employees.filter(emp => emp.department === currentUser.department);
+    
+    if (departmentEmployees.length === 0) {
+        showNotification('هیچ کارمەندێک لەم بەشەدا نییە', 'danger');
+        return;
+    }
+    
+    // Add record to each employee
+    for (const employee of departmentEmployees) {
+        if (!employee.dailyWork) {
+            employee.dailyWork = [];
+        }
+        
+        const workRecord = {
+            date,
+            rate,
+            note,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Add field based on department
+        if (currentUser.department === 'crushing-prep') {
+            workRecord.clayTons = fieldValue;
+        } else {
+            workRecord.carts = fieldValue;
+        }
+        
+        employee.dailyWork.push(workRecord);
+        await saveEmployeeToFirebase(employee);
+    }
+    
+    showNotification('تۆماری کار بۆ هەموو کارمەندەکانی بەش بەسەرکەوتووی تۆمارکرا', 'success');
+    const modal = bootstrap.Modal.getInstance(document.getElementById('quickRecordModal'));
+    modal.hide();
+}
+
+// Get employee name by ID
+function getEmployeeName(employeeId) {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee ? employee.name : 'کارمەندی نەناسراو';
+}
     </script>
 </body>
 </html>
