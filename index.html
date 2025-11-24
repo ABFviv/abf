@@ -2041,6 +2041,7 @@
             document.getElementById('workRecordsPage').style.display = 'none';
             document.getElementById('projectsPage').style.display = 'block';
             document.getElementById('notificationsPage').style.display = 'none';
+            document.getElementById('dailyWorkTotalsSection').style.display = 'none';
             
             loadProjects();
         }
@@ -2052,6 +2053,7 @@
             document.getElementById('workRecordsPage').style.display = 'none';
             document.getElementById('projectsPage').style.display = 'none';
             document.getElementById('notificationsPage').style.display = 'block';
+            document.getElementById('dailyWorkTotalsSection').style.display = 'none';
             
             loadNotifications();
         }
@@ -2060,12 +2062,16 @@
         function backToDashboardFromProjects() {
             document.getElementById('projectsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
+
+             updateDailyWorkTotals();
         }
 
         // Back to dashboard from notifications
         function backToDashboardFromNotifications() {
             document.getElementById('notificationsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
+
+            updateDailyWorkTotals();
         }
 
         // Update notification count
@@ -2578,6 +2584,8 @@
         function backToDashboard() {
             document.getElementById('workRecordsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
+
+            updateDailyWorkTotals();
         }
 
         // Switch record type
