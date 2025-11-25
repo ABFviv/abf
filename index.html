@@ -4676,7 +4676,7 @@
             }
             
             // Add delete button for supervisors
-            if (currentUser.role === 'supervisor') {
+            if (currentUser.role === 'admin') {
                 actionsHtml += `
                     <div class="notification-package-actions mt-2">
                         <button class="btn btn-sm btn-danger delete-notification-btn" data-id="${notification.id}">
