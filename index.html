@@ -1525,7 +1525,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">پاشتگەستبوونەوە</button>
-                    <button type="button" class="btn btn-success" id="finalConfirmNotificationBtn">بەڵێ، قبووڵ دەکەم</button>
+                    <button type="button" class="btn btn-success" id="Btn">بەڵێ، قبووڵ دەکەم</button>
                 </div>
             </div>
         </div>
@@ -4788,7 +4788,14 @@
             notificationToConfirm.resolvedAt = new Date().toISOString();
             notificationToConfirm.resolvedBy = currentUser.username;
             notificationToConfirm.confirmationNote = note;
-            loadNotifications();
+
+            // Update the local notifications array
+            const notificationIndex = notifications.findIndex(n => n.id === notificationToConfirm.id);
+            if (notificationIndex !== -1) {
+                notifications[notificationIndex] = notificationToConfirm;
+            }
+                
+                       
             
             // Update the corresponding work records for all employees in the notification
             if (notificationToConfirm.relatedEmployees) {
@@ -4830,7 +4837,8 @@
             const success = await saveNotificationToFirebase(notificationToConfirm);
             
             if (success) {
-                loadNotifications();
+                await loadNotifications();
+                 loadNotifications();
                 updateNotificationCount();
                 const modal = bootstrap.Modal.getInstance(document.getElementById('confirmNotificationModal'));
                 modal.hide();
@@ -4861,7 +4869,12 @@
             notificationToReject.resolvedAt = new Date().toISOString();
             notificationToReject.resolvedBy = currentUser.username;
             notificationToReject.confirmationNote = note;
-            loadNotifications();
+            
+            // Update the local notifications array
+            const notificationIndex = notifications.findIndex(n => n.id === notificationToReject.id);
+            if (notificationIndex !== -1) {
+                notifications[notificationIndex] = notificationToReject;
+            }
             
             // Update the corresponding work records for all employees in the notification
             if (notificationToReject.relatedEmployees) {
@@ -4903,6 +4916,7 @@
             const success = await saveNotificationToFirebase(notificationToReject);
             
             if (success) {
+                await loadNotifications();
                 loadNotifications();
                 updateNotificationCount();
                 const modal = bootstrap.Modal.getInstance(document.getElementById('rejectNotificationModal'));
