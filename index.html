@@ -4785,6 +4785,7 @@
             notificationToConfirm.resolvedAt = new Date().toISOString();
             notificationToConfirm.resolvedBy = currentUser.username;
             notificationToConfirm.confirmationNote = note;
+            loadNotifications();
             
             // Update the corresponding work records for all employees in the notification
             if (notificationToConfirm.relatedEmployees) {
@@ -4857,6 +4858,7 @@
             notificationToReject.resolvedAt = new Date().toISOString();
             notificationToReject.resolvedBy = currentUser.username;
             notificationToReject.confirmationNote = note;
+            loadNotifications();
             
             // Update the corresponding work records for all employees in the notification
             if (notificationToReject.relatedEmployees) {
