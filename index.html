@@ -3478,7 +3478,8 @@
                 name,
                 rate,
                 note,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                needsConfirmation: !(employee.department === 'electrical-ac' || employee.department === 'mechanical')
             };
             
             employee.otherWork.push(workRecord);
