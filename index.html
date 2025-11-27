@@ -2182,8 +2182,6 @@ const users = {
                 // Update position dropdown with unique positions from employees
                 updatePositionDropdown();
                 
-           
-                
                 // Update notification count
                 updateNotificationCount();
                 
@@ -2192,6 +2190,7 @@ const users = {
                 
                 // Update electrical/mechanical work totals
                 updateElectricalMechanicalTotals();
+                
             } catch (error) {
                 console.error('❌ Error loading data from Firebase:', error);
                 showNotification('هەڵە لە بارکردنی داتا لە بنکەی دراوە', 'danger');
@@ -6271,6 +6270,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
