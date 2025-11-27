@@ -2461,7 +2461,7 @@ const users = {
             document.getElementById('printRecordsBtn').addEventListener('click', printRecords);
             
             // Projects button
-            document.getElementById('projectsBtn').addEventListener('click', sPage);
+            document.getElementById('projectsBtn').addEventListener('click', showProjectsPage);
             
             // Add project button
             document.getElementById('addProjectBtn').addEventListener('click', openAddProjectModal);
@@ -2723,13 +2723,14 @@ document.getElementById('printBtn').style.display =
     setupTotalsToggle();
 }
 
-     // Show projects page
-         function showProjectsPage() {
+    // Show projects page - FIX THIS FUNCTION
+function showProjectsPage() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('dashboardPage').style.display = 'none';
     document.getElementById('workRecordsPage').style.display = 'none';
     document.getElementById('projectsPage').style.display = 'block';
     document.getElementById('notificationsPage').style.display = 'none';
+
     
     // Hide daily work totals sections AND department filter
     document.getElementById('dailyWorkTotalsSection').style.display = 'none';
@@ -6275,6 +6276,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
