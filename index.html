@@ -922,6 +922,10 @@
 .totals-visible .bi-eye-slash {
     display: none;
 }
+        /* Add to your CSS */
+.manager-hidden {
+    display: none !important;
+}
     </style>
 </head>
 <body>
@@ -2020,6 +2024,7 @@
             'kiln': { password: 'kiln2626', role: 'supervisor', department: 'klin' },
             sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac' },
             shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical' }
+            manager: { password: 'manager1001', role: 'manager', department: 'all' },
         };
 
         // Department scaling configurations
@@ -2484,8 +2489,14 @@
             document.getElementById('projectEmployeesContainer').addEventListener('change', updateProjectEmployeeRatings);
             document.getElementById('editProjectEmployeesContainer').addEventListener('change', updateEditProjectEmployeeRatings);
             
-            // Notifications button
-            document.getElementById('notificationsBtn').addEventListener('click', showNotificationsPage);
+               // Notifications button with manager restriction
+    document.getElementById('notificationsBtn').addEventListener('click', function() {
+        if (currentUser.role === 'manager') {
+            showNotification('چالاک نییە', 'warning');
+        } else {
+            showNotificationsPage();
+        }
+    });
             
             // Final confirm/reject notification buttons
             document.getElementById('finalConfirmNotificationBtn').addEventListener('click', finalConfirmNotification);
@@ -2640,7 +2651,7 @@ function applyPeriodFilter() {
         }
 
         // Show dashboard
-        function showDashboard() {
+function showDashboard() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('dashboardPage').style.display = 'block';
     document.getElementById('workRecordsPage').style.display = 'none';
@@ -2648,60 +2659,67 @@ function applyPeriodFilter() {
     document.getElementById('notificationsPage').style.display = 'none';
     document.getElementById('dailyWorkTotalsSection').style.display = 'none';
     document.getElementById('electricalMechanicalTotalsSection').style.display = 'none';
-            
-            // Update user info
+    
+    // Update user info
     document.getElementById('userInfo').textContent = `لە ژوورەوەیت وەک: ${currentUser.username} (${currentUser.role})`;
-            
-            // Show/hide admin-only elements
-            const adminElements = document.querySelectorAll('.admin-only');
-            adminElements.forEach(element => {
-                element.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
-            });
-            
-            // Show/hide admin and supervisor elements
-            const adminAndSupervisorElements = document.querySelectorAll('.admin-and-supervisor-only');
-            adminAndSupervisorElements.forEach(element => {
-                element.style.display = (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
-            });
-            
-            // Show electrical/mechanical only elements
-            const electricalMechanicalElements = document.querySelectorAll('.electrical-mechanical-only');
-            electricalMechanicalElements.forEach(element => {
-                element.style.display = (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') ? 'inline-block' : 'none';
-            });
-            
-            // Show quick record button for specific departments
-            const quickRecordElements = document.querySelectorAll('.quick-record-only');
-            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting'].includes(currentUser.department);
-            quickRecordElements.forEach(element => {
-                element.style.display = showQuickRecord ? 'inline-block' : 'none';
-            });
-            
-            // Show notifications button for supervisors and admin
-            document.getElementById('notificationsBtn').style.display = 
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
-            
-            // Show/hide department filter for daily work totals
-            const totalsDepartmentFilter = document.getElementById('totalsDepartmentFilter');
-            totalsDepartmentFilter.style.display = (currentUser.role === 'admin') ? 'block' : 'none';
-            
-            // Load and display employees
-            renderEmployeeTable();
-            
-            // Initialize sort icons
-            updateSortIcons();
-            
-            // Update notification count
-            updateNotificationCount();
-            
-            // Update daily work totals
-            updateDailyWorkTotals();
-            
-            // Update electrical/mechanical work totals
-            updateElectricalMechanicalTotals();
+    
+    // Show/hide admin-only elements
+    const adminElements = document.querySelectorAll('.admin-only');
+    adminElements.forEach(element => {
+        element.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+    });
+    
+    // Show/hide admin and supervisor elements
+    const adminAndSupervisorElements = document.querySelectorAll('.admin-and-supervisor-only');
+    adminAndSupervisorElements.forEach(element => {
+        element.style.display = (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
+    });
+    
+    // Show electrical/mechanical only elements
+    const electricalMechanicalElements = document.querySelectorAll('.electrical-mechanical-only');
+    electricalMechanicalElements.forEach(element => {
+        element.style.display = (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') ? 'inline-block' : 'none';
+    });
+    
+    // Show quick record button for specific departments
+    const quickRecordElements = document.querySelectorAll('.quick-record-only');
+    const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting'].includes(currentUser.department);
+    quickRecordElements.forEach(element => {
+        element.style.display = showQuickRecord ? 'inline-block' : 'none';
+    });
+    
+    // Show notifications button for supervisors and admin only (not manager)
+    document.getElementById('notificationsBtn').style.display = 
+        (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
+    
+    // Show department filter for admin and manager
+const totalsDepartmentFilter = document.getElementById('totalsDepartmentFilter');
+totalsDepartmentFilter.style.display = (currentUser.role === 'admin' || currentUser.role === 'manager') ? 'block' : 'none';
+   
+    // Show export and print for admin, supervisor, and manager
+document.getElementById('exportBtn').style.display = 
+    (currentUser.role === 'admin' || currentUser.role === 'manager') ? 'inline-block' : 'none';
 
-            setupTotalsToggle();
-        }
+document.getElementById('printBtn').style.display = 
+    (currentUser.role === 'admin' || currentUser.role === 'supervisor' || currentUser.role === 'manager') ? 'inline-block' : 'none';
+    
+    // Load and display employees
+    renderEmployeeTable();
+    
+    // Initialize sort icons
+    updateSortIcons();
+    
+    // Update notification count
+    updateNotificationCount();
+    
+    // Update daily work totals
+    updateDailyWorkTotals();
+    
+    // Update electrical/mechanical work totals
+    updateElectricalMechanicalTotals();
+
+    setupTotalsToggle();
+}
 
      // Show projects page
          function showProjectsPage() {
@@ -2939,22 +2957,23 @@ function renderEmployeeTable(filteredEmployees = null) {
                     <td>${dailyWorkDisplay}</td>
                     <td>${otherWorkDisplay}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}">
-                            <i class="bi bi-eye"></i> سەیرکردن
-                        </button>
-                        <button class="btn btn-sm btn-info work-records-btn ms-1" data-id="${employee.id}">
-                            <i class="bi bi-clipboard-data"></i> تۆمارەکان
-                        </button>
-                        ${currentUser.role === 'admin' ? `
-                        <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}">
-                            <i class="bi bi-pencil"></i> چاککردن
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}">
-                            <i class="bi bi-trash"></i> سڕینەوە
-                        </button>
-                        ` : ''}
-                    </td>
-                `;
+                        <td>
+    <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}">
+        <i class="bi bi-eye"></i> سەیرکردن
+    </button>
+    <button class="btn btn-sm btn-info work-records-btn ms-1" data-id="${employee.id}">
+        <i class="bi bi-clipboard-data"></i> تۆمارەکان
+    </button>
+    ${currentUser.role === 'admin' ? `
+    <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}">
+        <i class="bi bi-pencil"></i> چاککردن
+    </button>
+    <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}">
+        <i class="bi bi-trash"></i> سڕینەوە
+    </button>
+    ` : ''}
+</td>
+`
                 
                 tbody.appendChild(row);
             });
@@ -6249,6 +6268,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
