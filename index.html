@@ -3297,7 +3297,7 @@ function resetFilters() {
             alert(`وردەکاری کارمەند:\nژمارەی کارمەند: ${employee.id}\nناو: ${employee.name}\nپیشە: ${employee.position}\nبەش: ${employee.department}\nهەڵسەنگاندنی ڕۆژانە: ${calculateDailyRating(employee).toFixed(1)}\nهەڵسەنگاندنی کارەکانی دیکە: ${calculateOtherRating(employee).toFixed(1)}`);
         }
 
-      // View work records
+      // In viewWorkRecords() function - remove any department restrictions for manager
 function viewWorkRecords(id) {
     const employee = employees.find(emp => emp.id === id);
     if (!employee) return;
@@ -3318,9 +3318,10 @@ function viewWorkRecords(id) {
     document.getElementById('dailyWorkTab').style.display = 'inline-block';
     currentRecordType = 'daily';
     
-    // Show/hide special record button
+    // Show/hide special record button (only for supervisors and admin, not manager)
     document.getElementById('addSpecialRecordBtn').style.display = 
-        (employee.department === 'electrical-ac' || employee.department === 'mechanical') ? 'inline-block' : 'none';
+        (employee.department === 'electrical-ac' || employee.department === 'mechanical') && 
+        (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
     
     // Show/hide daily work totals for individual employee
     const dailyWorkTotalsSection = document.getElementById('employeeDailyWorkTotals');
@@ -5275,16 +5276,16 @@ function loadProjects() {
     
     let projectsToShow = projects;
     
-    // If not admin, filter projects to show only those with employees from the supervisor's department
-    if (currentUser.role !== 'admin') {
-        projectsToShow = projects.filter(project => {
-            // Check if any employee in the project is from the supervisor's department
-            return project.employeeIds.some(employeeId => {
-                const employee = employees.find(emp => emp.id === employeeId);
-                return employee && employee.department === currentUser.department;
-            });
+    // If not admin or manager, filter projects to show only those with employees from the supervisor's department
+if (currentUser.role !== 'admin' && currentUser.role !== 'manager') {
+    projectsToShow = projects.filter(project => {
+        // Check if any employee in the project is from the supervisor's department
+        return project.employeeIds.some(employeeId => {
+            const employee = employees.find(emp => emp.id === employeeId);
+            return employee && employee.department === currentUser.department;
         });
-    }
+    });
+}
     
     if (projectsToShow.length === 0) {
         projectsContainer.innerHTML = '<p class="text-muted">هیچ پڕۆژەیەک نییە</p>';
@@ -6270,6 +6271,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
