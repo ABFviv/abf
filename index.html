@@ -2392,6 +2392,7 @@ const users = {
                 switchRecordType('other');
             });
             document.getElementById('quickRecordField').addEventListener('input', function() {
+    console.log('📝 Quick record field input detected');
     autoCalculateQuickRecordRating();
 });
             
@@ -6233,20 +6234,29 @@ async function deleteNotification(notificationId) {
         const bsToast = new bootstrap.Toast(toast);
         bsToast.show();
     }
-        // Update the autoCalculateQuickRecordRating function:
+        // Add this debug version of the autoCalculateQuickRecordRating function
 function autoCalculateQuickRecordRating() {
+    console.log('🚀 autoCalculateQuickRecordRating called');
+    
     const fieldInput = document.getElementById('quickRecordField');
     const ratingInput = document.getElementById('quickRecordRating');
     const ratingValue = document.getElementById('quickRecordRatingValue');
     const autoRatingNote = document.getElementById('autoRatingNote');
     
+    console.log('Field input value:', fieldInput?.value);
+    console.log('Rating input:', ratingInput);
+    
     if (!fieldInput || !ratingInput || !fieldInput.value) {
+        console.log('❌ Missing inputs or field value');
         autoRatingNote.style.display = 'none';
         return;
     }
     
-    const inputValue = parseFloat(fieldInput.value); // Use parseFloat instead of parseInt
+    const inputValue = parseFloat(fieldInput.value);
+    console.log('Parsed input value:', inputValue);
+    
     if (isNaN(inputValue)) {
+        console.log('❌ Input value is NaN');
         autoRatingNote.style.display = 'none';
         return;
     }
@@ -6255,34 +6265,77 @@ function autoCalculateQuickRecordRating() {
     const selectedCheckboxes = document.querySelectorAll('#quickRecordEmployeesContainer .employee-checkbox:checked');
     const selectedEmployees = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
     
+    console.log('Selected employees:', selectedEmployees);
+    
     if (selectedEmployees.length === 0) {
+        console.log('❌ No employees selected');
         autoRatingNote.style.display = 'none';
         return;
     }
     
-    // For quick record, we'll use the first selected employee's department for calculation
+    // For quick record, use the first selected employee
     const firstEmployeeId = selectedEmployees[0];
     const employee = employees.find(emp => emp.id === firstEmployeeId);
     
+    console.log('Found employee:', employee);
+    
     if (!employee) {
+        console.log('❌ Employee not found');
         autoRatingNote.style.display = 'none';
         return;
     }
+    
+    console.log('Employee department:', employee.department);
     
     // Get automatic rating if applicable
     const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
     
+    console.log('Automatic rating result:', automaticRating);
+    
     if (automaticRating !== null) {
+        console.log('✅ Setting automatic rating to:', automaticRating);
         ratingInput.value = automaticRating;
-        ratingValue.textContent = automaticRating.toFixed(1); // Show with one decimal
+        ratingValue.textContent = automaticRating.toFixed(1);
         autoRatingNote.style.display = 'inline';
     } else {
+        console.log('❌ No automatic rating calculated');
         autoRatingNote.style.display = 'none';
     }
+}
+
+// Also add debug to getAutomaticRating
+function getAutomaticRating(employeeId, department, inputValue) {
+    console.log('🔍 getAutomaticRating called:', { employeeId, department, inputValue });
+    
+    // Check if this employee belongs to a specific sub-department with automatic scaling
+    for (const [subDept, config] of Object.entries(departmentScaling)) {
+        console.log('Checking department:', subDept, 'with employee IDs:', config.employeeIds);
+        if (config.employeeIds.includes(employeeId)) {
+            const result = Math.round(config.equation(inputValue) * 100) / 100;
+            console.log('✅ Found in department', subDept, 'result:', result);
+            return result;
+        }
+    }
+    
+    // Check department-wide scaling
+    if (department === 'unsetting' && departmentScaling.unsetting) {
+        const result = Math.round(departmentScaling.unsetting.equation(inputValue) * 100) / 100;
+        console.log('✅ Using unsetting department scaling, result:', result);
+        return result;
+    }
+    if (department === 'klin' && departmentScaling.klin) {
+        const result = Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
+        console.log('✅ Using klin department scaling, result:', result);
+        return result;
+    }
+    
+    console.log('❌ No automatic scaling found for this employee/department');
+    return null;
 }
 </script>
 </body>
 </html>
+
 
 
 
