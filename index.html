@@ -2015,17 +2015,17 @@
         let electricalMechanicalTotalsSortColumn = 'name';
         let electricalMechanicalTotalsSortDirection = 'asc';
         
-        // User credentials
-        const users = {
-            admin: { password: 'admin2002', role: 'admin', department: 'all' },
-            himat: { password: 'himat6600', role: 'supervisor', department: 'cutting-setting' },
-            'hemn': { password: 'hemn1212', role: 'supervisor', department: 'crushing-prep' },
-            samdar: { password: 'samdar7273', role: 'supervisor', department: 'unsetting' },
-            'kiln': { password: 'kiln2626', role: 'supervisor', department: 'klin' },
-            sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac' },
-            shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical' }
-            manager: { password: 'manager1001', role: 'manager', department: 'all' },
-        };
+       // User credentials - Fix the syntax
+const users = {
+    admin: { password: 'admin2002', role: 'admin', department: 'all' },
+    manager: { password: 'manager1001', role: 'manager', department: 'all' },
+    himat: { password: 'himat6600', role: 'supervisor', department: 'cutting-setting' },
+    hemn: { password: 'hemn1212', role: 'supervisor', department: 'crushing-prep' },
+    samdar: { password: 'samdar7273', role: 'supervisor', department: 'unsetting' },
+    kiln: { password: 'kiln2626', role: 'supervisor', department: 'klin' },
+    sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac' },
+    shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical' }
+};
 
         // Department scaling configurations
         const departmentScaling = {
@@ -6268,6 +6268,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
