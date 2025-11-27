@@ -2182,7 +2182,7 @@ const users = {
                 // Update position dropdown with unique positions from employees
                 updatePositionDropdown();
                 
-                renderEmployeeTable();
+                ();
                 
                 // Update notification count
                 updateNotificationCount();
@@ -2603,7 +2603,7 @@ function applyPeriodFilter() {
     toggleBtn.classList.remove('btn-primary');
     toggleBtn.classList.add('btn-outline-primary');
     
-    renderEmployeeTable();
+    ();
     updateDailyWorkTotals();
     updateElectricalMechanicalTotals();
     showNotification('فیلتەری کات جێبەجێ کرا', 'success');
@@ -2880,11 +2880,11 @@ function renderEmployeeTable(filteredEmployees = null) {
     
     let employeesToShow = filteredEmployees || employees;
     
-    // If not admin, filter by department
-    if (currentUser.role !== 'admin') {
+    // If not admin or manager, filter by department
+    if (currentUser.role !== 'admin' && currentUser.role !== 'manager') {
         employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
     } else {
-        // For admin, apply department filter from checkboxes if any are selected
+        // For admin and manager, apply department filter from checkboxes if any are selected
         const checkboxes = document.querySelectorAll('.department-checkbox:checked');
         const selectedDepartments = Array.from(checkboxes).map(checkbox => checkbox.value);
         
@@ -2892,6 +2892,7 @@ function renderEmployeeTable(filteredEmployees = null) {
             employeesToShow = employeesToShow.filter(emp => selectedDepartments.includes(emp.department));
         }
     }
+    
             
             // Apply sorting
             employeesToShow = sortEmployees(employeesToShow);
@@ -6269,6 +6270,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
