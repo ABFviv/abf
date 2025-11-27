@@ -1424,7 +1424,9 @@
                                             <i class="bi bi-arrow-down"></i>
                                         </button>
                                     </div>
-                                    <input type="range" class="form-range" id="dailyWorkRating" min="-100" max="100" value="0" required>
+                                    <input type="range" class="form-range" id="dailyWorkRating" min="-100" max="100" step="0.5" value="0" required>
+<!-- AND -->
+<input type="range" class="form-range employee-rating" min="-100" max="100" step="0.5" value="0" data-employee="${employeeId}">
                                     <span id="dailyWorkRatingValue" class="employee-rating-value">0</span>
                                 </div>
                             </div>
@@ -1695,7 +1697,7 @@
                                         <i class="bi bi-arrow-down"></i>
                                     </button>
                                 </div>
-                                <input type="range" class="form-range" id="editWorkRating" min="-100" max="100" value="0" required>
+                                <input type="range" class="form-range" id="editWorkRating" min="-100" max="100" step="0.5" value="0" required>
                                 <span id="editWorkRatingValue" class="employee-rating-value">0</span>
                             </div>
                         </div>
@@ -1935,7 +1937,7 @@
                                         <i class="bi bi-arrow-down"></i>
                                     </button>
                                 </div>
-                                <input type="range" class="form-range" id="quickRecordRating" min="-100" max="100" value="0" required>
+                                <input type="number" class="form-control employee-rating" step="0.1" min="-100" max="100" value="0" data-employee="${employeeId}">
                                 <span id="quickRecordRatingValue" class="employee-rating-value text-center">0</span>
                             </div>
                         </div>
@@ -2068,27 +2070,25 @@ const users = {
             }
         };
 
-        // Function to get automatic rating based on employee ID and department
         function getAutomaticRating(employeeId, department, inputValue) {
-            // Check if this employee belongs to a specific sub-department with automatic scaling
-            for (const [subDept, config] of Object.entries(departmentScaling)) {
-                if (config.employeeIds.includes(employeeId)) {
-                    return Math.round(config.equation(inputValue) * 100) / 100;
-                }
-            }
-            
-            // Check department-wide scaling
-            if (department === 'unsetting' && departmentScaling.unsetting) {
-                return Math.round(departmentScaling.unsetting.equation(inputValue) * 100) / 100;
-            }
-            if (department === 'klin' && departmentScaling.klin) {
-                return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
-            }
-            
-            // Manual rating for other departments
-            return null;
+    // Check if this employee belongs to a specific sub-department with automatic scaling
+    for (const [subDept, config] of Object.entries(departmentScaling)) {
+        if (config.employeeIds.includes(employeeId)) {
+            return Math.round(config.equation(inputValue) * 100) / 100; // This already returns decimals
         }
-
+    }
+    
+    // Check department-wide scaling
+    if (department === 'unsetting' && departmentScaling.unsetting) {
+        return Math.round(departmentScaling.unsetting.equation(inputValue) * 100) / 100;
+    }
+    if (department === 'klin' && departmentScaling.klin) {
+        return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
+    }
+    
+    // Manual rating for other departments
+    return null;
+}
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
             // Always start from fresh login page for maximum security
@@ -2431,22 +2431,22 @@ const users = {
             document.getElementById('saveSpecialDailyWorkBtn').addEventListener('click', saveSpecialDailyWorkRecord);
             document.getElementById('saveQuickRecordBtn').addEventListener('click', saveQuickRecord);
             
-            // Rating range inputs
-            document.getElementById('dailyWorkRating').addEventListener('input', function() {
-                document.getElementById('dailyWorkRatingValue').textContent = this.value;
-            });
-            
-            document.getElementById('otherWorkRating').addEventListener('input', function() {
-                document.getElementById('otherWorkRatingValue').textContent = this.value;
-            });
-            
-            document.getElementById('editWorkRating').addEventListener('input', function() {
-                document.getElementById('editWorkRatingValue').textContent = this.value;
-            });
-            
-            document.getElementById('quickRecordRating').addEventListener('input', function() {
-                document.getElementById('quickRecordRatingValue').textContent = this.value;
-            });
+            // Update all rating slider event listeners:
+document.getElementById('dailyWorkRating').addEventListener('input', function() {
+    document.getElementById('dailyWorkRatingValue').textContent = parseFloat(this.value).toFixed(1);
+});
+
+document.getElementById('otherWorkRating').addEventListener('input', function() {
+    document.getElementById('otherWorkRatingValue').textContent = parseFloat(this.value).toFixed(1);
+});
+
+document.getElementById('editWorkRating').addEventListener('input', function() {
+    document.getElementById('editWorkRatingValue').textContent = parseFloat(this.value).toFixed(1);
+});
+
+document.getElementById('quickRecordRating').addEventListener('input', function() {
+    document.getElementById('quickRecordRatingValue').textContent = parseFloat(this.value).toFixed(1);
+});
             
             // Auto-calculate rating when cart input changes for specific departments
             document.getElementById('dailyWorkCarts').addEventListener('input', function() {
@@ -2503,28 +2503,28 @@ const users = {
             document.getElementById('finalRejectNotificationBtn').addEventListener('click', finalRejectNotification);
         }
 
-        // Auto-calculate rating based on department scaling
-        function autoCalculateRating() {
-            const employee = employees.find(emp => emp.id === currentEmployeeId);
-            if (!employee) return;
-            
-            const cartInput = document.getElementById('dailyWorkCarts');
-            const ratingInput = document.getElementById('dailyWorkRating');
-            const ratingValue = document.getElementById('dailyWorkRatingValue');
-            
-            if (!cartInput || !ratingInput || !cartInput.value) return;
-            
-            const inputValue = parseInt(cartInput.value);
-            if (isNaN(inputValue)) return;
-            
-            // Get automatic rating if applicable
-            const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
-            
-            if (automaticRating !== null) {
-                ratingInput.value = automaticRating;
-                ratingValue.textContent = automaticRating;
-            }
-        }
+        // In autoCalculateRating function:
+function autoCalculateRating() {
+    const employee = employees.find(emp => emp.id === currentEmployeeId);
+    if (!employee) return;
+    
+    const cartInput = document.getElementById('dailyWorkCarts');
+    const ratingInput = document.getElementById('dailyWorkRating');
+    const ratingValue = document.getElementById('dailyWorkRatingValue');
+    
+    if (!cartInput || !ratingInput || !cartInput.value) return;
+    
+    const inputValue = parseFloat(cartInput.value); // Changed to parseFloat
+    if (isNaN(inputValue)) return;
+    
+    // Get automatic rating if applicable
+    const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+    
+    if (automaticRating !== null) {
+        ratingInput.value = automaticRating.toFixed(1); // Keep one decimal
+        ratingValue.textContent = automaticRating.toFixed(1);
+    }
+}
 
        // Select all departments
 function selectAllDepartments() {
@@ -4045,7 +4045,7 @@ async function saveEditedWorkRecord() {
                 ratingRow.innerHTML = `
                     <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
                     <div class="employee-rating-slider">
-                        <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
+                        <input type="number" class="form-control employee-rating" step="0.1" min="-100" max="100" value="0" data-employee="${employeeId}">
                     </div>
                 `;
                 
@@ -4074,7 +4074,7 @@ async function saveEditedWorkRecord() {
                 ratingRow.innerHTML = `
                     <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
                     <div class="employee-rating-slider">
-                       <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
+                       <input type="number" class="form-control employee-rating" step="0.1" min="-100" max="100" value="0" data-employee="${employeeId}">
                     </div>
                 `;
                 
@@ -6276,6 +6276,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
