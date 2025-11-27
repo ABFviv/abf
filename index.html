@@ -2503,7 +2503,7 @@ document.getElementById('quickRecordRating').addEventListener('input', function(
             document.getElementById('finalRejectNotificationBtn').addEventListener('click', finalRejectNotification);
         }
 
-        // In autoCalculateRating function:
+        // Update the autoCalculateRating function:
 function autoCalculateRating() {
     const employee = employees.find(emp => emp.id === currentEmployeeId);
     if (!employee) return;
@@ -2514,15 +2514,21 @@ function autoCalculateRating() {
     
     if (!cartInput || !ratingInput || !cartInput.value) return;
     
-    const inputValue = parseFloat(cartInput.value); // Changed to parseFloat
+    const inputValue = parseFloat(cartInput.value); // Use parseFloat
     if (isNaN(inputValue)) return;
     
     // Get automatic rating if applicable
     const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
     
     if (automaticRating !== null) {
-        ratingInput.value = automaticRating.toFixed(1); // Keep one decimal
+        ratingInput.value = automaticRating;
         ratingValue.textContent = automaticRating.toFixed(1);
+        
+        // Also update the slider if it exists
+        const ratingSlider = document.getElementById('dailyWorkRating');
+        if (ratingSlider) {
+            ratingSlider.value = automaticRating;
+        }
     }
 }
 
@@ -6227,7 +6233,8 @@ async function deleteNotification(notificationId) {
         const bsToast = new bootstrap.Toast(toast);
         bsToast.show();
     }
-        function autoCalculateQuickRecordRating() {
+        // Update the autoCalculateQuickRecordRating function:
+function autoCalculateQuickRecordRating() {
     const fieldInput = document.getElementById('quickRecordField');
     const ratingInput = document.getElementById('quickRecordRating');
     const ratingValue = document.getElementById('quickRecordRatingValue');
@@ -6238,7 +6245,7 @@ async function deleteNotification(notificationId) {
         return;
     }
     
-    const inputValue = parseInt(fieldInput.value);
+    const inputValue = parseFloat(fieldInput.value); // Use parseFloat instead of parseInt
     if (isNaN(inputValue)) {
         autoRatingNote.style.display = 'none';
         return;
@@ -6267,7 +6274,7 @@ async function deleteNotification(notificationId) {
     
     if (automaticRating !== null) {
         ratingInput.value = automaticRating;
-        ratingValue.textContent = automaticRating;
+        ratingValue.textContent = automaticRating.toFixed(1); // Show with one decimal
         autoRatingNote.style.display = 'inline';
     } else {
         autoRatingNote.style.display = 'none';
@@ -6276,6 +6283,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
