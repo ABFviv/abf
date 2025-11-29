@@ -100,7 +100,7 @@
         }
         
         .card-header {
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            background: linear-gradient(to right, var(--primary-color), var(--ent-color));
             color: white;
             border-radius: 8px 8px 0 0 !important;
             font-weight: 600;
@@ -177,7 +177,7 @@
         }
         
         .modal-header {
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            background: linear-gradient(to right, var(--primary-color), var(--ent-color));
             color: white;
         }
         
@@ -4478,7 +4478,7 @@ function formatDate(dateString) {
                         id: `NOTIF_${Date.now()}_${workKey}`,
                         type: 'rating_confirmation',
                         title: `هەڵسەنگاندنی کار بۆ ${name}`,
-                        message: `کارمەندەکان لە بەشی ${getDepartmentDisplayName(workDepartment)} کاری ${name}ی ئەنجامداوە. تکایە پەسەندی بکە.`,
+                        message: `کارمەندەکان لە بەشی ${getDepartmentDisplayName(workDepartment)} کاری ${name}ی ئەنجامداوە..`,
                         targetDepartment: workDepartment,
                         status: 'pending',
                         relatedEmployees: [],
@@ -6122,12 +6122,12 @@ function createNotificationDiv(notification) {
     // Add status info
     let statusInfo = '';
     if (notification.status === 'confirmed') {
-        statusInfo = `<div class="text-success mt-2"><i class="bi bi-check-circle"></i> پەسەندکراوە - ${notification.confirmedBy || 'بەڕێوەبەر'}</div>`;
+        statusInfo = `<div class="text-success mt-2"><i class="bi bi-check-circle"></i> پەسەندکراوە - ${notification.confirmedBy || 'ئەدمین'}</div>`;
         if (notification.confirmationNote) {
             statusInfo += `<div class="text-muted small">تێبینی: ${notification.confirmationNote}</div>`;
         }
     } else if (notification.status === 'rejected') {
-        statusInfo = `<div class="text-danger mt-2"><i class="bi bi-x-circle"></i> ڕەتکراوەتەوە - ${notification.rejectedBy || 'بەڕێوەبەر'}</div>`;
+        statusInfo = `<div class="text-danger mt-2"><i class="bi bi-x-circle"></i> ڕەتکراوەتەوە - ${notification.rejectedBy || 'ئەدمین'}</div>`;
         if (notification.rejectionNote) {
             statusInfo += `<div class="text-muted small">تێبینی: ${notification.rejectionNote}</div>`;
         }
@@ -6679,6 +6679,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
