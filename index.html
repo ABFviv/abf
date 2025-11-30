@@ -2496,52 +2496,6 @@ const users = {
             }
         }
 
-        async function initializeSampleData() {
-            const sampleEmployees = [
-                {
-                    id: 'EMP001',
-                    name: 'ئەحمەد محەممەد',
-                    position: 'کارپێکەر',
-                    department: 'crushing-prep',
-                    dailyWork: [
-                        { date: '2024-01-01', clayTons: '10', rate: '75', note: 'کاری باش', createdAt: new Date().toISOString() }
-                    ],
-                    otherWork: [
-                        { date: '2024-01-01', name: 'چاککردنی مەکینە', rate: '65', note: 'پێویستی بە باشترکردن هەیە', createdAt: new Date().toISOString() }
-                    ]
-                },
-                {
-                    id: 'EMP007',
-                    name: 'حوسێن عەلی',
-                    position: 'تەکنیککاری میکانیک',
-                    department: 'mechanical',
-                    dailyWork: [],
-                    otherWork: [
-                        { date: '2024-01-01', name: 'چاککردنی ئەنژین', rate: '85', note: 'کاری نایاب', createdAt: new Date().toISOString() }
-                    ]
-                },
-                {
-                    id: 'EMP008',
-                    name: 'سارا عەبدوڵڵا',
-                    position: 'تەکنیککاری کارەبا',
-                    department: 'electrical-ac',
-                    dailyWork: [],
-                    otherWork: [
-                        { date: '2024-01-01', name: 'دامەزراندنی AC', rate: '90', note: 'دامەزراندنی بێ کەموکوڕی', createdAt: new Date().toISOString() }
-                    ]
-                }
-            ];
-
-            try {
-                for (const employee of sampleEmployees) {
-                    await db.collection('employees').doc(employee.id).set(employee);
-                }
-                employees = sampleEmployees;
-                console.log('✅ Sample data initialized');
-            } catch (error) {
-                console.error('❌ Error initializing sample data:', error);
-            }
-        }
 
         // Setup event listeners
         function setupEventListeners() {
@@ -6679,6 +6633,7 @@ async function deleteNotification(notificationId) {
 </script>
 </body>
 </html>
+
 
 
 
