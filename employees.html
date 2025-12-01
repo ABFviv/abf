@@ -2386,7 +2386,7 @@
                 if (employee && employee.position === 'کارپێکەر') {
                     // Get the 4 specific employees who should have carts
                     // You need to update this with the actual employee IDs
-                    const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
+                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with actual IDs
 
                     // Check if this employee is one of the 4 that should have cart numbers
                     if (klinCartEmployees.includes(employeeId)) {
@@ -2795,7 +2795,7 @@
             // Special handling for klin department
             if (employee.department === 'klin') {
                 // Only apply automatic rating for كارپێكەر positions in the 4 specified employees
-                const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
+                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with actual IDs
 
                 if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
                     const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
@@ -4147,7 +4147,7 @@
             // Special handling for klin department
             if (employee.department === 'klin') {
                 // For كارپێكەر position in klin (only the 4 specified employees)
-                const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
+                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with actual IDs
 
                 if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
                     // These 4 employees show carts field with auto rating
@@ -6786,3 +6786,4 @@
 </body>
 
 </html>
+
