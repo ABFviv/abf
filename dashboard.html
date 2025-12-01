@@ -121,6 +121,14 @@
             border-color: #f57c00;
         }
 
+        .dashboard-card.reports {
+            background: linear-gradient(135deg, #fff 0%, #f3e5f5 100%);
+        }
+
+        .dashboard-card.reports:hover {
+            border-color: #7b1fa2;
+        }
+
         .card-icon {
             font-size: 70px;
             margin-bottom: 20px;
@@ -141,6 +149,10 @@
 
         .card-icon.notes {
             color: #f57c00;
+        }
+
+        .card-icon.reports {
+            color: #7b1fa2;
         }
 
         .card-title {
@@ -210,6 +222,18 @@
         .btn-notes:hover {
             background-color: #ef6c00;
             border-color: #ef6c00;
+            color: white;
+        }
+
+        .btn-reports {
+            background-color: #7b1fa2;
+            border-color: #7b1fa2;
+            color: white;
+        }
+
+        .btn-reports:hover {
+            background-color: #6a1b9a;
+            border-color: #6a1b9a;
             color: white;
         }
 
@@ -308,6 +332,18 @@
                     <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
                 </button>
             </div>
+
+            <!-- Daily Reports Card -->
+            <div class="dashboard-card reports" onclick="goToReports()">
+                <div class="card-icon reports">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                </div>
+                <h2 class="card-title">ڕاپۆڕتی ڕۆژانە</h2>
+                <p class="card-description">ڕاپۆڕتە ڕۆژانەکان و راپۆڕتەکانی کارگە</p>
+                <button class="btn btn-reports btn-card">
+                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
+                </button>
+            </div>
         </div>
     </div>
 
@@ -349,10 +385,12 @@
         function goToNotes() {
             window.location.href = 'notes.html';
         }
+
+        // Navigate to daily reports page
+        function goToReports() {
+            window.location.href = 'reports.html';
+        }
     </script>
 </body>
 
-
 </html>
-
-
