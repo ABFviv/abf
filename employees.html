@@ -2358,11 +2358,11 @@
                 equation: (x) => (x / 11) * 100,
                 employeeIds: [] // All employees in unsetting department
             },
-            // فڕن (klin)
+            // Update the klin configuration
             'klin': {
-                maxValue: 26,
-                equation: (x) => (x / 26) * 100,
-                employeeIds: [] // All employees in klin department
+                maxValue: 11, // Change from 26 to 11
+                equation: (x) => (x / 11) * 100,
+                employeeIds: [] // This needs to be populated with the 4 employees who should have cart numbers
             }
         };
 
@@ -2379,11 +2379,27 @@
             if (department === 'unsetting' && departmentScaling.unsetting) {
                 return Math.round(departmentScaling.unsetting.equation(inputValue) * 100) / 100;
             }
-            if (department === 'klin' && departmentScaling.klin) {
-                return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
+            if (department === 'klin') {
+                const employee = employees.find(emp => emp.id === employeeId);
+
+                // Check if employee exists and position is كارپێکەر
+                if (employee && employee.position === 'کارپێکەر') {
+                    // Get the 4 specific employees who should have carts
+                    // You need to update this with the actual employee IDs
+                    const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
+
+                    // Check if this employee is one of the 4 that should have cart numbers
+                    if (klinCartEmployees.includes(employeeId)) {
+                        // For these 4 employees, use automatic rating calculation
+                        return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
+                    }
+                }
+                return null; // No automatic rating for other employees in klin
             }
 
-            // Manual rating for other departments
+
+
+            // No automatic rating for other cases
             return null;
         }
 
@@ -2776,12 +2792,25 @@
             const inputValue = parseFloat(cartInput.value);
             if (isNaN(inputValue)) return;
 
-            // Get automatic rating if applicable
-            const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+            // Special handling for klin department
+            if (employee.department === 'klin') {
+                // Only apply automatic rating for كارپێكەر positions in the 4 specified employees
+                const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
 
-            if (automaticRating !== null) {
-                ratingInput.value = automaticRating;
-                ratingValue.textContent = automaticRating;
+                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                    const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+                    if (automaticRating !== null) {
+                        ratingInput.value = automaticRating;
+                        ratingValue.textContent = automaticRating;
+                    }
+                }
+            } else {
+                // Get automatic rating for other departments
+                const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+                if (automaticRating !== null) {
+                    ratingInput.value = automaticRating;
+                    ratingValue.textContent = automaticRating;
+                }
             }
         }
 
@@ -2942,9 +2971,10 @@
                 element.style.display = (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') ? 'inline-block' : 'none';
             });
 
-            // Show quick record button for specific departments
+
+            // Show quick record button for specific departments - ADD 'klin' to the list
             const quickRecordElements = document.querySelectorAll('.quick-record-only');
-            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting'].includes(currentUser.department);
+            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department);
             quickRecordElements.forEach(element => {
                 element.style.display = showQuickRecord ? 'inline-block' : 'none';
             });
@@ -3798,8 +3828,10 @@
                     </div>
                 `;
                     } else if (currentRecordType === 'daily') {
-                        // Daily work record - compact design
-                        const detail = work.carts ? `${work.carts} عەرەبانە` : (work.clayTons ? `${work.clayTons} طەن` : 'کاری ڕۆژانە');
+                        // In the section that creates daily work records:
+                        const detail = work.carts ? `${work.carts} عەرەبانە` :
+                            (work.clayTons ? `${work.clayTons} طەن` :
+                                (work.name ? `${work.name}` : 'کاری ڕۆژانە')); // Added work.name check
                         recordContent = `
                     <div class="record-header-minimal">
                         <div class="record-main-info">
@@ -4109,12 +4141,29 @@
             document.getElementById('dailyWorkRatingValue').textContent = '0';
             document.getElementById('dailyWorkDate').valueAsDate = new Date();
 
-            // Show/hide carts field based on department
             const employee = employees.find(emp => emp.id === currentEmployeeId);
-            if (employee && (employee.department === 'engineering' || employee.department === 'management')) {
+            if (!employee) return;
+
+            // Special handling for klin department
+            if (employee.department === 'klin') {
+                // For كارپێكەر position in klin (only the 4 specified employees)
+                const klinCartEmployees = ['019', '020', '021', '022']; // Replace with actual IDs
+
+                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                    // These 4 employees show carts field with auto rating
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+                } else {
+                    // Other employees in klin show "ناوی کار" field and no auto rating
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'none';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'block';
+                }
+            } else if (employee.department === 'engineering' || employee.department === 'management') {
+                // Existing code for other departments...
                 document.getElementById('dailyWorkCartsContainer').style.display = 'none';
                 document.getElementById('dailyWorkNameContainer').style.display = 'block';
-            } else if (employee && employee.department === 'crushing-prep') {
+            } else if (employee.department === 'crushing-prep') {
                 document.getElementById('dailyWorkCartsContainer').style.display = 'block';
                 document.getElementById('dailyWorkNameContainer').style.display = 'none';
                 document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی طەنی خۆڵ';
@@ -4593,6 +4642,8 @@
             const fieldLabel = document.getElementById('quickRecordFieldLabel');
             if (currentUser.department === 'crushing-prep') {
                 fieldLabel.textContent = 'ژمارەی طەنی خۆڵ';
+            } else if (currentUser.department === 'klin') {
+                fieldLabel.textContent = 'ناوی کار'; // For klin department, show "ناوی کار"
             } else {
                 fieldLabel.textContent = 'ژمارەی عەرەبانەکان';
             }
@@ -4658,14 +4709,19 @@
                     employee.dailyWork = [];
                 }
 
-                // Calculate automatic rating based on department equation
+                // Special handling for klin department
                 let finalRating = rate;
-                const inputValue = parseInt(fieldValue);
-
-                if (!isNaN(inputValue)) {
-                    const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
-                    if (automaticRating !== null) {
-                        finalRating = automaticRating;
+                if (currentUser.department === 'klin') {
+                    // For klin, don't calculate automatic rating
+                    // Use the rating provided by the user
+                } else {
+                    // Calculate automatic rating for other departments
+                    const inputValue = parseInt(fieldValue);
+                    if (!isNaN(inputValue)) {
+                        const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+                        if (automaticRating !== null) {
+                            finalRating = automaticRating;
+                        }
                     }
                 }
 
@@ -4679,6 +4735,8 @@
                 // Add field based on department
                 if (currentUser.department === 'crushing-prep') {
                     workRecord.clayTons = fieldValue;
+                } else if (currentUser.department === 'klin') {
+                    workRecord.name = fieldValue; // For klin, save as "ناوی کار"
                 } else {
                     workRecord.carts = fieldValue;
                 }
