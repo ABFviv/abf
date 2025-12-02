@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASOBRICK FACTORY - بەشی چاکسازی</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1976d2;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #0288d1;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1565c0, #0d47a1);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .machine-selector {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin: 0 20px 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            border-bottom: 4px solid var(--primary-color);
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .kpi-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .table-custom th {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status-ok {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+
+        .status-danger {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        /* Excel-like Table Styling */
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            font-size: 0.95rem;
+        }
+
+        .excel-table th,
+        .excel-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .excel-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .excel-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .btn-float {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        
+        .machine-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="d-flex align-items-center">
+            <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
+                alt="ASOBRICK FACTORY" height="50" class="me-3">
+            <div>
+                <h4 class="m-0"> بەشی چاکسازی و کێشەکان </h4>
+                <p class="m-0 small opacity-75">Analysis & Predictive Maintenance</p>
+            </div>
+        </div>
+        <div>
+            <span id="userInfo" class="me-3 small"></span>
+            <button class="btn btn-light btn-sm me-2" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-house-door"></i> پەڕەی سەرەکی
+            </button>
+            <button class="btn btn-light btn-sm" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="machine-selector">
+        <label for="departmentSelect" class="fw-bold"><i class="bi bi-diagram-3"></i> بەش هەڵبژێرە:</label>
+        <select id="departmentSelect" class="form-select w-auto" style="min-width: 200px;">
+            <option value="">-- هەموو بەشەکان --</option>
+            <option value="هاڕین">هاڕین</option>
+            <option value="ئامادەکردن">ئامادەکردن</option>
+            <option value="بڕین">بڕین</option>
+            <option value="بارکردن">بارکردن</option>
+            <option value="درایەر">درایەر</option>
+            <option value="فڕن">فڕن</option>
+            <option value="داگرتن">داگرتن</option>
+            <option value="کارەبا">کارەبا</option>
+        </select>
+
+        <label for="machineSelect" class="fw-bold"><i class="bi bi-cpu"></i> ئامێر هەڵبژێرە:</label>
+        <select id="machineSelect" class="form-select w-auto" style="min-width: 200px;">
+            <option value="">-- ئامێرێک دیاری بکە --</option>
+        </select>
+        <button class="btn btn-outline-primary btn-sm" onclick="openAddMachineModal()">
+            <i class="bi bi-plus-lg"></i> زیادکردنی ئامێر
+        </button>
+        <button class="btn btn-outline-warning btn-sm" onclick="openManageMachinesModal()">
+            <i class="bi bi-gear"></i> بەڕێوەبردنی ئامێرەکان
+        </button>
+    </div>
+
+    <div class="container-fluid px-4">
+        <div id="mainContent" style="display: none;">
+
+            <ul class="nav nav-tabs mb-4" id="maintenanceTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
+                        type="button" role="tab">
+                        <i class="bi bi-bar-chart-fill"></i> شیکاری و داهاتوو
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="records-tab" data-bs-toggle="tab" data-bs-target="#records"
+                        type="button" role="tab">
+                        <i class="bi bi-tools"></i> تۆماری چاککردنەوە
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="problems-tab" data-bs-toggle="tab" data-bs-target="#problems"
+                        type="button" role="tab">
+                        <i class="bi bi-exclamation-triangle-fill"></i> کێشە و وەستان
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="maintenanceTabsContent">
+
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--danger-color);">
+                                <div class="kpi-value" id="kpiMTTR">--</div>
+                                <div class="kpi-label">MTTR (کاتژمێر)</div>
+                                <small class="text-muted" style="font-size: 0.7rem;">ناوەندی کاتی چاککردنەوە</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--success-color);">
+                                <div class="kpi-value" id="kpiMTBF">--</div>
+                                <div class="kpi-label">MTBF (ڕۆژ)</div>
+                                <small class="text-muted" style="font-size: 0.7rem;">ناوەندی کات نێوان
+                                    وەستانەکان</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--warning-color);">
+                                <div class="kpi-value" id="kpiDowntime">0</div>
+                                <div class="kpi-label">کۆی کاتژمێری وەستان</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="chart-container">
+                                <h5 class="mb-3 text-center">بەراوردی چاککردنەوە بەپێی ساڵەکان</h5>
+                                <canvas id="maintenanceChart" height="150"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0 text-primary"><i class="bi bi-calendar-check"></i> چاککردنەوەی
+                                        پێشبینیکراو</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover mb-0 text-center">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>پارچە / کار</th>
+                                                    <th>بەرواری پێشبینیکراو</th>
+                                                    <th>ماوە (ڕۆژ)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="predictionTableBody">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="records" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-primary">تۆماری گۆڕانکاری و چاککردنەوەکان</h5>
+                        <button class="btn btn-primary" onclick="openAddRecordModal('maintenance')">
+                            <i class="bi bi-plus-lg"></i> زیادکردنی تۆمار
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th>بەروار</th>
+                                    <th>ساڵ</th>
+                                    <th>پارچەی گۆڕدراو / کار</th>
+                                    <th>ژمارە / بڕ</th>
+                                    <th>پێویستی (Frequency - ڕۆژ)</th>
+                                    <th>تێبینی</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenanceLogBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="problems" role="tabpanel">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <div>ئەم بەشە بۆ هەژمارکردنی MTTR و MTBF بەکاردێت. تکایە بە وردی کاتەکان پڕبکەرەوە.</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-danger">تۆماری کێشە و وەستانەکان</h5>
+                        <button class="btn btn-danger" onclick="openAddRecordModal('problem')">
+                            <i class="bi bi-exclamation-octagon"></i> زیادکردنی کێشە
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th>بەروار</th>
+                                    <th>کێشە</th>
+                                    <th>هۆکاری سەرەکی</th>
+                                    <th>ماوەی وەستان</th>
+                                    <th>چارەسەر</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="problemLogBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="noMachineState" class="text-center py-5">
+            <i class="bi bi-cpu text-muted" style="font-size: 5rem;"></i>
+            <h3 class="text-muted mt-3">تکایە سەرەتا ئامێرێک هەڵبژێرە</h3>
+            <p>بۆ بینینی داتا و شیکارییەکان، ناوی ئامێرەکە لە لیستی سەرەوە دیاری بکە</p>
+        </div>
+    </div>
+
+    <!-- Add Machine Modal -->
+    <div class="modal fade" id="addMachineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">زیادکردنی ئامێری نوێ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMachineForm">
+                        <div class="mb-3">
+                            <label class="form-label">ناوی ئامێر</label>
+                            <input type="text" class="form-control" id="newMachineName" required
+                                placeholder="Example: Xtruder A1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەش</label>
+                            <select class="form-select" id="newMachineDept" required>
+                                <option value="هاڕین">هاڕین</option>
+                                <option value="ئامادەکردن">ئامادەکردن</option>
+                                <option value="بڕین">بڕین</option>
+                                <option value="بارکردن">بارکردن</option>
+                                <option value="درایەر">درایەر</option>
+                                <option value="فڕن">فڕن</option>
+                                <option value="داگرتن">داگرتن</option>
+                                <option value="کارەبا">کارەبا</option>
+                                <option value="mechanical">میکانیک (General)</option>
+                                <option value="electrical-ac">کارەبا (General)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەرواری کارکردن (Commission Date)</label>
+                            <input type="date" class="form-control" id="newMachineDate">
+                            <small class="text-muted">بۆ هەژمارکردنی MTBF گرنگە</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">زیادکردن</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Machine Modal -->
+    <div class="modal fade" id="editMachineModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">دەستکاریکردنی ئامێر</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editMachineForm">
+                        <input type="hidden" id="editMachineId">
+                        <div class="mb-3">
+                            <label class="form-label">ناوی ئامێر</label>
+                            <input type="text" class="form-control" id="editMachineName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەش</label>
+                            <select class="form-select" id="editMachineDept" required>
+                                <option value="هاڕین">هاڕین</option>
+                                <option value="ئامادەکردن">ئامادەکردن</option>
+                                <option value="بڕین">بڕین</option>
+                                <option value="بارکردن">بارکردن</option>
+                                <option value="درایەر">درایەر</option>
+                                <option value="فڕن">فڕن</option>
+                                <option value="داگرتن">داگرتن</option>
+                                <option value="کارەبا">کارەبا</option>
+                                <option value="mechanical">میکانیک (General)</option>
+                                <option value="electrical-ac">کارەبا (General)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەرواری کارکردن (Commission Date)</label>
+                            <input type="date" class="form-control" id="editMachineDate">
+                            <small class="text-muted">بۆ هەژمارکردنی MTBF گرنگە</small>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">نوێکردنەوە</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Machines Modal -->
+    <div class="modal fade" id="manageMachinesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">بەڕێوەبردنی ئامێرەکان</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ناوی ئامێر</th>
+                                    <th>بەش</th>
+                                    <th>بەرواری کارکردن</th>
+                                    <th>ژمارەی تۆمارەکان</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="machinesListBody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Record Modal (existing) -->
+    <div class="modal fade" id="addRecordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white" id="recordModalHeader">
+                    <h5 class="modal-title" id="recordModalTitle">تۆماری نوێ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="recordForm">
+                        <input type="hidden" id="recordType">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">بەروار</label>
+                                <input type="date" class="form-control" id="recDate" required>
+                            </div>
+
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label">ناوی پارچە / کار</label>
+                                <input type="text" class="form-control" id="recPart" required>
+                            </div>
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label">بڕ / ژمارە</label>
+                                <input type="number" class="form-control" id="recQty" value="1" required>
+                            </div>
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label">ماوەی مانەوە (Frequency - ڕۆژ)</label>
+                                <input type="number" class="form-control" id="recFreq" required
+                                    placeholder="e.g. 365 for 1 year">
+                                <small class="text-muted">ئەمە دیاری دەکات کەی دیسان پێویستە بگۆڕدرێت</small>
+                            </div>
+
+                            <div class="col-md-12 problem-field" style="display:none;">
+                                <label class="form-label">کێشە </label>
+                                <input type="text" class="form-control" id="recProblem" required>
+                            </div>
+                            <div class="col-md-12 problem-field" style="display:none;">
+                                <label class="form-label">هۆکاری سەرەکی </label>
+                                <textarea class="form-control" id="recRootCause" rows="2"
+                                    placeholder="Why did it happen?"></textarea>
+                            </div>
+                            <div class="col-md-6 problem-field" style="display:none;">
+                                <label class="form-label">ماوەی وەستان </label>
+                                <input type="number" step="0.1" class="form-control" id="recDowntime" required
+                                    placeholder="Hours">
+                            </div>
+                            <div class="col-md-6 problem-field" style="display:none;">
+                                <label class="form-label">چارەسەر</label>
+                                <input type="text" class="form-control" id="recSolution">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">تێبینی</label>
+                                <textarea class="form-control" id="recNote" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary w-100">تۆمارکردن</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- 1. CONFIGURATION & SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+            authDomain: "abf6-96dcf.firebaseapp.com",
+            projectId: "abf6-96dcf",
+            storageBucket: "abf6-96dcf.firebasestorage.app",
+            messagingSenderId: "405357996484",
+            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let currentMachineId = null;
+        let currentMachineData = null;
+        let maintenanceChart = null;
+        let allFetchedMachines = [];
+
+        // --- 2. AUTH CHECK ---
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) {
+            window.location.href = 'index.html';
+        } else {
+            currentUser = JSON.parse(userStr);
+            document.getElementById('userInfo').textContent = `${currentUser.username}`;
+            initApp();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+
+        // --- 3. INITIALIZATION & EVENT LISTENERS ---
+        function initApp() {
+            loadMachines();
+        }
+
+        const departmentSelect = document.getElementById('departmentSelect');
+        const machineSelect = document.getElementById('machineSelect');
+
+        departmentSelect.addEventListener('change', function() {
+            loadMachines(this.value);
+        });
+
+        machineSelect.addEventListener('change', function () {
+            currentMachineId = this.value;
+            if (currentMachineId) {
+                document.getElementById('noMachineState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadMachineData(currentMachineId);
+            } else {
+                document.getElementById('noMachineState').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+            }
+        });
+
+        // --- 4. MACHINE MANAGEMENT ---
+        async function loadMachines(filterDepartment = '') {
+            const select = document.getElementById('machineSelect');
+            select.innerHTML = '<option value="">-- ئامێرێک دیاری بکە --</option>';
+            allFetchedMachines = [];
+
+            try {
+                let query = db.collection('machines');
+                
+                if (filterDepartment && filterDepartment !== '') {
+                    query = query.where('department', '==', filterDepartment);
+                }
+                
+                if (currentUser.role === 'supervisor' && currentUser.department) {
+                    if (filterDepartment === '' || filterDepartment === currentUser.department) {
+                        query = query.where('department', '==', currentUser.department);
+                    } else if (filterDepartment !== currentUser.department) {
+                        console.log("Supervisor is restricted to their department.");
+                        select.innerHTML = '<option value="">-- ئامێری ڕێگەپێدراو نییە --</option>';
+                        return;
+                    }
+                }
+                
+                const snapshot = await query.get();
+                
+                snapshot.forEach(doc => {
+                    const m = doc.data();
+                    allFetchedMachines.push({ id: doc.id, ...m });
+
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = m.name;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('noMachineState').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
+
+            } catch (err) {
+                console.error("Error loading machines:", err);
+            }
+        }
+
+        function openAddMachineModal() {
+            document.getElementById('addMachineForm').reset();
+            const deptSelect = document.getElementById('newMachineDept');
+            
+            deptSelect.disabled = false;
+            
+            if (currentUser.role === 'supervisor' && currentUser.department) {
+                deptSelect.value = currentUser.department;
+                deptSelect.disabled = true;
+            }
+            
+            new bootstrap.Modal(document.getElementById('addMachineModal')).show();
+        }
+
+        document.getElementById('addMachineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('newMachineName').value;
+            const dept = document.getElementById('newMachineDept').value;
+            const date = document.getElementById('newMachineDate').value;
+
+            try {
+                const docRef = await db.collection('machines').add({
+                    name: name,
+                    department: dept,
+                    commissionDate: date,
+                    createdAt: new Date()
+                });
+
+                await loadMachines(departmentSelect.value);
+                
+                const machineSelect = document.getElementById('machineSelect');
+                machineSelect.value = docRef.id;
+                machineSelect.dispatchEvent(new Event('change'));
+
+                bootstrap.Modal.getInstance(document.getElementById('addMachineModal')).hide();
+                alert("ئامێر بەسەرکەوتووی زیادکرا");
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
+
+        // NEW: Open Manage Machines Modal
+        async function openManageMachinesModal() {
+            try {
+                const tbody = document.getElementById('machinesListBody');
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">بارکردنی داتاکان...</td></tr>';
+
+                // Get all machines regardless of filter
+                let query = db.collection('machines');
+                
+                if (currentUser.role === 'supervisor' && currentUser.department) {
+                    query = query.where('department', '==', currentUser.department);
+                }
+                
+                const snapshot = await query.get();
+                
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">هیچ ئامێرێک نەدۆزرایەوە</td></tr>';
+                    new bootstrap.Modal(document.getElementById('manageMachinesModal')).show();
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                
+                // First get all logs to count records per machine
+                const allLogsSnapshot = await db.collection('machine_logs').get();
+                const machineLogCounts = {};
+                
+                allLogsSnapshot.forEach(doc => {
+                    const log = doc.data();
+                    if (log.machineId) {
+                        machineLogCounts[log.machineId] = (machineLogCounts[log.machineId] || 0) + 1;
+                    }
+                });
+
+                snapshot.forEach(doc => {
+                    const machine = doc.data();
+                    const tr = document.createElement('tr');
+                    const logCount = machineLogCounts[doc.id] || 0;
+                    
+                    tr.innerHTML = `
+                        <td>${machine.name}</td>
+                        <td><span class="badge bg-info">${machine.department}</span></td>
+                        <td>${machine.commissionDate || '-'}</td>
+                        <td><span class="badge ${logCount > 0 ? 'bg-primary' : 'bg-secondary'}">${logCount}</span></td>
+                        <td>
+                            <div class="machine-actions">
+                                <button class="btn btn-sm btn-warning" onclick="openEditMachineModal('${doc.id}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMachine('${doc.id}', '${machine.name}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                new bootstrap.Modal(document.getElementById('manageMachinesModal')).show();
+            } catch (err) {
+                console.error("Error loading machines for management:", err);
+                alert("هەڵە لە بارکردنی ئامێرەکان: " + err.message);
+            }
+        }
+
+        // NEW: Open Edit Machine Modal
+        async function openEditMachineModal(machineId) {
+            try {
+                const doc = await db.collection('machines').doc(machineId).get();
+                if (!doc.exists) {
+                    alert("ئامێر نەدۆزرایەوە");
+                    return;
+                }
+
+                const machine = doc.data();
+                
+                document.getElementById('editMachineId').value = machineId;
+                document.getElementById('editMachineName').value = machine.name;
+                document.getElementById('editMachineDept').value = machine.department;
+                document.getElementById('editMachineDate').value = machine.commissionDate || '';
+                
+                // Disable department editing for supervisors
+                const deptSelect = document.getElementById('editMachineDept');
+                if (currentUser.role === 'supervisor' && currentUser.department) {
+                    deptSelect.value = currentUser.department;
+                    deptSelect.disabled = true;
+                } else {
+                    deptSelect.disabled = false;
+                }
+                
+                new bootstrap.Modal(document.getElementById('editMachineModal')).show();
+            } catch (err) {
+                console.error("Error loading machine for edit:", err);
+                alert("هەڵە لە بارکردنی داتاکانی ئامێر: " + err.message);
+            }
+        }
+
+        // NEW: Edit Machine Form Submit
+        document.getElementById('editMachineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const machineId = document.getElementById('editMachineId').value;
+            const name = document.getElementById('editMachineName').value;
+            const dept = document.getElementById('editMachineDept').value;
+            const date = document.getElementById('editMachineDate').value;
+            
+            // Validate supervisor permissions
+            if (currentUser.role === 'supervisor' && currentUser.department) {
+                if (dept !== currentUser.department) {
+                    alert("تۆ تەنیا دەتوانیت ئامێرەکانی بەشی خۆت دەستکاری بکەیت");
+                    return;
+                }
+            }
+
+            try {
+                await db.collection('machines').doc(machineId).update({
+                    name: name,
+                    department: dept,
+                    commissionDate: date || null,
+                    updatedAt: new Date()
+                });
+
+                // Update local cache
+                const index = allFetchedMachines.findIndex(m => m.id === machineId);
+                if (index !== -1) {
+                    allFetchedMachines[index] = {
+                        ...allFetchedMachines[index],
+                        name: name,
+                        department: dept,
+                        commissionDate: date || null
+                    };
+                }
+
+                // Update dropdown if this machine is currently selected
+                if (currentMachineId === machineId) {
+                    currentMachineData = allFetchedMachines[index];
+                    loadMachineData(machineId); // Reload data to reflect changes
+                }
+
+                // Update dropdown options
+                const option = machineSelect.querySelector(`option[value="${machineId}"]`);
+                if (option) {
+                    option.textContent = name;
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('editMachineModal')).hide();
+                alert("ئامێر بەسەرکەوتووی نوێکرایەوە");
+                
+                // Refresh the manage machines modal if open
+                const manageModal = bootstrap.Modal.getInstance(document.getElementById('manageMachinesModal'));
+                if (manageModal) {
+                    openManageMachinesModal();
+                }
+            } catch (err) {
+                console.error("Error updating machine:", err);
+                alert("هەڵە لە نوێکردنەوەی ئامێر: " + err.message);
+            }
+        });
+
+        // NEW: Delete Machine
+        async function deleteMachine(machineId, machineName) {
+            if (!confirm(`دڵنیایت لە سڕینەوەی ئامێری "${machineName}"؟\n\nئەگەر ئەم ئامێرە تۆماری چاککردنەوەی هەبێت، هەموویان دەسڕێنرێتەوە.`)) {
+                return;
+            }
+
+            try {
+                // First, check if machine has any logs
+                const logsSnapshot = await db.collection('machine_logs')
+                    .where('machineId', '==', machineId)
+                    .get();
+                
+                // Delete all logs for this machine
+                const deleteLogPromises = [];
+                logsSnapshot.forEach(doc => {
+                    deleteLogPromises.push(doc.ref.delete());
+                });
+                
+                // Wait for all logs to be deleted
+                await Promise.all(deleteLogPromises);
+                
+                // Then delete the machine itself
+                await db.collection('machines').doc(machineId).delete();
+
+                // Update local cache
+                allFetchedMachines = allFetchedMachines.filter(m => m.id !== machineId);
+
+                // If the deleted machine was currently selected, clear the selection
+                if (currentMachineId === machineId) {
+                    currentMachineId = null;
+                    machineSelect.value = '';
+                    document.getElementById('noMachineState').style.display = 'block';
+                    document.getElementById('mainContent').style.display = 'none';
+                }
+
+                // Remove from dropdown
+                const option = machineSelect.querySelector(`option[value="${machineId}"]`);
+                if (option) {
+                    option.remove();
+                }
+
+                // Refresh the manage machines modal
+                await openManageMachinesModal();
+                
+                alert("ئامێر و هەموو تۆمارەکانی بەسەرکەوتووی سڕایەوە");
+            } catch (err) {
+                console.error("Error deleting machine:", err);
+                alert("هەڵە لە سڕینەوەی ئامێر: " + err.message);
+            }
+        }
+
+        // --- 5. DATA LOADING & LOGIC (existing, unchanged) ---
+        async function loadMachineData(machineId) {
+            try {
+                console.log("Loading data for machine:", machineId);
+                
+                currentMachineData = allFetchedMachines.find(m => m.id === machineId);
+
+                if (!currentMachineData || !currentMachineData.commissionDate) {
+                    const mDoc = await db.collection('machines').doc(machineId).get();
+                    if (!mDoc.exists) {
+                        alert("ئامێر نەدۆزرایەوە");
+                        return;
+                    }
+                    currentMachineData = { id: mDoc.id, ...mDoc.data() };
+                }
+
+                console.log("Machine data:", currentMachineData);
+
+                const allLogsSnapshot = await db.collection('machine_logs')
+                    .where('machineId', '==', machineId)
+                    .get();
+
+                console.log("All logs found:", allLogsSnapshot.size);
+
+                const maintLogs = [];
+                const probLogs = [];
+
+                allLogsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const logEntry = { 
+                        id: doc.id, 
+                        ...data,
+                        date: data.date || '-',
+                        note: data.note || ''
+                    };
+
+                    if (data.type === 'maintenance') {
+                        logEntry.part = data.part || '-';
+                        logEntry.quantity = data.quantity || 1;
+                        logEntry.frequency = data.frequency || '-';
+                        maintLogs.push(logEntry);
+                    } else if (data.type === 'problem') {
+                        logEntry.problem = data.problem || '-';
+                        logEntry.rootCause = data.rootCause || '-';
+                        logEntry.downtime = data.downtime || 0;
+                        logEntry.solution = data.solution || '-';
+                        probLogs.push(logEntry);
+                    }
+                });
+
+                maintLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                probLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                console.log("Maintenance logs:", maintLogs);
+                console.log("Problem logs:", probLogs);
+
+                renderMaintenanceTable(maintLogs);
+                renderProblemTable(probLogs);
+                calculateKPIs(probLogs, maintLogs);
+                renderChart(maintLogs);
+                renderPredictions(maintLogs);
+                
+            } catch (err) {
+                console.error("Error loading machine data:", err);
+                alert("هەڵە لە بارکردنی داتاکان: " + err.message);
+            }
+        }
+
+        // --- 6. RENDERING TABLES (existing, unchanged) ---
+        function renderMaintenanceTable(logs) {
+            const tbody = document.getElementById('maintenanceLogBody');
+            tbody.innerHTML = '';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">هیچ تۆمارێک نییە</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const year = log.date ? log.date.substring(0, 4) : '-';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.date}</td>
+                    <td>${year}</td>
+                    <td class="fw-bold">${log.part}</td>
+                    <td>${log.quantity}</td>
+                    <td>${log.frequency ? log.frequency + ' Days' : '-'}</td>
+                    <td class="text-muted small">${log.note}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderProblemTable(logs) {
+            const tbody = document.getElementById('problemLogBody');
+            tbody.innerHTML = '';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">هیچ تۆمارێک نییە</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.date}</td>
+                    <td class="fw-bold text-danger">${log.problem}</td>
+                    <td>${log.rootCause}</td>
+                    <td><span class="badge bg-warning text-dark">${log.downtime} Hrs</span></td>
+                    <td>${log.solution}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 7. CALCULATIONS (MTTR, MTBF) (existing, unchanged) ---
+        function calculateKPIs(probLogs, maintLogs) {
+            let totalDowntime = 0;
+            let failureCount = probLogs.length;
+
+            probLogs.forEach(p => {
+                totalDowntime += parseFloat(p.downtime || 0);
+            });
+
+            const mttr = failureCount > 0 ? (totalDowntime / failureCount).toFixed(1) : 0;
+            document.getElementById('kpiMTTR').textContent = mttr;
+            document.getElementById('kpiDowntime').textContent = totalDowntime.toFixed(1);
+
+            let daysRunning = 365;
+            if (currentMachineData && currentMachineData.commissionDate) {
+                const start = new Date(currentMachineData.commissionDate);
+                const now = new Date();
+                const diffTime = Math.abs(now - start);
+                daysRunning = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+
+            const totalHours = daysRunning * 24;
+            const operationHours = totalHours - totalDowntime;
+
+            const mtbfDays = failureCount > 0 ? ((operationHours / 24) / failureCount).toFixed(1) : daysRunning;
+
+            document.getElementById('kpiMTBF').textContent = mtbfDays;
+        }
+
+        // --- 8. CHART JS (existing, unchanged) ---
+        function renderChart(logs) {
+            const ctx = document.getElementById('maintenanceChart').getContext('2d');
+
+            const years = {};
+            logs.forEach(log => {
+                if (log.date && log.date !== '-') {
+                    const y = log.date.substring(0, 4);
+                    years[y] = (years[y] || 0) + 1;
+                }
+            });
+
+            const currentYear = new Date().getFullYear();
+            if (!years[currentYear]) years[currentYear] = 0;
+            if (!years[currentYear - 1]) years[currentYear - 1] = 0;
+
+            const labels = Object.keys(years).sort();
+            const data = labels.map(y => years[y]);
+
+            if (maintenanceChart) maintenanceChart.destroy();
+
+            maintenanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ژمارەی چاککردنەوەکان (Number of Changes)',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        // --- 9. PREDICTIONS (Next Maintenance) (existing, unchanged) ---
+        function renderPredictions(logs) {
+            const tbody = document.getElementById('predictionTableBody');
+            tbody.innerHTML = '';
+
+            const partHistory = {};
+            const sortedLogs = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            sortedLogs.forEach(log => {
+                if (log.part && log.part !== '-' && log.frequency && log.frequency > 0) {
+                    partHistory[log.part] = {
+                        date: log.date,
+                        freq: parseInt(log.frequency)
+                    };
+                }
+            });
+
+            Object.keys(partHistory).forEach(part => {
+                const lastDate = new Date(partHistory[part].date);
+                const freq = partHistory[part].freq;
+
+                const nextDate = new Date(lastDate);
+                nextDate.setDate(lastDate.getDate() + freq);
+
+                const today = new Date();
+                const diffTime = nextDate - today;
+                const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let statusClass = "text-success";
+                if (daysRemaining < 0) statusClass = "text-danger fw-bold";
+                else if (daysRemaining < 7) statusClass = "text-warning fw-bold";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${part}</td>
+                    <td>${nextDate.toISOString().split('T')[0]}</td>
+                    <td class="${statusClass}">${daysRemaining}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (Object.keys(partHistory).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-muted">هیچ داتایەک بۆ پێشبینی نییە</td></tr>';
+            }
+        }
+
+        // --- 10. ADD RECORDS LOGIC (existing, unchanged) ---
+        function openAddRecordModal(type) {
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordType').value = type;
+            document.getElementById('recDate').valueAsDate = new Date();
+
+            if (type === 'maintenance') {
+                document.getElementById('recordModalTitle').textContent = "تۆماری چاککردنەوە (Maintenance)";
+                document.getElementById('recordModalHeader').className = "modal-header bg-primary text-white";
+                document.querySelectorAll('.maintenance-field').forEach(el => el.style.display = 'block');
+                document.querySelectorAll('.problem-field').forEach(el => el.style.display = 'none');
+            } else {
+                document.getElementById('recordModalTitle').textContent = "تۆماری کێشە (Problem)";
+                document.getElementById('recordModalHeader').className = "modal-header bg-danger text-white";
+                document.querySelectorAll('.maintenance-field').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.problem-field').forEach(el => el.style.display = 'block');
+            }
+
+            new bootstrap.Modal(document.getElementById('addRecordModal')).show();
+        }
+
+        document.getElementById('recordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const type = document.getElementById('recordType').value;
+            const data = {
+                machineId: currentMachineId,
+                type: type,
+                date: document.getElementById('recDate').value,
+                note: document.getElementById('recNote').value,
+                createdAt: new Date()
+            };
+
+            if (type === 'maintenance') {
+                data.part = document.getElementById('recPart').value;
+                data.quantity = parseInt(document.getElementById('recQty').value);
+                data.frequency = parseInt(document.getElementById('recFreq').value);
+            } else {
+                data.problem = document.getElementById('recProblem').value;
+                data.rootCause = document.getElementById('recRootCause').value;
+                data.downtime = parseFloat(document.getElementById('recDowntime').value);
+                data.solution = document.getElementById('recSolution').value;
+            }
+
+            console.log("Adding record:", data);
+
+            try {
+                await db.collection('machine_logs').add(data);
+                bootstrap.Modal.getInstance(document.getElementById('addRecordModal')).hide();
+                loadMachineData(currentMachineId);
+                alert("تۆمارکرا");
+            } catch (err) {
+                console.error("Error adding record:", err);
+                alert("هەڵە لە تۆمارکردن: " + err.message);
+            }
+        });
+
+        async function deleteLog(id) {
+            if (!confirm("دڵنیایت لە سڕینەوە؟")) return;
+            try {
+                await db.collection('machine_logs').doc(id).delete();
+                loadMachineData(currentMachineId);
+                alert("سڕایەوە");
+            } catch (err) {
+                alert("هەڵە لە سڕینەوە: " + err.message);
+            }
+        }
+
+    </script>
+</body>
+
+</html>
