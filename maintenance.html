@@ -214,7 +214,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="records-tab" data-bs-toggle="tab" data-bs-target="#records"
                         type="button" role="tab">
-                        <i class="bi bi-tools"></i> تۆماری چاککردنەوە
+                        <i class="bi bi-tools"></i> تۆماری چاکسازی
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -835,7 +835,7 @@
 
         // NEW: Delete Machine
         async function deleteMachine(machineId, machineName) {
-            if (!confirm(`دڵنیایت لە سڕینەوەی ئامێری "${machineName}"؟\n\nئەگەر ئەم ئامێرە تۆماری چاککردنەوەی هەبێت، هەموویان دەسڕێنرێتەوە.`)) {
+            if (!confirm(`دڵنیایت لە سڕینەوەی ئامێری "${machineName}"؟\n\nئەگەر ئەم ئامێرە تۆماری چاکسازی هەبێت، هەموویان دەسڕێنرێتەوە.`)) {
                 return;
             }
 
@@ -1140,7 +1140,7 @@
             document.getElementById('recDate').valueAsDate = new Date();
 
             if (type === 'maintenance') {
-                document.getElementById('recordModalTitle').textContent = "تۆماری چاککردنەوە (Maintenance)";
+                document.getElementById('recordModalTitle').textContent = "تۆماری چاکسازی (Maintenance)";
                 document.getElementById('recordModalHeader').className = "modal-header bg-primary text-white";
                 document.querySelectorAll('.maintenance-field').forEach(el => el.style.display = 'block');
                 document.querySelectorAll('.problem-field').forEach(el => el.style.display = 'none');
