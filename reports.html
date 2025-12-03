@@ -1,0 +1,996 @@
+﻿<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASOBRICK FACTORY - ڕاپۆرتی ڕۆژانە</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #05084b;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+            --brand-red: #c62828;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #8e0000);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-logo {
+            height: 60px;
+            margin-left: 20px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: rgb(249, 108, 0);
+            margin: 0;
+        }
+
+        .brand-red-text {
+            color: rgb(249, 108, 0);
+            font-weight: 700;
+        }
+
+        .brand-gray-text {
+            color: rgb(249, 108, 0);
+            font-weight: 500;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .report-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .report-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .report-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+
+        .report-table th,
+        .report-table td {
+            border: 1px solid #333;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .report-table th {
+            background-color: #e3f2fd;
+            font-weight: 600;
+        }
+
+        .report-table .row-header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: right;
+            padding-right: 10px;
+            min-width: 180px;
+        }
+
+        .report-table input[type="number"],
+        .report-table input[type="time"] {
+            width: 100%;
+            border: none;
+            text-align: center;
+            background: transparent;
+            font-size: 0.85rem;
+            padding: 2px;
+        }
+
+        .report-table input:focus {
+            outline: 2px solid var(--primary-color);
+            background-color: #fff;
+        }
+
+        .report-table select {
+            width: 100%;
+            border: none;
+            text-align: center;
+            background: transparent;
+            font-size: 0.85rem;
+            padding: 2px;
+        }
+
+        .report-table select:focus {
+            outline: 2px solid var(--primary-color);
+            background-color: #fff;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-red);
+            border-color: var(--brand-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #b71c1c;
+            border-color: #b71c1c;
+        }
+
+        .summary-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .summary-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .summary-card label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            display: block;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        @media print {
+
+            .control-panel,
+            .action-buttons,
+            .header button {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .report-container {
+                box-shadow: none;
+            }
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+        }
+
+        .auto-number {
+            background-color: #e8f5e9;
+            font-weight: 600;
+        }
+
+        .shift-management {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .shift-section {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+
+        .shift-header {
+            background: linear-gradient(135deg, var(--primary-color), #8e0000);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .shift-entry {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .shift-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .shift-entry-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .btn-remove-shift {
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+
+        .employee-select-group {
+            margin-bottom: 8px;
+        }
+
+        .employee-select-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .employee-select-group select {
+            width: 100%;
+            font-size: 0.85rem;
+            padding: 4px;
+        }
+
+        .column-range-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .column-range-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .column-range-group input {
+            width: 50px;
+            font-size: 0.85rem;
+            padding: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="toast-container"></div>
+
+    <div class="container-fluid">
+        <div class="header">
+            <div class="header-brand">
+                <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
+                    alt="ASOBRICK FACTORY" class="header-logo">
+                <div>
+                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
+                            class="brand-gray-text">FACTORY</span></h4>
+                    <p class="mb-0" style="font-size: 0.9rem; color: #ffcdd2;">ڕاپۆرتی ڕۆژانە</p>
+                </div>
+            </div>
+            <div>
+                <span id="userInfo" class="me-3"></span>
+                <button class="btn btn-light btn-sm me-2" onclick="goBack()">
+                    <i class="bi bi-arrow-right-circle"></i> گەڕانەوە
+                </button>
+                <button class="btn btn-light btn-sm" id="logoutBtn">
+                    <i class="bi bi-box-arrow-right"></i> چوونەدەرەوە
+                </button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h5 class="mb-4 text-center" style="color: var(--primary-color);">
+                <i class="bi bi-sliders"></i> ڕێکخستنەکانی ڕاپۆرت
+            </h5>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="departmentSelect" class="form-label">بەش</label>
+                    <select class="form-select" id="departmentSelect">
+                        <option value="">بەش هەڵبژێرە</option>
+                        <option value="crushing-prep">هاڕین و ئامادەکردن</option>
+                        <option value="cutting-setting">بڕین و بارکردن</option>
+                        <option value="klin">فڕن</option>
+                        <option value="unsetting">داگرتن</option>
+                        <option value="mechanical">میکانیک</option>
+                        <option value="electrical-ac">کارەبا</option>
+                        <option value="engineering">ئەندازیاریی</option>
+                        <option value="management">لێپرسراوەکان</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="reportDate" class="form-label">بەروار</label>
+                    <input type="date" class="form-control" id="reportDate">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="numRows" class="form-label">ژمارەی ڕیزەکان</label>
+                    <input type="number" class="form-control" id="numRows" value="24" min="1" max="50">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="timeScale" class="form-label">پێوانەی کات (کاتژمێر)</label>
+                    <input type="number" class="form-control" id="timeScale" value="1" min="0.5" max="4" step="0.5">
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="generateReport()">
+                        <i class="bi bi-file-earmark-text"></i> دروستکردن
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-container" id="reportContainer" style="display: none;">
+            <div class="report-header">
+                <h2 class="report-title">ڕاپۆرتی ڕۆژانە</h2>
+                <div class="report-info">
+                    <div><strong>بەش:</strong> <span id="reportDepartmentName"></span></div>
+                    <div><strong>بەروار:</strong> <span id="reportDateDisplay"></span></div>
+                </div>
+            </div>
+
+            <div id="reportTableContainer"></div>
+
+            <div class="summary-section" id="summarySection">
+                <h5 class="summary-title">کورتەی گشتی</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="summary-card">
+                            <label>total pcs. of unloading bricks</label>
+                            <input type="number" class="form-control text-center" id="totalLoadUnload" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card">
+                            <label>total pcs. brick for one kilncar</label>
+                            <input type="number" class="form-control text-center" id="totalBrickPerKlincar" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card">
+                            <label>total klincar</label>
+                            <input type="number" class="form-control text-center" id="totalKlincar" step="0.1">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-card">
+                            <label>oil balance</label>
+                            <input type="number" class="form-control text-center" id="oilBalance" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-success" onclick="saveReport()">
+                    <i class="bi bi-save"></i> پاشەکەوتکردن
+                </button>
+                <button class="btn btn-info" onclick="window.print()">
+                    <i class="bi bi-printer"></i> چاپکردن
+                </button>
+                <button class="btn btn-secondary" onclick="exportToExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> هەناردەکردن بۆ Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+            authDomain: "abf6-96dcf.firebaseapp.com",
+            projectId: "abf6-96dcf",
+            storageBucket: "abf6-96dcf.firebasestorage.app",
+            messagingSenderId: "405357996484",
+            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Global variables
+        let currentUser = null;
+        let employees = [];
+        let reportData = {};
+        let brickTypes = ['بلۆک 20', 'خشتی', 'خشتی سپی', 'خشتی تایبەت'];
+        let shiftEntries = { shift1: [], shift2: [], shift3: [] };
+        let shiftCounter = { shift1: 0, shift2: 0, shift3: 0 };
+
+        // Check authentication
+        const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!storedUser) {
+            window.location.href = 'index.html';
+        } else {
+            currentUser = storedUser;
+            document.getElementById('userInfo').textContent = `لە ژوورەوەیت وەک: ${currentUser.username} (${currentUser.role})`;
+        }
+
+        // Logout function
+        document.getElementById('logoutBtn').addEventListener('click', function () {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+
+        // Go back function
+        function goBack() {
+            window.location.href = 'dashboard (2).html';
+        }
+
+        // Load employees from Firebase
+        async function loadEmployees() {
+            try {
+                const employeesSnapshot = await db.collection('employees').get();
+                employees = [];
+                employeesSnapshot.forEach(doc => {
+                    employees.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('Loaded employees:', employees.length);
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                showNotification('هەڵە لە بارکردنی کارمەندەکان', 'danger');
+            }
+        }
+
+        // Get department display name
+        function getDepartmentDisplayName(department) {
+            const departmentNames = {
+                'crushing-prep': 'هاڕین و ئامادەکردن',
+                'cutting-setting': 'بڕین و بارکردن',
+                'klin': 'فڕن',
+                'unsetting': 'داگرتن',
+                'mechanical': 'میکانیک',
+                'electrical-ac': 'کارەبا',
+                'engineering': 'ئەندازیاریی',
+                'management': 'لێپرسراوەکان'
+            };
+            return departmentNames[department] || department;
+        }
+
+        // Generate time for row based on start time and scale
+        function generateTimeForRow(rowIndex, timeScale) {
+            const startHour = 8; // Default start at 08:00
+            const totalHours = rowIndex * timeScale;
+            const hour = Math.floor(startHour + totalHours) % 24;
+            const minute = ((totalHours % 1) * 60);
+            return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        }
+
+        // Auto-fill brick type for entire column from selected row onwards
+        function autoFillBrickType(columnType, fromRow, value) {
+            const numRows = parseInt(document.getElementById('numRows').value);
+            for (let i = fromRow; i < numRows; i++) {
+                const cellId = `${columnType}-${i}`;
+                const selectElement = document.getElementById(cellId);
+                if (selectElement) {
+                    selectElement.value = value;
+                    reportData[cellId] = value;
+                }
+            }
+        }
+
+        // Generate report
+        function generateReport() {
+            const department = document.getElementById('departmentSelect').value;
+            const date = document.getElementById('reportDate').value;
+            const numRows = parseInt(document.getElementById('numRows').value);
+            const timeScale = parseFloat(document.getElementById('timeScale').value);
+
+            if (!department) {
+                showNotification('تکایە بەشێک هەڵبژێرە', 'warning');
+                return;
+            }
+
+            if (!date) {
+                showNotification('تکایە بەروار هەڵبژێرە', 'warning');
+                return;
+            }
+
+            // Update report header info
+            document.getElementById('reportDepartmentName').textContent = getDepartmentDisplayName(department);
+            document.getElementById('reportDateDisplay').textContent = date;
+
+            // Reset shift entries
+            shiftEntries = { shift1: [], shift2: [], shift3: [] };
+            shiftCounter = { shift1: 0, shift2: 0, shift3: 0 };
+
+            // Generate table
+            generateReportTable(numRows, timeScale);
+
+            // Show report container
+            document.getElementById('reportContainer').style.display = 'block';
+
+            // Scroll to report
+            document.getElementById('reportContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Generate report table (PORTRAIT orientation)
+        function generateReportTable(numRows, timeScale) {
+            const tableContainer = document.getElementById('reportTableContainer');
+            const departmentEmployees = employees.filter(emp => emp.department === document.getElementById('departmentSelect').value);
+
+            let tableHTML = '<div class="row">';
+
+            // Main table (portrait - rows are time slots)
+            tableHTML += '<div class="col-md-8">';
+            tableHTML += '<table class="report-table">';
+
+            // Header row
+            tableHTML += '<thead><tr>';
+            tableHTML += '<th class="row-header">ژ</th>';
+            tableHTML += '<th class="row-header">ژمارەی عەرەبانەی دخول</th>';
+            tableHTML += '<th class="row-header">جۆری خشت (دخول)</th>';
+            tableHTML += '<th class="row-header">ژمارەی عەرەبانەی خروج</th>';
+            tableHTML += '<th class="row-header">جۆری خشت (خروج)</th>';
+            tableHTML += '<th class="row-header">کات</th>';
+            tableHTML += '</tr></thead>';
+
+            tableHTML += '<tbody>';
+
+            // Each row is a time slot
+            for (let i = 0; i < numRows; i++) {
+                tableHTML += '<tr>';
+
+                // ژ - Auto number
+                tableHTML += `<td class="auto-number">${i + 1}</td>`;
+
+                // ژمارەی عەرەبانەی دخول - Manual entry
+                const entryCartsId = `entry-carts-${i}`;
+                tableHTML += `<td><input type="number" id="${entryCartsId}" onchange="updateReportData('${entryCartsId}', this.value)" style="width: 70px;"></td>`;
+
+                // جۆری خشت (دخول) - Selective with auto-fill
+                const entryBrickId = `entry-brick-type-${i}`;
+                tableHTML += `<td><select id="${entryBrickId}" onchange="autoFillBrickType('entry-brick-type', ${i}, this.value)" style="width: 110px;">
+                    <option value="">هەڵبژێرە</option>
+                    ${brickTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                </select></td>`;
+
+                // ژمارەی عەرەبانەی خروج - Manual entry
+                const exitCartsId = `exit-carts-${i}`;
+                tableHTML += `<td><input type="number" id="${exitCartsId}" onchange="updateReportData('${exitCartsId}', this.value)" style="width: 70px;"></td>`;
+
+                // جۆری خشت (خروج) - Selective with auto-fill
+                const exitBrickId = `exit-brick-type-${i}`;
+                tableHTML += `<td><select id="${exitBrickId}" onchange="autoFillBrickType('exit-brick-type', ${i}, this.value)" style="width: 110px;">
+                    <option value="">هەڵبژێرە</option>
+                    ${brickTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
+                </select></td>`;
+
+                // کات - Auto-manual timer
+                const timeId = `time-${i}`;
+                const autoTime = generateTimeForRow(i, timeScale);
+                tableHTML += `<td><input type="time" id="${timeId}" value="${autoTime}" onchange="updateReportData('${timeId}', this.value)" style="width: 100px;"></td>`;
+
+                tableHTML += '</tr>';
+            }
+
+            tableHTML += '</tbody>';
+            tableHTML += '</table>';
+            tableHTML += '</div>';
+
+            // Employee shift section (next to table)
+            tableHTML += '<div class="col-md-4">';
+            tableHTML += '<div class="shift-management">';
+            tableHTML += '<h6 class="text-center mb-3" style="color: var(--primary-color); font-weight: 600;">شیفتەکانی کارمەندان</h6>';
+
+            // Shift 1
+            tableHTML += '<div class="shift-section mb-3">';
+            tableHTML += '<div class="shift-header">شیفتی یەکەم</div>';
+            tableHTML += '<div id="shift1-entries"></div>';
+            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift1\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
+            tableHTML += '</div>';
+
+            // Shift 2
+            tableHTML += '<div class="shift-section mb-3">';
+            tableHTML += '<div class="shift-header">شیفتی دووەم</div>';
+            tableHTML += '<div id="shift2-entries"></div>';
+            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift2\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
+            tableHTML += '</div>';
+
+            // Shift 3
+            tableHTML += '<div class="shift-section mb-3">';
+            tableHTML += '<div class="shift-header">شیفتی سێیەم</div>';
+            tableHTML += '<div id="shift3-entries"></div>';
+            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift3\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
+            tableHTML += '</div>';
+
+            tableHTML += '</div>';
+            tableHTML += '</div>';
+
+            tableHTML += '</div>'; // End row
+
+            tableContainer.innerHTML = tableHTML;
+
+            // Store department employees for shift entries
+            window.currentDepartmentEmployees = departmentEmployees;
+        }
+
+        // Add shift entry
+        function addShiftEntry(shiftId) {
+            const entryId = shiftCounter[shiftId]++;
+            const container = document.getElementById(`${shiftId}-entries`);
+            const departmentEmployees = window.currentDepartmentEmployees || [];
+
+            const entryHTML = `
+                <div class="shift-entry" id="${shiftId}-entry-${entryId}">
+                    <div class="shift-entry-header">
+                        <span class="shift-entry-title">شیفت ${entryId + 1}</span>
+                        <button class="btn btn-sm btn-danger btn-remove-shift" onclick="removeShiftEntry('${shiftId}', ${entryId})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="employee-select-group">
+                        <label>کارمەند ١</label>
+                        <select class="form-select form-select-sm" id="${shiftId}-${entryId}-emp1">
+                            <option value="">هەڵبژێرە</option>
+                            ${departmentEmployees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="employee-select-group">
+                        <label>کارمەند ٢</label>
+                        <select class="form-select form-select-sm" id="${shiftId}-${entryId}-emp2">
+                            <option value="">هەڵبژێرە</option>
+                            ${departmentEmployees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="column-range-group">
+                        <label>لە ڕیزی:</label>
+                        <input type="number" class="form-control form-control-sm" id="${shiftId}-${entryId}-from" min="1" max="${document.getElementById('numRows').value}" value="1">
+                        <label>بۆ:</label>
+                        <input type="number" class="form-control form-control-sm" id="${shiftId}-${entryId}-to" min="1" max="${document.getElementById('numRows').value}" value="8">
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', entryHTML);
+
+            // Store entry data
+            shiftEntries[shiftId].push({
+                id: entryId,
+                emp1: null,
+                emp2: null,
+                from: 1,
+                to: 8
+            });
+        }
+
+        // Remove shift entry
+        function removeShiftEntry(shiftId, entryId) {
+            const entryElement = document.getElementById(`${shiftId}-entry-${entryId}`);
+            if (entryElement) {
+                entryElement.remove();
+            }
+            shiftEntries[shiftId] = shiftEntries[shiftId].filter(entry => entry.id !== entryId);
+        }
+
+        // Update report data
+        function updateReportData(cellId, value) {
+            reportData[cellId] = value;
+        }
+
+        // Collect shift data before saving
+        function collectShiftData() {
+            const allShiftData = {};
+
+            ['shift1', 'shift2', 'shift3'].forEach(shiftId => {
+                allShiftData[shiftId] = [];
+                shiftEntries[shiftId].forEach(entry => {
+                    const emp1Element = document.getElementById(`${shiftId}-${entry.id}-emp1`);
+                    const emp2Element = document.getElementById(`${shiftId}-${entry.id}-emp2`);
+                    const fromElement = document.getElementById(`${shiftId}-${entry.id}-from`);
+                    const toElement = document.getElementById(`${shiftId}-${entry.id}-to`);
+
+                    if (emp1Element && emp2Element && fromElement && toElement) {
+                        allShiftData[shiftId].push({
+                            emp1: emp1Element.value,
+                            emp2: emp2Element.value,
+                            from: parseInt(fromElement.value),
+                            to: parseInt(toElement.value)
+                        });
+                    }
+                });
+            });
+
+            return allShiftData;
+        }
+
+        // Save report to Firebase
+        async function saveReport() {
+            const department = document.getElementById('departmentSelect').value;
+            const date = document.getElementById('reportDate').value;
+            const numRows = parseInt(document.getElementById('numRows').value);
+            const timeScale = parseFloat(document.getElementById('timeScale').value);
+
+            const reportId = `report-${department}-${date}-${Date.now()}`;
+
+            const reportDocument = {
+                id: reportId,
+                department: department,
+                date: date,
+                numRows: numRows,
+                timeScale: timeScale,
+                reportData: reportData,
+                shiftData: collectShiftData(),
+                summaryData: {
+                    totalLoadUnload: document.getElementById('totalLoadUnload').value,
+                    totalBrickPerKlincar: document.getElementById('totalBrickPerKlincar').value,
+                    totalKlincar: document.getElementById('totalKlincar').value,
+                    oilBalance: document.getElementById('oilBalance').value
+                },
+                createdAt: new Date().toISOString(),
+                createdBy: currentUser.username
+            };
+
+            try {
+                await db.collection('dailyReports').doc(reportId).set(reportDocument);
+                showNotification('ڕاپۆرت بە سەرکەوتوویی پاشەکەوت کرا', 'success');
+            } catch (error) {
+                console.error('Error saving report:', error);
+                showNotification('هەڵە لە پاشەکەوتکردنی ڕاپۆرت', 'danger');
+            }
+        }
+
+        // Export to Excel (simplified version)
+        function exportToExcel() {
+            showNotification('تایبەتمەندی هەناردەکردن بۆ Excel بەم زووانە زیاد دەکرێت', 'info');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const bgColors = {
+                'success': 'bg-success',
+                'danger': 'bg-danger',
+                'warning': 'bg-warning',
+                'info': 'bg-info'
+            };
+
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgColors[type]} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+            toast.show();
+
+            toastElement.addEventListener('hidden.bs.toast', function () {
+                toastElement.remove();
+            });
+        }
+
+        // View history of saved reports
+        async function viewHistory() {
+            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+            const historyContainer = document.getElementById('historyContainer');
+
+            historyContainer.innerHTML = '<p class="text-center text-muted"><i class="bi bi-hourglass-split"></i>ڕاپۆرتەکان</p>';
+            historyModal.show();
+
+            try {
+                const reportsSnapshot = await db.collection('dailyReports')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+
+                if (reportsSnapshot.empty) {
+                    historyContainer.innerHTML = '<p class="text-center text-muted">هیچ ڕاپۆرتێک ئەنجام نەدراوە</p>';
+                    return;
+                }
+
+                let historyHTML = '<div class="table-responsive"><table class="table table-hover">';
+                historyHTML += '<thead><tr>';
+                historyHTML += '<th>بەروار</th>';
+                historyHTML += '<th>بەش</th>';
+                historyHTML += '<th>دروستکراوە لەلایەن</th>';
+                historyHTML += '<th>کات</th>';
+                historyHTML += '<th>سەیرکردن و سڕینەوە</th>';
+                historyHTML += '</tr></thead><tbody>';
+
+                reportsSnapshot.forEach(doc => {
+                    const report = doc.data();
+                    const createdDate = new Date(report.createdAt);
+                    const formattedDate = createdDate.toLocaleDateString('en-GB');
+                    const formattedTime = createdDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+                    historyHTML += '<tr>';
+                    historyHTML += `<td>${report.date}</td>`;
+                    historyHTML += `<td>${getDepartmentDisplayName(report.department)}</td>`;
+                    historyHTML += `<td>${report.createdBy}</td>`;
+                    historyHTML += `<td>${formattedDate} ${formattedTime}</td>`;
+                    historyHTML += `<td>
+                        <button class="btn btn-sm btn-primary" onclick="loadReport('${doc.id}')">
+                            <i class="bi bi-eye"></i> سەیرکردن
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteReport('${doc.id}')">
+                            <i class="bi bi-trash"></i> سڕینەوە
+                        </button>
+                    </td>`;
+                    historyHTML += '</tr>';
+                });
+
+                historyHTML += '</tbody></table></div>';
+                historyContainer.innerHTML = historyHTML;
+
+            } catch (error) {
+                console.error('Error loading history:', error);
+                historyContainer.innerHTML = '<p class="text-center text-danger">هەڵە</p>';
+            }
+        }
+
+        // Load a saved report
+        async function loadReport(reportId) {
+            try {
+                const reportDoc = await db.collection('dailyReports').doc(reportId).get();
+                if (!reportDoc.exists) {
+                    showNotification('هەڵە', 'danger');
+                    return;
+                }
+
+                const report = reportDoc.data();
+
+                document.getElementById('departmentSelect').value = report.department;
+                document.getElementById('reportDate').value = report.date;
+                document.getElementById('numRows').value = report.numRows;
+                document.getElementById('timeScale').value = report.timeScale;
+
+                reportData = report.reportData || {};
+                shiftEntries = report.shiftData || { shift1: [], shift2: [], shift3: [] };
+
+                generateReport();
+
+                setTimeout(() => {
+                    Object.keys(reportData).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element) element.value = reportData[key];
+                    });
+
+                    if (report.summaryData) {
+                        document.getElementById('totalLoadUnload').value = report.summaryData.totalLoadUnload || '';
+                        document.getElementById('totalBrickPerKlincar').value = report.summaryData.totalBrickPerKlincar || '';
+                        document.getElementById('totalKlincar').value = report.summaryData.totalKlincar || '';
+                        document.getElementById('oilBalance').value = report.summaryData.oilBalance || '';
+                    }
+                }, 500);
+
+                const historyModal = bootstrap.Modal.getInstance(document.getElementById('historyModal'));
+                if (historyModal) historyModal.hide();
+
+                showNotification('سەرکەوتوو بوو', 'success');
+
+            } catch (error) {
+                console.error('Error loading report:', error);
+                showNotification('هەڵە', 'danger');
+            }
+        }
+
+        // Delete a saved report
+        async function deleteReport(reportId) {
+            if (!confirm('دڵنیایت لە سڕینەوە؟')) return;
+
+            try {
+                await db.collection('dailyReports').doc(reportId).delete();
+                showNotification('سڕینەوە سەرکەوتوو بوو', 'success');
+                viewHistory();
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                showNotification('سڕینەوە سەرکەوتوو نەبوو', 'danger');
+            }
+        }
+
+        // Set default date to today
+        document.getElementById('reportDate').valueAsDate = new Date();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadEmployees();
+        });
+    </script>
+
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, var(--primary-color), #8e0000); color: white;">
+                    <h5 class="modal-title">ڕاپۆرتە ئەنجام دراوەکان</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="historyContainer">
+                        <p class="text-center text-muted">ڕاپۆرتەکان</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+```
