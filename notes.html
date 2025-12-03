@@ -4,279 +4,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASOBRICK FACTORY - تێبینی ڕۆژانە</title>
+    <title>ASOBRICK - تێبینییەکان</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
-            --primary-color: #f57c00;
-            --secondary-color: #2c3e50;
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
+            --light-bg: #f5f7fa;
+            --primary-color: #05084b;
         }
 
         body {
-            background-color: #f5f7fa;
+            background-color: var(--light-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
         }
 
         .header {
-            background: linear-gradient(135deg, #f57c00, #e65100);
+            background: linear-gradient(135deg, #ebcb47, #6a7504);
             color: white;
             padding: 15px 30px;
-            border-radius: 8px;
-            margin: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .header-logo {
-            height: 60px;
-            margin-left: 20px;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .container-main {
+        /* Note Card */
+        .note-card {
+            background: white;
+            border-radius: 12px;
             padding: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            border: none;
-        }
-
-        .card-header {
-            background: linear-gradient(to right, var(--primary-color), #ef6c00);
-            color: white;
-            border-radius: 8px 8px 0 0 !important;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .btn-primary:hover {
-            background-color: #ef6c00;
-            border-color: #ef6c00;
-        }
-
-        .note-item {
+            height: 100%;
             border: 1px solid #e0e0e0;
-            border-left: 4px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            background-color: #fff;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
         }
 
-        .note-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        .note-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .note-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+            align-items: flex-start;
+            margin-bottom: 10px;
         }
 
-        .note-date {
-            font-size: 0.9rem;
-            color: #6c757d;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .note-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #333;
+            margin: 0;
         }
 
-        .note-author {
-            font-size: 0.85rem;
-            color: #6c757d;
-            background-color: #fff3e0;
-            padding: 3px 10px;
-            border-radius: 12px;
+        .priority-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
         }
 
-        .note-department {
-            font-size: 0.85rem;
-            color: #fff;
-            background-color: var(--primary-color);
-            padding: 3px 10px;
-            border-radius: 12px;
-            margin-right: 5px;
+        .bg-high {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+
+        .bg-medium {
+            background-color: #fff8e1;
+            color: #fbc02d;
+            border: 1px solid #ffecb3;
+        }
+
+        .bg-low {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
         }
 
         .note-content {
-            color: #2c3e50;
-            line-height: 1.6;
-            margin-bottom: 10px;
+            color: #555;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
             white-space: pre-wrap;
+            flex-grow: 1;
         }
 
-        .note-actions {
+        .note-footer {
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            font-size: 0.8rem;
+            color: #888;
             display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .date-filter {
-            background-color: white;
-            padding: 15px;
+        .sender-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sender-avatar {
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* Reply Section */
+        .reply-box {
+            background-color: #f1f3f4;
             border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--primary-color);
         }
 
-        .quick-add-note {
+        .reply-header {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .btn-fab {
             position: fixed;
             bottom: 30px;
             left: 30px;
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-        }
-
-        .quick-add-note:hover {
-            transform: scale(1.1);
-            background-color: #ef6c00;
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="header-brand">
-            <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
-                alt="ASOBRICK FACTORY" class="header-logo">
-            <div>
-                <h4 class="header-title">تێبینی ڕۆژانە</h4>
-                <p class="mb-0" style="font-size: 0.9rem; opacity: 0.9;">ASOBRICK FACTORY</p>
-            </div>
-        </div>
-        <div>
-            <span id="userInfo" class="me-3"></span>
-            <button class="btn btn-light btn-sm me-2" onclick="goToDashboard()">
-                <i class="bi bi-house-door"></i> پەڕەی سەرەکی
-            </button>
-            <button class="btn btn-light btn-sm" id="logoutBtn">
-                <i class="bi bi-box-arrow-right"></i> چوونەدەرەوە
-            </button>
-        </div>
-    </div>
 
-    <div class="container-main">
-        <!-- Date Filter -->
-        <div class="date-filter">
-            <div class="row g-3 align-items-center">
-                <div class="col-md-4">
-                    <label for="filterDate" class="form-label">فلتەرکردن بەپێی بەروار</label>
-                    <input type="date" class="form-control" id="filterDate">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" id="applyFilterBtn">
-                        <i class="bi bi-funnel"></i> جێبەجێکردن
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-secondary w-100" id="clearFilterBtn">
-                        <i class="bi bi-x-circle"></i> پاککردنەوە
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-success w-100" id="todayBtn">
-                        <i class="bi bi-calendar-day"></i> ئەمڕۆ
-                    </button>
-                </div>
+    <div class="toast-container position-fixed top-0 start-0 p-3"></div>
+
+    <div class="container pb-5">
+        <div class="header">
+            <div class="d-flex align-items-center">
+                <h3 class="m-0 fw-bold"><i class="bi bi-journal-text me-2"></i>تێبینییەکان</h3>
+            </div>
+            <button class="btn btn-outline-light" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-arrow-right"></i> گەڕانەوە
+            </button>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <input type="text" class="form-control" id="searchNote" placeholder="گەڕان..." onkeyup="filterNotes()">
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">تێبینییەکان</h5>
-                <button class="btn btn-light btn-sm" id="addNoteBtn">
-                    <i class="bi bi-plus-circle"></i> زیادکردنی تێبینی نوێ
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="notesList">
-                    <!-- Notes will be loaded here -->
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-journal-text" style="font-size: 3rem; opacity: 0.3;"></i>
-                        <p class="mt-3">هیچ تێبینییەک تۆمار نەکراوە</p>
-                    </div>
-                </div>
+        <div class="row g-3" id="notesGrid">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Add Button -->
-    <button class="quick-add-note" id="quickAddBtn" title="زیادکردنی تێبینی خێرا">
-        <i class="bi bi-plus-lg"></i>
+    <button class="btn btn-primary btn-fab" onclick="openModal()">
+        <i class="bi bi-pencil-square"></i>
     </button>
 
-    <!-- Add/Edit Note Modal -->
     <div class="modal fade" id="noteModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"
-                    style="background: linear-gradient(to right, var(--primary-color), #ef6c00); color: white;">
-                    <h5 class="modal-title" id="noteModalTitle">زیادکردنی تێبینی نوێ</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTitle">زیادکردنی تێبینی</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="noteForm">
+                        <input type="hidden" id="editNoteId">
+
                         <div class="mb-3">
-                            <label for="noteContent" class="form-label">تێبینی</label>
-                            <textarea class="form-control" id="noteContent" rows="6" required></textarea>
+                            <label class="form-label">بابەت</label>
+                            <input type="text" class="form-control" id="noteTitle" required>
                         </div>
+
                         <div class="mb-3">
-                            <label for="noteDepartment" class="form-label">بەش</label>
-                            <select class="form-select" id="noteDepartment" required>
-                                <option value="">هەڵبژاردنی بەش</option>
-                                <option value="cutting-setting">بڕین و ڕێکخستن</option>
-                                <option value="crushing-prep">وردکردن و ئامادەکردن</option>
-                                <option value="unsetting">هەڵگرتن</option>
-                                <option value="klin">کوورە</option>
-                                <option value="electrical-ac">کارەبا و ئەی سی</option>
-                                <option value="mechanical">میکانیکی</option>
+                            <label class="form-label">ناوەڕۆک</label>
+                            <textarea class="form-control" id="noteContent" rows="4" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">گرنگی (Priority)</label>
+                            <select class="form-select" id="notePriority">
+                                <option value="low">کەم (Low)</option>
+                                <option value="medium" selected>مامناوەند (Medium)</option>
+                                <option value="high">بەرز (High)</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">تۆمارکردن</button>
                     </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">پاشگەزبوونەوە</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNote()">پاشەکەوتکردن</button>
                 </div>
             </div>
         </div>
@@ -284,7 +231,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Firebase configuration
+        // --- 1. CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
             authDomain: "abf6-96dcf.firebaseapp.com",
@@ -293,253 +240,229 @@
             messagingSenderId: "405357996484",
             appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
         };
-
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let currentUser = null;
-        let allNotes = [];
-        let filterDate = null;
-        let editingNoteId = null;
+        let notesList = [];
 
-        // Check authentication
-        window.addEventListener('load', function () {
-            const userStr = localStorage.getItem('currentUser');
-            if (!userStr) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            currentUser = JSON.parse(userStr);
-            document.getElementById('userInfo').textContent = `${currentUser.username} (${getRoleText(currentUser.role)})`;
+        // --- 2. AUTH & INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = JSON.parse(localStorage.getItem('currentUser'));
+            if (!stored) window.location.href = 'index.html';
+            currentUser = stored;
 
             loadNotes();
         });
 
-        function getRoleText(role) {
-            const roles = {
-                'admin': 'بەڕێوبەر',
-                'manager': 'مانیجەر',
-                'supervisor': 'سەرپەرشتیار'
-            };
-            return roles[role] || role;
-        }
-
-        function goToDashboard() {
-            window.location.href = 'dashboard.html';
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', function () {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        });
-
-        // Load notes
-        async function loadNotes() {
-            try {
-                let query = db.collection('daily_notes').orderBy('createdAt', 'desc');
-
-                // Filter by department for supervisors
-                if (currentUser.role === 'supervisor') {
-                    query = query.where('department', '==', currentUser.department);
-                }
-
-                const snapshot = await query.get();
-                allNotes = [];
-
-                snapshot.forEach(doc => {
-                    allNotes.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
+        // --- 3. LOAD DATA (Fixed Logic) ---
+        function loadNotes() {
+            // We fetch ALL notes first, then filter/sort in Javascript to prevent "Index" errors
+            db.collection('notes').onSnapshot(snap => {
+                notesList = [];
+                snap.forEach(doc => {
+                    notesList.push({ id: doc.id, ...doc.data() });
                 });
 
+                // Client-side Sort (Newest first)
+                notesList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
                 renderNotes();
-            } catch (error) {
-                console.error('Error loading notes:', error);
-                alert('هەڵە لە بارکردنی تێبینییەکان');
-            }
+            });
         }
 
         function renderNotes() {
-            const notesList = document.getElementById('notesList');
-            let filteredNotes = allNotes;
+            const grid = document.getElementById('notesGrid');
+            grid.innerHTML = '';
 
-            // Apply date filter
-            if (filterDate) {
-                filteredNotes = allNotes.filter(note => {
-                    if (!note.createdAt) return false;
-                    const noteDate = note.createdAt.toDate().toISOString().split('T')[0];
-                    return noteDate === filterDate;
-                });
-            }
+            // Filter logic: Admin sees all, User sees ONLY their own
+            const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'manager');
+            const visibleNotes = isAdmin ? notesList : notesList.filter(n => n.author === currentUser.username);
 
-            if (filteredNotes.length === 0) {
-                notesList.innerHTML = `
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-journal-text" style="font-size: 3rem; opacity: 0.3;"></i>
-                        <p class="mt-3">هیچ تێبینییەک تۆمار نەکراوە</p>
-                    </div>
-                `;
+            if (visibleNotes.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted mt-5"><h5>هیچ تێبینییەک نییە</h5></div>';
                 return;
             }
 
-            let html = '';
-            filteredNotes.forEach(note => {
-                const departmentText = getDepartmentText(note.department);
-                html += `
-                    <div class="note-item">
-                        <div class="note-header">
-                            <div>
-                                <span class="note-department">${departmentText}</span>
-                                <span class="note-author">${note.createdBy}</span>
-                            </div>
-                            <div class="note-date">
-                                <i class="bi bi-calendar3"></i>
-                                ${formatDate(note.createdAt)}
-                            </div>
-                        </div>
-                        <div class="note-content">${note.content}</div>
-                        <div class="note-actions">
-                            <button class="btn btn-sm btn-primary" onclick="editNote('${note.id}')">
-                                <i class="bi bi-pencil"></i> دەستکاری
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteNote('${note.id}')">
-                                <i class="bi bi-trash"></i> سڕینەوە
-                            </button>
+            visibleNotes.forEach(note => {
+                grid.innerHTML += createNoteCard(note, isAdmin);
+            });
+        }
+
+        // --- 4. CREATE CARD HTML ---
+        function createNoteCard(note, isAdmin) {
+            // Priority Badge
+            let priorityBadge = '';
+            if (note.priority === 'high') priorityBadge = '<span class="priority-badge bg-high">گرنگ</span>';
+            else if (note.priority === 'medium') priorityBadge = '<span class="priority-badge bg-medium">مامناوەند</span>';
+            else priorityBadge = '<span class="priority-badge bg-low">ئاسایی</span>';
+
+            // Author Info
+            const authorInitial = note.author.charAt(0).toUpperCase();
+
+            // Permissions
+            const isMyNote = (note.author === currentUser.username);
+
+            // Buttons
+            let actionBtns = '';
+            if (isMyNote) {
+                actionBtns = `
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light text-primary p-0 px-1" onclick="editNote('${note.id}')" title="دەستکاری"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')" title="سڕینەوە"><i class="bi bi-trash"></i></button>
+                    </div>
+                `;
+            } else if (isAdmin) {
+                // Admin can delete anyone's note
+                actionBtns = `<button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')"><i class="bi bi-trash"></i></button>`;
+            }
+
+            // Reply Section
+            let replyHTML = '';
+            if (note.adminReply) {
+                replyHTML = `
+                    <div class="reply-box">
+                        <div class="reply-header"><i class="bi bi-arrow-return-left"></i> وەڵامی ئەدمین:</div>
+                        ${note.adminReply}
+                    </div>
+                `;
+            } else if (isAdmin) {
+                // Admin input to Add Reply
+                replyHTML = `
+                    <div class="mt-3 pt-2 border-top">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="reply-input-${note.id}" placeholder="نووسینی وەڵام...">
+                            <button class="btn btn-primary" onclick="submitReply('${note.id}')"><i class="bi bi-send"></i></button>
                         </div>
                     </div>
                 `;
-            });
-
-            notesList.innerHTML = html;
-        }
-
-        function getDepartmentText(dept) {
-            const departments = {
-                'cutting-setting': 'بڕین و ڕێکخستن',
-                'crushing-prep': 'وردکردن و ئامادەکردن',
-                'unsetting': 'هەڵگرتن',
-                'klin': 'کوورە',
-                'electrical-ac': 'کارەبا و ئەی سی',
-                'mechanical': 'میکانیکی'
-            };
-            return departments[dept] || dept;
-        }
-
-        function formatDate(timestamp) {
-            if (!timestamp) return '';
-            const date = timestamp.toDate();
-            return date.toLocaleDateString('ku') + ' ' + date.toLocaleTimeString('ku', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // Add note modal
-        document.getElementById('addNoteBtn').addEventListener('click', function () {
-            editingNoteId = null;
-            document.getElementById('noteForm').reset();
-            document.getElementById('noteModalTitle').textContent = 'زیادکردنی تێبینی نوێ';
-
-            // Pre-select department for supervisors
-            if (currentUser.role === 'supervisor') {
-                document.getElementById('noteDepartment').value = currentUser.department;
-                document.getElementById('noteDepartment').disabled = true;
-            } else {
-                document.getElementById('noteDepartment').disabled = false;
             }
 
-            const modal = new bootstrap.Modal(document.getElementById('noteModal'));
-            modal.show();
-        });
+            return `
+                <div class="col-md-4 col-sm-6 note-item">
+                    <div class="note-card">
+                        <div class="note-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="sender-avatar">${authorInitial}</div>
+                                <div style="line-height:1.1">
+                                    <div style="font-size:0.85rem; font-weight:bold;">${note.author}</div>
+                                    <div style="font-size:0.7rem; color:#999;">${new Date(note.createdAt).toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                            ${priorityBadge}
+                        </div>
+                        
+                        <h6 class="note-title mt-2">${note.title}</h6>
+                        <div class="note-content">${note.content}</div>
 
-        document.getElementById('quickAddBtn').addEventListener('click', function () {
-            document.getElementById('addNoteBtn').click();
-        });
+                        <div class="note-footer">
+                            <span class="text-muted small">ID: ${note.id.substring(0, 4)}</span>
+                            ${actionBtns}
+                        </div>
 
-        // Edit note
+                        ${replyHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 5. ACTIONS ---
+
+        // Add or Edit Logic
+        function openModal() {
+            document.getElementById('noteForm').reset();
+            document.getElementById('editNoteId').value = '';
+            document.getElementById('modalTitle').textContent = 'زیادکردنی تێبینی';
+            new bootstrap.Modal(document.getElementById('noteModal')).show();
+        }
+
         function editNote(id) {
-            const note = allNotes.find(n => n.id === id);
+            const note = notesList.find(n => n.id === id);
             if (!note) return;
 
-            editingNoteId = id;
+            document.getElementById('editNoteId').value = note.id;
+            document.getElementById('noteTitle').value = note.title;
             document.getElementById('noteContent').value = note.content;
-            document.getElementById('noteDepartment').value = note.department;
-            document.getElementById('noteModalTitle').textContent = 'دەستکاریکردنی تێبینی';
+            document.getElementById('notePriority').value = note.priority;
 
-            // Pre-select department for supervisors
-            if (currentUser.role === 'supervisor') {
-                document.getElementById('noteDepartment').disabled = true;
-            } else {
-                document.getElementById('noteDepartment').disabled = false;
-            }
-
-            const modal = new bootstrap.Modal(document.getElementById('noteModal'));
-            modal.show();
+            document.getElementById('modalTitle').textContent = 'دەستکاریکردنی تێبینی';
+            new bootstrap.Modal(document.getElementById('noteModal')).show();
         }
 
-        // Save note
-        document.getElementById('noteForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+        async function saveNote() {
+            const id = document.getElementById('editNoteId').value;
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            const priority = document.getElementById('notePriority').value;
+
+            if (!title || !content) { showToast('تکایە هەموو زانیاریەکان بنووسە', 'warning'); return; }
+
+            const data = {
+                title, content, priority,
+                updatedAt: new Date().toISOString()
+            };
 
             try {
-                const noteData = {
-                    content: document.getElementById('noteContent').value,
-                    department: document.getElementById('noteDepartment').value,
-                    createdBy: currentUser.username,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                if (editingNoteId) {
-                    await db.collection('daily_notes').doc(editingNoteId).update(noteData);
+                if (id) {
+                    // Update existing
+                    await db.collection('notes').doc(id).update(data);
+                    showToast('نوێکرایەوە', 'success');
                 } else {
-                    noteData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                    await db.collection('daily_notes').add(noteData);
+                    // Create new
+                    data.author = currentUser.username;
+                    data.createdAt = new Date().toISOString();
+                    await db.collection('notes').add(data);
+                    showToast('زیادکرا', 'success');
                 }
-
-                const modal = bootstrap.Modal.getInstance(document.getElementById('noteModal'));
-                modal.hide();
-                loadNotes();
-                alert(editingNoteId ? 'تێبینییەکە نوێکرایەوە' : 'تێبینییەکە تۆمارکرا');
-            } catch (error) {
-                console.error('Error saving note:', error);
-                alert('هەڵە لە تۆمارکردنی تێبینی');
-            }
-        });
-
-        // Delete note
-        async function deleteNote(id) {
-            if (!confirm('دڵنیایت لە سڕینەوەی ئەم تێبینییە؟')) return;
-
-            try {
-                await db.collection('daily_notes').doc(id).delete();
-                loadNotes();
-                alert('تێبینییەکە سڕایەوە');
-            } catch (error) {
-                console.error('Error deleting note:', error);
-                alert('هەڵە لە سڕینەوەی تێبینی');
+                bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+            } catch (e) {
+                console.error(e);
+                showToast('هەڵە ڕوویدا', 'danger');
             }
         }
 
-        // Filter by date
-        document.getElementById('applyFilterBtn').addEventListener('click', function () {
-            filterDate = document.getElementById('filterDate').value;
-            if (filterDate) {
-                renderNotes();
+        async function deleteNote(id) {
+            if (confirm('دڵنیایت لە سڕینەوە؟')) {
+                try {
+                    await db.collection('notes').doc(id).delete();
+                    showToast('سڕایەوە', 'success');
+                } catch (e) { showToast('هەڵە', 'danger'); }
             }
-        });
+        }
 
-        document.getElementById('clearFilterBtn').addEventListener('click', function () {
-            filterDate = null;
-            document.getElementById('filterDate').value = '';
-            renderNotes();
-        });
+        // Admin Reply Logic
+        async function submitReply(noteId) {
+            const replyText = document.getElementById(`reply-input-${noteId}`).value;
+            if (!replyText) return;
 
-        document.getElementById('todayBtn').addEventListener('click', function () {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filterDate').value = today;
-            filterDate = today;
-            renderNotes();
-        });
+            try {
+                await db.collection('notes').doc(noteId).update({
+                    adminReply: replyText
+                });
+                showToast('وەڵام نێردرا', 'success');
+            } catch (e) {
+                showToast('هەڵە', 'danger');
+            }
+        }
+
+        // Utils
+        function filterNotes() {
+            const term = document.getElementById('searchNote').value.toLowerCase();
+            const items = document.querySelectorAll('.note-item');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+
+        function showToast(msg, type) {
+            const container = document.querySelector('.toast-container');
+            const el = document.createElement('div');
+            el.className = `toast show align-items-center text-white bg-${type} border-0`;
+            el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div></div>`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 2500);
+        }
     </script>
 </body>
 
