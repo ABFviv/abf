@@ -4,394 +4,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASOBRICK FACTORY - پەڕەی سەرەکی</title>
+    <title>ASOBRICK - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-
     <style>
         :root {
-            --primary-color: #05084b;
-            --secondary-color: #2c3e50;
-            --success-color: #2ecc71;
-            --light-color: #ecf0f1;
+            --primary-bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --sidebar-width: 280px;
         }
 
         body {
-            background-color: #f5f7fa;
+            background-color: var(--primary-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
+            overflow-x: hidden;
+            /* Prevent scroll during animation */
+            transition: transform 0.3s ease;
         }
 
+        /* --- Header Style --- */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), #05084b);
+            background: linear-gradient(135deg, #05084b, #1a237e);
             color: white;
-            padding: 15px 30px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-logo {
-            height: 60px;
-            margin-left: 20px;
+            box-shadow: 0 15px 30px rgba(5, 8, 75, 0.2);
+            position: relative;
+            z-index: 10;
         }
 
         .header-brand {
             display: flex;
             align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            height: 55px;
+            border-radius: 12px;
+            background: white;
+            padding: 4px;
         }
 
         .header-title {
             font-size: 1.5rem;
-            font-weight: 600;
-            color: rgb(249, 108, 0);
+            font-weight: 800;
             margin: 0;
         }
 
-        .brand-red-text {
-            color: rgb(249, 108, 0);
-            font-weight: 700;
+        .header-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0;
         }
 
-        .brand-gray-text {
-           color: rgb(249, 108, 0);
-            font-weight: 500;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .dashboard-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .dashboard-card {
-            background: white;
-            border-radius: 15px;
-            padding: 35px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+        /* --- Menu Button (Hamburger) --- */
+        .menu-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            border: 2px solid transparent;
+            transition: all 0.2s;
         }
 
-        .dashboard-card:hover {
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* --- Sidebar (Offcanvas) Styles --- */
+        .offcanvas {
+            border-top-left-radius: 20px;
+            /* Rounded corner for aesthetic */
+            border-bottom-left-radius: 20px;
+            width: var(--sidebar-width);
+        }
+
+        .offcanvas-header {
+            background: linear-gradient(135deg, #2c3e50, #000000);
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #444;
+            text-decoration: none;
+            font-weight: 600;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background-color: #f8f9fa;
+            color: #05084b;
+            border-left-color: #05084b;
+        }
+
+        .sidebar-link i {
+            font-size: 1.3rem;
+            margin-left: 15px;
+            width: 25px;
+            text-align: center;
+        }
+
+        /* --- Dashboard Grid (Same as before) --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 0 10px;
+        }
+
+        .nav-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.4s;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
         }
 
-        .dashboard-card.employees {
-            background: linear-gradient(135deg, #fff 0%, #ffebee 100%);
-        }
-
-        .dashboard-card.employees:hover {
-            border-color: #c62828;
-        }
-
-        .dashboard-card.maintenance {
-            background: linear-gradient(135deg, #fff 0%, #e3f2fd 100%);
-        }
-
-        .dashboard-card.maintenance:hover {
-            border-color: #1976d2;
-        }
-
-        .dashboard-card.manuals {
-            background: linear-gradient(135deg, #fff 0%, #e8f5e9 100%);
-        }
-
-        .dashboard-card.manuals:hover {
-            border-color: #388e3c;
-        }
-
-        .dashboard-card.notes {
-            background: linear-gradient(135deg, #fff 0%, #fff3e0 100%);
-        }
-
-        .dashboard-card.notes:hover {
-            border-color: #f57c00;
-        }
-
-        .dashboard-card.reports {
-            background: linear-gradient(135deg, #fff 0%, #f3e5f5 100%);
-        }
-
-        .dashboard-card.reports:hover {
-            border-color: #7b1fa2;
-        }
-
-        .card-icon {
-            font-size: 70px;
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
             margin-bottom: 20px;
-            display: inline-block;
         }
 
-        .card-icon.employees {
+        .card-employees .icon-box {
+            background: #ffebee;
             color: #c62828;
         }
 
-        .card-icon.maintenance {
-            color: #1976d2;
+        .card-maintenance .icon-box {
+            background: #e3f2fd;
+            color: #1565c0;
         }
 
-        .card-icon.manuals {
-            color: #388e3c;
+        .card-manuals .icon-box {
+            background: #e8f5e9;
+            color: #2e7d32;
         }
 
-        .card-icon.notes {
-            color: #f57c00;
+        .card-notes .icon-box {
+            background: #fff3e0;
+            color: #ef6c00;
         }
 
-        .card-icon.reports {
+        .card-reports .icon-box {
+            background: #f3e5f5;
             color: #7b1fa2;
         }
 
         .card-title {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             color: #2c3e50;
         }
 
-        .card-description {
+        .card-desc {
             font-size: 0.95rem;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-            min-height: 45px;
-        }
-
-        .btn-card {
-            padding: 10px 25px;
-            font-size: 1rem;
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-employees {
-            background-color: #c62828;
-            border-color: #c62828;
-            color: white;
-        }
-
-        .btn-employees:hover {
-            background-color: #b71c1c;
-            border-color: #b71c1c;
-            color: white;
-        }
-
-        .btn-maintenance {
-            background-color: #1976d2;
-            border-color: #1976d2;
-            color: white;
-        }
-
-        .btn-maintenance:hover {
-            background-color: #1565c0;
-            border-color: #1565c0;
-            color: white;
-        }
-
-        .btn-manuals {
-            background-color: #388e3c;
-            border-color: #388e3c;
-            color: white;
-        }
-
-        .btn-manuals:hover {
-            background-color: #2e7d32;
-            border-color: #2e7d32;
-            color: white;
-        }
-
-        .btn-notes {
-            background-color: #f57c00;
-            border-color: #f57c00;
-            color: white;
-        }
-
-        .btn-notes:hover {
-            background-color: #ef6c00;
-            border-color: #ef6c00;
-            color: white;
-        }
-
-        .btn-reports {
-            background-color: #7b1fa2;
-            border-color: #7b1fa2;
-            color: white;
-        }
-
-        .btn-reports:hover {
-            background-color: #6a1b9a;
-            border-color: #6a1b9a;
-            color: white;
-        }
-
-        .welcome-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-        }
-
-        .welcome-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .welcome-subtitle {
-            font-size: 1.2rem;
-            color: #7f8c8d;
+            color: #6c757d;
         }
     </style>
 </head>
 
 <body>
-    <div class="dashboard-container">
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
+        <div class="offcanvas-header">
+            <div>
+                <h5 class="offcanvas-title fw-bold">ASOBRICK</h5>
+                <small class="opacity-75" id="menuUserInfo">Loading...</small>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0 pt-3">
+            <nav class="nav flex-column">
+                <a class="sidebar-link active" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="sidebar-link" href="employees.html"><i class="bi bi-people"></i> Employees</a>
+                <a class="sidebar-link" href="maintenance.html"><i class="bi bi-tools"></i> Maintenance</a>
+                <a class="sidebar-link" href="manuals.html"><i class="bi bi-book"></i> Manuals</a>
+                <a class="sidebar-link" href="notes.html"><i class="bi bi-journal-text"></i> Notes</a>
+                <a class="sidebar-link" href="reports.html"><i class="bi bi-file-text"></i> Reports</a>
+                <hr class="mx-3 my-2">
+                <a class="sidebar-link text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i>
+                    Logout</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container-fluid dashboard-container">
+
         <div class="header">
             <div class="header-brand">
                 <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
-                    alt="ASOBRICK FACTORY" class="header-logo">
+                    alt="Logo" class="header-logo">
                 <div>
-                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
-                            class="brand-gray-text">FACTORY</span></h4>
-                    <p class="mb-0" style="font-size: 0.9rem; color: #ffcdd2;">پەڕەی سەرەکی</p>
+                    <h1 class="header-title">ASOBRICK FACTORY</h1>
+                    <p class="header-subtitle">سیستەمی سەرەکی</p>
                 </div>
             </div>
-            <div>
-                <span id="userInfo" class="me-3"></span>
-                <button class="btn btn-light btn-sm" id="logoutBtn">
-                    <i class="bi bi-box-arrow-right"></i> چوونەدەرەوە
-                </button>
+
+            <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div onclick="window.location.href='employees.html'" class="nav-card card-employees">
+                <div class="icon-box"><i class="bi bi-people-fill"></i></div>
+                <div class="card-title">Employees</div>
+                <div class="card-desc">بەڕێوەبردنی کارمەندان و هەڵسەنگاندن</div>
+            </div>
+            <div onclick="window.location.href='maintenance.html'" class="nav-card card-maintenance">
+                <div class="icon-box"><i class="bi bi-gear-wide-connected"></i></div>
+                <div class="card-title">Maintenance</div>
+                <div class="card-desc">چاکسازی ئامێرەکان و تۆماری کێشەکان</div>
+            </div>
+            <div onclick="window.location.href='manuals.html'" class="nav-card card-manuals">
+                <div class="icon-box"><i class="bi bi-book-half"></i></div>
+                <div class="card-title">Manuals</div>
+                <div class="card-desc">کتێبخانەی فێرکاری و ڕێنماییەکان</div>
+            </div>
+            <div onclick="window.location.href='notes.html'" class="nav-card card-notes">
+                <div class="icon-box"><i class="bi bi-journal-check"></i></div>
+                <div class="card-title">Daily Notes</div>
+                <div class="card-desc">تۆماری تێبینی و ئاگادارکردنەوەکان</div>
+            </div>
+            <div onclick="window.location.href='reports.html'" class="nav-card card-reports">
+                <div class="icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
+                <div class="card-title">Reports</div>
+                <div class="card-desc">ڕاپۆرتی ڕۆژانە و ئامارەکان</div>
             </div>
         </div>
 
-        <div class="welcome-section">
-            <h1 class="welcome-title">بەخێربێیت بۆ سیستەمی بەڕێوبردن</h1>
-            <p class="welcome-subtitle">تکایە یەکێک لە بەشەکان هەڵبژێرە</p>
-        </div>
-
-        <div class="dashboard-cards">
-            <!-- Employees Card -->
-            <div class="dashboard-card employees" onclick="goToEmployees()">
-                <div class="card-icon employees">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <h2 class="card-title">داتای کارمەندەکان</h2>
-                <p class="card-description">بەڕێوبردنی کارمەندەکان، هەڵسەنگاندن و تۆمارەکان</p>
-                <button class="btn btn-employees btn-card">
-                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
-                </button>
-            </div>
-
-            <!-- Maintenance Card -->
-            <div class="dashboard-card maintenance" onclick="goToMaintenance()">
-                <div class="card-icon maintenance">
-                    <i class="bi bi-tools"></i>
-                </div>
-                <h2 class="card-title">کاری چاکسازی</h2>
-                <p class="card-description">کارەکانی چاککردنەوە و چاکسازی</p>
-                <button class="btn btn-maintenance btn-card">
-                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
-                </button>
-            </div>
-
-            <!-- Manuals Card -->
-            <div class="dashboard-card manuals" onclick="goToManuals()">
-                <div class="card-icon manuals">
-                    <i class="bi bi-book-fill"></i>
-                </div>
-                <h2 class="card-title">مانوەڵەکان</h2>
-                <p class="card-description">مانوەڵەکانی ئامێرەکانی کارگە</p>
-                <button class="btn btn-manuals btn-card">
-                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
-                </button>
-            </div>
-
-            <!-- Daily Notes Card -->
-            <div class="dashboard-card notes" onclick="goToNotes()">
-                <div class="card-icon notes">
-                    <i class="bi bi-journal-text"></i>
-                </div>
-                <h2 class="card-title">تێبینی ڕۆژانە</h2>
-                <p class="card-description">تۆمارکردنی تێبینی ڕۆژانە</p>
-                <button class="btn btn-notes btn-card">
-                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
-                </button>
-            </div>
-
-            <!-- Daily Reports Card -->
-            <div class="dashboard-card reports" onclick="goToReports()">
-                <div class="card-icon reports">
-                    <i class="bi bi-file-earmark-text-fill"></i>
-                </div>
-                <h2 class="card-title">ڕاپۆڕتی ڕۆژانە</h2>
-                <p class="card-description">ڕاپۆڕتە ڕۆژانەکان و راپۆڕتەکانی کارگە</p>
-                <button class="btn btn-reports btn-card">
-                    <i class="bi bi-arrow-left-circle"></i> چوونە ژوورەوە
-                </button>
-            </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check if user is logged in
+        // Check Login
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) window.location.href = 'index.html';
 
-        if (!currentUser) {
-            // Redirect to login if not logged in
-            window.location.href = 'index.html';
-        } else {
-            // Display user info
-            document.getElementById('userInfo').textContent = `لە ژوورەوەیت وەک: ${currentUser.username} (${currentUser.role})`;
-        }
+        // Display User Info in Menu
+        document.getElementById('menuUserInfo').textContent = `${currentUser.username} (${currentUser.role})`;
 
-        // Logout function
-        document.getElementById('logoutBtn').addEventListener('click', function () {
+        // Logout Logic
+        function logout() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
-        });
-
-        // Navigate to employees page
-        function goToEmployees() {
-            window.location.href = 'employees.html';
-        }
-
-        // Navigate to maintenance page
-        function goToMaintenance() {
-            window.location.href = 'maintenance.html';
-        }
-
-        // Navigate to manuals page
-        function goToManuals() {
-            window.location.href = 'manuals.html';
-        }
-
-        // Navigate to daily notes page
-        function goToNotes() {
-            window.location.href = 'notes.html';
-        }
-
-        // Navigate to daily reports page
-        function goToReports() {
-            window.location.href = 'reports.html';
         }
     </script>
 </body>
 
 </html>
-
