@@ -4146,7 +4146,8 @@
                 'engineering': 'ئەندازیاریی',
                 'management': 'لێپرسراوەکان',
                 'line-one': 'هێڵی یەک',
-                'line-two-general': 'گشتی هێڵی دوو'
+                'line-two-general': 'گشتی هێڵی دوو',
+                'dryer': 'درایەر'
             };
 
             return departmentNames[department] || department;
@@ -4298,7 +4299,8 @@
                 'klin',
                 'unsetting',
                 'mechanical',
-                'electrical-ac'
+                'electrical-ac',
+                'dryer'
             ];
 
             // Add هێڵی یەک and گشتی هێڵی دوو for electrical supervisor
@@ -4913,10 +4915,10 @@
 
                         filteredDailyWork.forEach(work => {
                             if (work.carts) {
-                                cartsTotal += parseInt(work.carts);
+                                cartsTotal += parseFloat(work.carts);
                             }
                             if (work.clayTons) {
-                                clayTonsTotal += parseInt(work.clayTons);
+                                clayTonsTotal += parseFloat(work.clayTons);
                             }
                             workCount++;
                         });
@@ -5173,10 +5175,10 @@
 
                 filteredDailyWork.forEach(work => {
                     if (work.carts) {
-                        cartsTotal += parseInt(work.carts);
+                        cartsTotal += parseFloat(work.carts);
                     }
                     if (work.clayTons) {
-                        clayTonsTotal += parseInt(work.clayTons);
+                        clayTonsTotal += parseFloat(work.clayTons);
                     }
                 });
             }
@@ -5967,8 +5969,12 @@
             } else if (currentUser.role === 'supervisor') {
                 // Check if this supervisor should see electrical/mechanical notifications
                 const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
+                const departmentsThatMonitorMaintenance = ['cutting-setting', 'unsetting', 'crushing-prep', 'klin', 'dryer'];
+
                 const shouldSeeElectricalMechanical = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                    ['cutting-setting', 'unsetting', 'crushing-prep', 'klin'].includes(currentUser.department);
+                    departmentsThatMonitorMaintenance.includes(currentUser.department);
+
+
 
                 if (shouldSeeElectricalMechanical) {
                     // These supervisors see notifications where electrical/mechanical employees worked in their department
@@ -6021,10 +6027,12 @@
 
             // Create department tabs based on user role
             const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
+            const departmentsThatMonitorMaintenance = ['cutting-setting', 'unsetting', 'crushing-prep', 'klin', 'dryer']; // <-- ADD 'dryer' here as well
+
             const shouldShowElectricalMechanicalTabs =
                 (currentUser.role === 'supervisor' &&
                     (supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                        ['cutting-setting', 'unsetting', 'crushing-prep', 'klin'].includes(currentUser.department))) ||
+                        departmentsThatMonitorMaintenance.includes(currentUser.department))) ||
                 (currentUser.role === 'supervisor' && (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical'));
 
             if (shouldShowElectricalMechanicalTabs) {
@@ -6926,70 +6934,108 @@
             showNotification('داتای کارمەندەکان بەسەرکەوتووی نێردرا بۆ CSV', 'success');
         }
 
-        // Print data
+        // --- Start of Corrected printData function ---
+        // This function is intended to replace the existing printData function in the <script> block.
         function printData() {
-            let printContent = `
-            <div style="padding: 20px;">
-                <h2 style="text-align: center; margin-bottom: 20px;">ASOBRICK FACTORY - ڕاپۆرتی کارمەند</h2>
-                <p style="text-align: center; color: #666; margin-bottom: 30px;">دروستکراوە لە: ${new Date().toLocaleDateString()}</p>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ژمارەی کارمەند</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ناو</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">پیشە</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەش</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندنی ڕۆژانە</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندنی کارەکانی دیکە</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+            let employeesToPrint = employees;
 
-            employees.forEach(employee => {
+            // 1. Filter employees based on user role (Supervisor or Admin/Manager)
+            if (currentUser.role === 'supervisor') {
+                employeesToPrint = employeesToPrint.filter(emp => emp.department === currentUser.department);
+                showNotification(`تەنها کارمەندانی بەشی ${getDepartmentDisplayName(currentUser.department)} پرینت دەکرێت`, 'info');
+            } else if (currentUser.role === 'manager') {
+                // Managers are not supposed to see all data, so we need to filter them as well
+                // Assuming manager should also be restricted to their assigned department or none if not assigned
+                // For simplicity, let's treat the manager like an admin for now if their department is 'all'
+                // If manager has a specific department, restrict them.
+                if (currentUser.department !== 'all') {
+                    employeesToPrint = employeesToPrint.filter(emp => emp.department === currentUser.department);
+                    showNotification(`تەنها کارمەندانی بەشی ${getDepartmentDisplayName(currentUser.department)} پرینت دەکرێت`, 'info');
+                } else {
+                    // For manager role with department 'all', they see all employees but should be discouraged
+                    showNotification('سەرجەم کارمەندەکان پرینت دەکرێت', 'warning');
+                }
+            } else if (currentUser.role === 'admin') {
+                // Admin sees all employees
+                showNotification('سەرجەم کارمەندەکان پرینت دەکرێت', 'info');
+            } else {
+                // If an unauthorized role tries to print
+                showNotification('مۆڵەتی پرینت کردنی تۆمارەکانت نییە', 'danger');
+                return;
+            }
+
+            // Check if any employee is left to print
+            if (employeesToPrint.length === 0) {
+                showNotification('هیچ کارمەندێک بۆ پرینت کردن نەدۆزرایەوە', 'danger');
+                return;
+            }
+
+
+            // 2. Build the print content using the filtered list
+            let printContent = `
+        <div style="padding: 20px;">
+            <h2 style="text-align: center; margin-bottom: 20px;">ASOBRICK FACTORY - ڕاپۆرتی کارمەند</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">دروستکراوە لە: ${new Date().toLocaleDateString()}</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ژمارەی کارمەند</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ناو</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">پیشە</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەش</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندنی ڕۆژانە</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندنی کارەکانی دیکە</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+            employeesToPrint.forEach(employee => {
                 const dailyRating = calculateDailyRating(employee);
                 const otherRating = calculateOtherRating(employee);
                 printContent += `
-                <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${employee.id}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${employee.name}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${employee.position}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${employee.department}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${dailyRating.toFixed(1)}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${otherRating.toFixed(1)}</td>
-                </tr>
-            `;
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${employee.id}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${employee.name}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${employee.position}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${getDepartmentDisplayName(employee.department)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${dailyRating.toFixed(1)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${otherRating.toFixed(1)}</td>
+            </tr>
+        `;
             });
 
             printContent += `
-                    </tbody>
-                </table>
-                <p style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
-                    دروستکراوە لەلایەن سیستەمی بەڕێوبردنی کارمەندانی ASOBRICK FACTORY
-                </p>
-            </div>
-        `;
+                </tbody>
+            </table>
+            <p style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
+                دروستکراوە لەلایەن سیستەمی بەڕێوبردنی کارمەندانی ASOBRICK FACTORY
+            </p>
+        </div>
+    `;
 
+            // 3. Open the print window
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
-            <html>
-                <head>
-                    <title>ڕاپۆرتی کارمەند</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; direction: rtl; }
-                        table { width: 100%; border-collapse: collapse; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-                        th { background-color: #f2f2f2; }
-                    </style>
-                </head>
-                <body>${printContent}</body>
-            </html>
-        `);
+        <html>
+            <head>
+                <title>ڕاپۆرتی کارمەند</title>
+                <style>
+                    body { font-family: Arial, sans-serif; direction: rtl; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>${printContent}</body>
+        </html>
+    `);
             printWindow.document.close();
             printWindow.print();
 
             showNotification('پەنجەرەی پرینت کردن کرایەوە', 'success');
         }
+        // --- End of Corrected printData function ---
 
         // Test Firebase connection
         async function checkFirebaseConnection() {
