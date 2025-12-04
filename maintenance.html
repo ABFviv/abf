@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASOBRICK FACTORY - بەشی چاکسازی</title>
+    <title>ASOBRICK - چاکسازی پێشکەوتوو</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,427 +14,510 @@
 
     <style>
         :root {
-            --primary-color: #05084b;
-            --brand-red: #c62828;
-            --secondary-color: #475569;
-            --light-bg: #f1f5f9;
-            --card-bg: #ffffff;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
+            /* Blue Theme Restored */
+            --primary-color: #1976d2;
+            --primary-gradient: linear-gradient(135deg, #42a5f5, #0d47a1);
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-bg: #f0f2f5;
         }
 
         body {
             background-color: var(--light-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
-            color: #333;
+            /* Added padding to match Notes layout */
+            padding-bottom: 50px;
         }
 
-        /* --- Header --- */
+        /* --- HEADER: NOTES FILE FORMAT --- */
+        /* Rounded corners (12px), floating style, blue gradient */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), #0c64d7);
+            background: var(--primary-gradient);
             color: white;
             padding: 15px 30px;
             border-radius: 12px;
-            margin-bottom: 25px;
+            /* Matches Notes file */
+            margin-bottom: 30px;
+            /* Matches Notes file */
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            /* Matches Notes file */
         }
 
-        /* --- Modern Tabs --- */
-        .nav-pills {
+        /* Selectors Box */
+        .machine-selector {
             background: white;
-            padding: 5px;
+            padding: 20px;
             border-radius: 12px;
-            display: inline-flex;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            /* Removed side margins to align with container */
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #e0e0e0;
         }
 
-        .nav-pills .nav-link {
-            border-radius: 8px;
-            color: var(--secondary-color);
+        /* Tabs */
+        .nav-tabs .nav-link {
+            color: #555;
             font-weight: 600;
-            padding: 10px 20px;
+            border: none;
+            padding: 12px 20px;
             transition: all 0.3s;
         }
 
-        .nav-pills .nav-link.active {
-            background-color: var(--brand-red);
-            color: white;
-            box-shadow: 0 4px 10px rgba(198, 40, 40, 0.3);
-        }
-
-        /* --- Machine List (Sidebar) --- */
-        .machine-list-container {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            height: 100%;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            border: 1px solid #e2e8f0;
-        }
-
-        .list-group-item {
-            border: none;
-            margin-bottom: 8px;
-            border-radius: 8px !important;
-            padding: 12px 15px;
-            font-weight: 500;
-            transition: all 0.2s;
-            background-color: #f8fafc;
-            color: #475569;
-            cursor: pointer;
-            border-right: 4px solid transparent;
-        }
-
-        .list-group-item:hover {
-            background-color: #e2e8f0;
-            transform: translateX(-3px);
-        }
-
-        .list-group-item.active {
-            background-color: #fff1f2;
-            color: var(--brand-red);
-            border-color: #fff1f2;
-            border-right-color: var(--brand-red);
-            font-weight: 700;
-        }
-
-        /* --- Main Content Cards --- */
-        .main-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            border: 1px solid #e2e8f0;
-            min-height: 500px;
-        }
-
-        .section-title {
-            font-weight: 700;
+        .nav-tabs .nav-link.active {
             color: var(--primary-color);
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
-        }
-
-        /* --- Table Styling --- */
-        .table-custom {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 8px;
-        }
-
-        .table-custom thead th {
-            border: none;
+            border-bottom: 3px solid var(--primary-color);
             background: transparent;
-            color: #64748b;
-            font-weight: 600;
-            padding: 10px;
         }
 
-        .table-custom tbody tr {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-            transition: transform 0.2s;
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
         }
 
-        .table-custom tbody tr:hover {
-            transform: scale(1.005);
-        }
-
-        .table-custom td {
-            padding: 15px;
-            border-top: 1px solid #f1f5f9;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .table-custom td:first-child {
-            border-radius: 0 8px 8px 0;
-            border-right: 1px solid #f1f5f9;
-        }
-
-        .table-custom td:last-child {
-            border-radius: 8px 0 0 8px;
-            border-left: 1px solid #f1f5f9;
-        }
-
-        /* Status Badges */
-        .badge-repair {
-            background-color: #fee2e2;
-            color: #ef4444;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-
-        .badge-maint {
-            background-color: #d1fae5;
-            color: #10b981;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-
-        /* --- Form Inputs --- */
-        .form-control,
-        .form-select {
-            border-radius: 8px;
-            padding: 10px 15px;
-            border: 1px solid #cbd5e1;
-            background-color: #f8fafc;
-        }
-
-        .form-control:focus {
-            background-color: white;
-            border-color: var(--brand-red);
-            box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
-        }
-
+        /* Buttons */
         .btn-primary {
-            background-color: var(--brand-red);
-            border: none;
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(198, 40, 40, 0.2);
-            transition: all 0.3s;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
         .btn-primary:hover {
-            background-color: #b71c1c;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(198, 40, 40, 0.3);
+            background-color: #1565c0;
+            border-color: #1565c0;
+        }
+
+        /* KPI Cards */
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-bottom: 4px solid #ddd;
+            height: 100%;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+        }
+
+        .kpi-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Tables */
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .excel-table th,
+        .excel-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .excel-table th {
+            background-color: #f8f9fa;
+            color: #444;
+            font-weight: bold;
+        }
+
+        .excel-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .pivot-row-header {
+            text-align: right !important;
+            background-color: #fafafa;
+            font-weight: bold;
+        }
+
+        .total-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
         }
 
         .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            height: 400px;
         }
 
-        .floating-add-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--brand-red);
-            color: white;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border: none;
-            z-index: 100;
-            transition: transform 0.2s;
+        .badge-category {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: normal;
+            border: 1px solid #bbdefb;
         }
 
-        .floating-add-btn:hover {
-            transform: scale(1.1);
-            color: white;
+        .badge-part {
+            font-weight: bold;
+            color: #333;
         }
 
-        @media (max-width: 768px) {
-            .machine-list-container {
-                margin-bottom: 20px;
-                height: auto;
-                max-height: 300px;
-                overflow-y: auto;
-            }
+        /* Manage Parts Styles */
+        .part-group-item {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container-fluid">
-        <div class="header">
-            <div class="d-flex align-items-center">
-                <h3 class="m-0 fw-bold"><i class="bi bi-tools me-2"></i>بەشی چاکسازی (Maintenance)</h3>
-            </div>
+    <div class="header">
+        <div class="d-flex align-items-center">
+            <h3 class="m-0 fw-bold"><i class="bi bi-gear-wide-connected me-2"></i>ASOBRICK FACTORY</h3>
+            <span class="ms-3 badge bg-white text-primary opacity-75">Maintenance System</span>
+        </div>
+        <div>
+            <span id="userInfo" class="me-3 small text-white-50"></span>
             <button class="btn btn-outline-light" onclick="window.location.href='dashboard.html'">
                 <i class="bi bi-arrow-right"></i> گەڕانەوە
             </button>
         </div>
+    </div>
 
-        <ul class="nav nav-pills" id="maintenanceTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="view-tab" data-bs-toggle="tab" data-bs-target="#viewPane"
-                    type="button">
-                    <i class="bi bi-grid-fill me-2"></i>ئامێرەکان
+    <div class="container-fluid px-0">
+
+        <div class="machine-selector">
+            <div class="d-flex align-items-center gap-2">
+                <label class="fw-bold text-secondary"><i class="bi bi-diagram-3"></i> بەش:</label>
+                <select id="departmentSelect" class="form-select form-select-sm" style="min-width: 150px;">
+                    <option value="">-- هەموو --</option>
+                </select>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <label class="fw-bold text-secondary"><i class="bi bi-cpu"></i> ئامێر:</label>
+                <select id="machineSelect" class="form-select" style="min-width: 250px;">
+                    <option value="">-- ئامێرێک دیاری بکە --</option>
+                </select>
+            </div>
+
+            <div id="machineControls" style="display:none;" class="d-flex gap-2">
+                <button class="btn btn-warning btn-sm text-white" onclick="openManagePartsModal()">
+                    <i class="bi bi-gear-fill"></i> ڕێکخستنی پارچەکان
                 </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#addPane" type="button">
-                    <i class="bi bi-plus-circle-fill me-2"></i>زیادکردنی ئامێر
+            </div>
+
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn btn-primary btn-sm" onclick="openAddMachineModal()">
+                    <i class="bi bi-plus-lg"></i> زیادکردن
                 </button>
-            </li>
-        </ul>
+                <button class="btn btn-secondary btn-sm" onclick="openManageMachinesModal()">
+                    <i class="bi bi-list-ul"></i> بەڕێوەبردن
+                </button>
+            </div>
+        </div>
 
-        <div class="tab-content" id="tabContent">
+        <div id="mainContent" style="display: none;">
 
-            <div class="tab-pane fade show active" id="viewPane" role="tabpanel">
-                <div class="row">
-                    <div class="col-lg-3 col-md-4 mb-4">
-                        <div class="machine-list-container">
-                            <h5 class="text-secondary mb-3 px-2"><i class="bi bi-list-ul me-2"></i>لیستی ئامێرەکان</h5>
-                            <div class="list-group" id="machineList">
-                                <div class="text-center py-4 text-muted">
-                                    <div class="spinner-border spinner-border-sm"></div>
-                                </div>
+            <ul class="nav nav-tabs mb-4" id="maintTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dashboard">
+                        <i class="bi bi-speedometer2 me-2"></i>داشبۆرد & شیکاری
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#records">
+                        <i class="bi bi-clipboard-data me-2"></i>تۆماری چاکسازی
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#problems">
+                        <i class="bi bi-exclamation-triangle me-2"></i>کێشەکان
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="dashboard">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--danger-color);">
+                                <div class="kpi-value" id="kpiMTTR">--</div>
+                                <div class="kpi-label">MTTR (کاتژمێر)</div>
+                                <small class="text-muted">ناوەندی کاتی چاککردنەوە</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--success-color);">
+                                <div class="kpi-value" id="kpiMTBF">--</div>
+                                <div class="kpi-label">MTBF (ڕۆژ)</div>
+                                <small class="text-muted">ناوەندی کات نێوان وەستانەکان</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="kpi-card" style="border-bottom-color: var(--warning-color);">
+                                <div class="kpi-value" id="kpiDowntime">0</div>
+                                <div class="kpi-label">کۆی کاتژمێری وەستان</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-9 col-md-8">
-                        <div class="main-card">
-                            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                                <div>
-                                    <h4 class="mb-1 fw-bold" id="machineNameDisplay">ئامێرێک هەڵبژێرە</h4>
-                                    <small class="text-muted" id="machineModelDisplay">...</small>
-                                </div>
-                                <button class="btn btn-primary" onclick="openAddRecordModal()">
-                                    <i class="bi bi-plus-lg me-2"></i>تۆمارکردنی چاکسازی
-                                </button>
-                            </div>
-
+                    <div class="row g-4">
+                        <div class="col-lg-7">
                             <div class="chart-container">
-                                <canvas id="chartCanvas"></canvas>
+                                <h5 class="mb-3 text-secondary"><i class="bi bi-bar-chart-fill"></i> شیکاری بەکارهێنانی
+                                    پارچەکان</h5>
+                                <div style="height: 320px; width: 100%;">
+                                    <canvas id="maintenanceChart"></canvas>
+                                </div>
                             </div>
-
-                            <h5 class="mt-5 mb-3 fw-bold text-secondary">پێشینەی کارەکان (Logs)</h5>
-                            <div class="table-responsive">
-                                <table class="table table-custom">
-                                    <thead>
-                                        <tr>
-                                            <th>بەروار</th>
-                                            <th>جۆر</th>
-                                            <th>وردەکاری</th>
-                                            <th>تێچوو/کات</th>
-                                            <th>کردار</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="logsTableBody">
-                                    </tbody>
-                                </table>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white fw-bold py-3 border-bottom">
+                                    <i class="bi bi-table text-primary"></i> پوختەی ساڵانە (Pivot)
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive" style="max-height: 400px;">
+                                        <table class="excel-table" id="pivotTable">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="p-4 text-muted">داتا باردەکرێت...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="tab-pane fade" id="addPane" role="tabpanel">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
-                        <div class="main-card">
-                            <h4 class="section-title text-center">زیادکردنی ئامێری نوێ</h4>
-                            <form id="addMachineForm">
-                                <div class="mb-3">
-                                    <label class="form-label">ناوی ئامێر</label>
-                                    <input type="text" class="form-control" id="mName" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">مۆدێل / جۆر</label>
-                                    <input type="text" class="form-control" id="mModel">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">بەشی بەرپرس</label>
-                                    <select class="form-select" id="mDept">
-                                        <option value="crushing">هاڕین</option>
-                                        <option value="prep">ئامادەکردن</option>
-                                        <option value="cutting">بڕین</option>
-                                        <option value="kiln">فڕن</option>
-                                        <option value="unloading">داگرتن</option>
-                                        <option value="electrical">کارەبا</option>
-                                        <option value="mechanical">میکانیک</option>
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label">بەرواری دامەزراندن</label>
-                                    <input type="date" class="form-control" id="mInstallDate">
-                                </div>
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg">زیادکردن</button>
-                                </div>
-                            </form>
-                        </div>
+                <div class="tab-pane fade" id="records">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-primary fw-bold">تۆماری گۆڕانکاری و پارچەکان</h5>
+                        <button class="btn btn-primary" onclick="openAddRecordModal('maintenance')">
+                            <i class="bi bi-plus-lg me-2"></i>زیادکردنی تۆمار
+                        </button>
                     </div>
+                    <div class="table-responsive bg-white rounded shadow-sm">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th>بەروار</th>
+                                    <th>ساڵ</th>
+                                    <th>بەشی سەرەکی (Category)</th>
+                                    <th>ناوی پارچە (Part)</th>
+                                    <th>ژمارە</th>
+                                    <th>تێبینی</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenanceLogBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="problems">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-danger fw-bold">تۆماری کێشە و وەستانەکان</h5>
+                        <button class="btn btn-danger" onclick="openAddRecordModal('problem')">
+                            <i class="bi bi-exclamation-octagon me-2"></i>زیادکردنی کێشە
+                        </button>
+                    </div>
+                    <div class="table-responsive bg-white rounded shadow-sm">
+                        <table class="excel-table">
+                            <thead>
+                                <tr>
+                                    <th>بەروار</th>
+                                    <th>کێشە</th>
+                                    <th>هۆکار</th>
+                                    <th>ماوەی وەستان</th>
+                                    <th>چارەسەر</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="problemLogBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="noMachineState" class="text-center py-5">
+            <i class="bi bi-cpu text-secondary opacity-25" style="font-size: 6rem;"></i>
+            <h3 class="text-muted mt-3">تکایە سەرەتا ئامێرێک هەڵبژێرە</h3>
+            <p class="text-muted">بۆ بینینی داتا و شیکارییەکان، ناوی ئامێرەکە لە لیستی سەرەوە دیاری بکە</p>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addRecordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white" id="recordModalHeader">
+                    <h5 class="modal-title" id="recordModalTitle">تۆماری نوێ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="recordForm">
+                        <input type="hidden" id="recordType">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">بەروار</label>
+                                <input type="date" class="form-control" id="recDate" required>
+                            </div>
+
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label fw-bold text-primary">بەشی سەرەکی (Category)</label>
+                                <select class="form-select" id="partCategory" onchange="updateSubParts()">
+                                    <option value="">هەڵبژێرە...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label fw-bold text-danger">ناوی پارچە (Part Name)</label>
+                                <select class="form-select" id="partName" disabled>
+                                    <option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 maintenance-field">
+                                <label class="form-label">ژمارە (Qty)</label>
+                                <input type="number" class="form-control" id="recQty" value="1" min="1">
+                            </div>
+
+                            <div class="col-md-12 problem-field" style="display:none;">
+                                <label class="form-label">کێشە (Problem)</label>
+                                <input type="text" class="form-control" id="recProblem">
+                            </div>
+                            <div class="col-md-12 problem-field" style="display:none;">
+                                <label class="form-label">هۆکاری سەرەکی (Root Cause)</label>
+                                <textarea class="form-control" id="recRootCause" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-6 problem-field" style="display:none;">
+                                <label class="form-label">ماوەی وەستان (کاتژمێر)</label>
+                                <input type="number" step="0.1" class="form-control" id="recDowntime">
+                            </div>
+                            <div class="col-md-6 problem-field" style="display:none;">
+                                <label class="form-label">چارەسەر</label>
+                                <input type="text" class="form-control" id="recSolution">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">تێبینی</label>
+                                <textarea class="form-control" id="recNote" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-grid">
+                            <button type="submit" class="btn btn-primary">تۆمارکردن</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="addRecordModal" tabindex="-1">
+    <div class="modal fade" id="addMachineModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">تۆمارکردنی چاکسازی</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title">زیادکردنی ئامێر</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addRecordForm">
+                    <form id="addMachineForm">
                         <div class="mb-3">
-                            <label class="form-label">جۆری کار</label>
-                            <select class="form-select" id="recType" onchange="toggleRecordFields()">
-                                <option value="breakdown">تێکچوون (Breakdown)</option>
-                                <option value="maintenance">چاکسازی خولی (Preventive)</option>
+                            <label class="form-label">ناوی ئامێر</label>
+                            <input type="text" class="form-control" id="newMachineName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەش</label>
+                            <select class="form-select" id="newMachineDept" required>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">بەروار</label>
-                            <input type="date" class="form-control" id="recDate" required>
+                            <label class="form-label">بەرواری کارکردن</label>
+                            <input type="date" class="form-control" id="newMachineDate">
                         </div>
-
-                        <div id="maintFields" style="display:none;">
-                            <div class="mb-2">
-                                <label class="form-label">پارچەی گۆڕدراو</label>
-                                <input type="text" class="form-control" id="recPart">
-                            </div>
-                            <div class="row">
-                                <div class="col-6 mb-2">
-                                    <label class="form-label">ژمارە (Qty)</label>
-                                    <input type="number" class="form-control" id="recQty" value="1">
-                                </div>
-                                <div class="col-6 mb-2">
-                                    <label class="form-label">ماوەی مانەوە (Frequency - Days)</label>
-                                    <input type="number" class="form-control" id="recFreq">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="breakFields">
-                            <div class="mb-2">
-                                <label class="form-label">کێشەکە چی بوو؟ (Problem)</label>
-                                <textarea class="form-control" id="recProblem" rows="2"></textarea>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">هۆکار (Root Cause)</label>
-                                <input type="text" class="form-control" id="recRootCause">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">ماوەی وەستان (Downtime - Minutes)</label>
-                                <input type="number" class="form-control" id="recDowntime">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label">چارەسەر (Solution)</label>
-                                <textarea class="form-control" id="recSolution" rows="2"></textarea>
-                            </div>
-                        </div>
-
+                        <button type="submit" class="btn btn-primary w-100">زیادکردن</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="managePartsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">ڕێکخستنی پارچەکانی ئامێر</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 border-end">
+                            <h6 class="fw-bold">زیادکردنی بەش (Category)</h6>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="newCatInput" placeholder="Key (e.g. motor)">
+                                <input type="text" class="form-control" id="newCatLabel"
+                                    placeholder="Label (e.g. Motor)">
+                                <button class="btn btn-success" onclick="addNewCategory()">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="fw-bold">پارچەکان بەپێی بەش</h6>
+                            <div id="partsConfigList" style="max-height: 400px; overflow-y: auto;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">داخستن</button>
-                    <button type="button" class="btn btn-primary" id="saveRecordBtn">پاشەکەوتکردن</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">داخستن</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMachineParts()">پاشەکەوتکردن
+                        (Save)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="manageMachinesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title">بەڕێوەبردنی ئامێرەکان</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ناو</th>
+                                    <th>بەش</th>
+                                    <th>کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="machinesListBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -442,6 +525,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // --- CONFIGURATION ---
+        const departments = {
+            'haarin': 'هاڕین', 'amadakrdn': 'ئامادەکردن', 'brin': 'بڕین', 'barkrdn': 'بارکردن',
+            'dryer': 'درایەر', 'firn': 'فڕن', 'dagrtn': 'داگرتن', 'kareba': 'کارەبا'
+        };
+
+        const defaultPartsConfig = {
+            'relay': { label: 'ڕیڵەی (Relays)', parts: ['سکراپەر', 'باڵ', 'سەرپەنجە', 'زەنجیر', 'گێڕ'] },
+            'bearing': { label: 'بەرینە (Bearings)', parts: ['بەرینەی ڕۆڵە', 'بەرینەی سەرەکی', 'بەرینەی ماتۆڕ', 'هاوسینگ'] },
+            'lining': { label: 'بەطانە (Lining)', parts: ['بەطانەی ناوەوە', 'بەطانەی دەرەوە', 'پلێتی بەطانە'] },
+            'knife': { label: 'چەقۆ (Knives)', parts: ['چەقۆی بڕین', 'چەقۆی پاککردنەوە', 'چەقۆی لاوەکی'] },
+            'electrical': { label: 'کارەبایی', parts: ['کۆنتێکتەر', 'فیوز', 'هەستەوەر', 'ماتۆڕ'] },
+            'general': { label: 'گشتی', parts: ['ڕۆن', 'فیلتەر', 'قاییش', 'هیتر'] }
+        };
+
+        // --- AUTH & SETUP ---
         const firebaseConfig = {
             apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
             authDomain: "abf6-96dcf.firebaseapp.com",
@@ -453,178 +552,380 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        let currentUser = null;
         let currentMachineId = null;
-        let machineChart = null;
+        let currentPartsConfig = null;
+        let chartInstance = null;
+        let unsubscribeLogs = null;
 
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) window.location.href = 'index.html';
+        currentUser = JSON.parse(userStr);
+        document.getElementById('userInfo').textContent = currentUser.username;
+
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
+            initUI();
             loadMachines();
-            document.getElementById('recDate').valueAsDate = new Date();
         });
 
-        // 1. Add Machine
-        document.getElementById('addMachineForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                name: document.getElementById('mName').value,
-                model: document.getElementById('mModel').value,
-                department: document.getElementById('mDept').value,
-                installDate: document.getElementById('mInstallDate').value,
-                createdAt: new Date().toISOString()
-            };
+        function initUI() {
+            // Populate Departments
+            const deptSelect = document.getElementById('newMachineDept');
+            const deptFilter = document.getElementById('departmentSelect');
+
+            deptSelect.innerHTML = '';
+            deptFilter.innerHTML = '<option value="">-- هەموو --</option>';
+
+            Object.keys(departments).forEach(key => {
+                deptSelect.innerHTML += `<option value="${departments[key]}">${departments[key]}</option>`;
+                deptFilter.innerHTML += `<option value="${departments[key]}">${departments[key]}</option>`;
+            });
+
+            // Listeners
+            document.getElementById('departmentSelect').addEventListener('change', (e) => loadMachines(e.target.value));
+            document.getElementById('machineSelect').addEventListener('change', (e) => {
+                selectMachine(e.target.value);
+            });
+        }
+
+        // --- MACHINES ---
+        async function loadMachines(filterDept = '') {
+            const select = document.getElementById('machineSelect');
+            select.innerHTML = '<option value="">-- بارکردن... --</option>';
+
+            let query = db.collection('machines');
+            if (filterDept) query = query.where('department', '==', filterDept);
+
             try {
-                await db.collection('machines').add(data);
-                alert("ئامێر زیادکرا");
-                e.target.reset();
-                loadMachines();
-                // Switch back to view tab
-                new bootstrap.Tab(document.getElementById('view-tab')).show();
-            } catch (err) {
-                console.error(err);
-                alert("هەڵە ڕوویدا");
-            }
-        });
-
-        // 2. Load Machines List
-        function loadMachines() {
-            db.collection('machines').onSnapshot(snap => {
-                const list = document.getElementById('machineList');
-                list.innerHTML = '';
+                const snap = await query.get();
+                select.innerHTML = '<option value="">-- ئامێرێک دیاری بکە --</option>';
                 snap.forEach(doc => {
                     const m = doc.data();
-                    const item = document.createElement('a');
-                    item.className = 'list-group-item list-group-item-action';
-                    item.textContent = m.name;
-                    item.onclick = () => selectMachine(doc.id, m);
-                    list.appendChild(item);
+                    select.innerHTML += `<option value="${doc.id}">${m.name}</option>`;
                 });
-            });
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">هەڵە لە بارکردن</option>';
+            }
         }
 
-        function selectMachine(id, data) {
-            currentMachineId = id;
-            document.getElementById('machineNameDisplay').textContent = data.name;
-            document.getElementById('machineModelDisplay').textContent = (data.model || '') + ' - ' + (data.department || '');
-
-            // Update active state in list
-            document.querySelectorAll('.list-group-item').forEach(el => el.classList.remove('active'));
-            event.target.classList.add('active');
-
-            loadMachineData(id);
-        }
-
-        // 3. Load Logs & Chart
-        async function loadMachineData(id) {
-            const snap = await db.collection('machine_logs')
-                .where('machineId', '==', id)
-                .orderBy('date', 'desc')
-                .get();
-
-            const tbody = document.getElementById('logsTableBody');
-            tbody.innerHTML = '';
-
-            let logs = [];
-            snap.forEach(doc => {
-                logs.push({ id: doc.id, ...doc.data() });
-            });
-
-            // Render Table
-            logs.forEach(log => {
-                let details = '';
-                let costTime = '';
-                let badgeClass = log.type === 'breakdown' ? 'badge-repair' : 'badge-maint';
-                let typeLabel = log.type === 'breakdown' ? 'تێکچوون' : 'چاکسازی';
-
-                if (log.type === 'maintenance') {
-                    details = `گۆڕینی: ${log.part} (Qty: ${log.quantity})`;
-                    costTime = `Frequency: ${log.frequency || '-'} days`;
-                } else {
-                    details = `کێشە: ${log.problem} <br> <small class="text-muted">چارەسەر: ${log.solution}</small>`;
-                    costTime = `وەستان: ${log.downtime} خولەک`;
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${log.date}</td>
-                    <td><span class="${badgeClass}">${typeLabel}</span></td>
-                    <td>${details}</td>
-                    <td>${costTime}</td>
-                    <td><button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            updateChart(logs);
-        }
-
-        // 4. Chart Logic
-        function updateChart(logs) {
-            // Simple logic: Count breakdowns vs maintenance per month, or total downtime
-            const ctx = document.getElementById('chartCanvas').getContext('2d');
-
-            if (machineChart) machineChart.destroy();
-
-            // Process data for chart (Example: Downtime over time)
-            // Filtering only breakdowns for the chart
-            const breakdowns = logs.filter(l => l.type === 'breakdown').reverse(); // reverse to show old to new
-            const labels = breakdowns.map(l => l.date);
-            const dataPoints = breakdowns.map(l => l.downtime || 0);
-
-            machineChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'ماوەی وەستان (Downtime - Minutes)',
-                        data: dataPoints,
-                        borderColor: '#c62828',
-                        backgroundColor: 'rgba(198, 40, 40, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
-                }
-            });
-        }
-
-        // 5. Add Record Logic
-        function openAddRecordModal() {
-            if (!currentMachineId) {
-                alert("تکایە سەرەتا ئامێرێک دیاری بکە");
+        async function selectMachine(id) {
+            if (!id) {
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('noMachineState').style.display = 'block';
+                document.getElementById('machineControls').style.display = 'none';
                 return;
             }
-            new bootstrap.Modal(document.getElementById('addRecordModal')).show();
+            currentMachineId = id;
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('noMachineState').style.display = 'none';
+            document.getElementById('machineControls').style.display = 'block';
+
+            const doc = await db.collection('machines').doc(id).get();
+            const machineData = doc.data();
+
+            if (machineData.partsConfig) {
+                currentPartsConfig = machineData.partsConfig;
+            } else {
+                currentPartsConfig = JSON.parse(JSON.stringify(defaultPartsConfig));
+            }
+
+            subscribeToLogs(id);
         }
 
-        function toggleRecordFields() {
-            const type = document.getElementById('recType').value;
-            if (type === 'maintenance') {
-                document.getElementById('maintFields').style.display = 'block';
-                document.getElementById('breakFields').style.display = 'none';
-            } else {
-                document.getElementById('maintFields').style.display = 'none';
-                document.getElementById('breakFields').style.display = 'block';
+        // --- HIERARCHY LOGIC ---
+        function updateCategoryDropdown() {
+            const catSelect = document.getElementById('partCategory');
+            catSelect.innerHTML = '<option value="">هەڵبژێرە...</option>';
+
+            if (!currentPartsConfig) return;
+
+            for (const [key, val] of Object.entries(currentPartsConfig)) {
+                catSelect.innerHTML += `<option value="${key}">${val.label}</option>`;
             }
         }
 
-        document.getElementById('saveRecordBtn').addEventListener('click', async () => {
-            const type = document.getElementById('recType').value;
+        function updateSubParts() {
+            const catKey = document.getElementById('partCategory').value;
+            const partSelect = document.getElementById('partName');
+            partSelect.innerHTML = '';
+
+            if (!catKey || !currentPartsConfig[catKey]) {
+                partSelect.disabled = true;
+                partSelect.innerHTML = '<option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>';
+                return;
+            }
+            partSelect.disabled = false;
+            currentPartsConfig[catKey].parts.forEach(p => {
+                partSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        }
+
+        // --- MANAGE PARTS LOGIC ---
+        function openManagePartsModal() {
+            renderManagePartsUI();
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('managePartsModal'));
+            modal.show();
+        }
+
+        function renderManagePartsUI() {
+            const container = document.getElementById('partsConfigList');
+            container.innerHTML = '';
+
+            for (const [key, val] of Object.entries(currentPartsConfig)) {
+                const partsBadges = val.parts.map(p =>
+                    `<span class="badge bg-secondary me-1 mb-1">${p} <i style="cursor:pointer;" onclick="removePart('${key}', '${p}')" class="bi bi-x"></i></span>`
+                ).join('');
+
+                const html = `
+                    <div class="part-group-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-primary">${val.label} (${key})</strong>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeCategory('${key}')">Delete Category</button>
+                        </div>
+                        <div class="mb-2">${partsBadges}</div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="newPartInput-${key}" placeholder="Add new part name">
+                            <button class="btn btn-outline-success" onclick="addNewPart('${key}')">Add</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+        }
+
+        function addNewCategory() {
+            const key = document.getElementById('newCatInput').value.trim();
+            const label = document.getElementById('newCatLabel').value.trim();
+            if (!key || !label) return alert("Please enter Key and Label");
+
+            if (currentPartsConfig[key]) return alert("Category exists!");
+
+            currentPartsConfig[key] = { label: label, parts: [] };
+            renderManagePartsUI();
+        }
+
+        function removeCategory(key) {
+            if (confirm("Delete this category?")) {
+                delete currentPartsConfig[key];
+                renderManagePartsUI();
+            }
+        }
+
+        function addNewPart(catKey) {
+            const input = document.getElementById(`newPartInput-${catKey}`);
+            const val = input.value.trim();
+            if (!val) return;
+
+            currentPartsConfig[catKey].parts.push(val);
+            renderManagePartsUI();
+        }
+
+        function removePart(catKey, partName) {
+            const idx = currentPartsConfig[catKey].parts.indexOf(partName);
+            if (idx > -1) {
+                currentPartsConfig[catKey].parts.splice(idx, 1);
+                renderManagePartsUI();
+            }
+        }
+
+        async function saveMachineParts() {
+            if (!currentMachineId) return;
+            try {
+                await db.collection('machines').doc(currentMachineId).update({
+                    partsConfig: currentPartsConfig
+                });
+                alert("Saved!");
+                bootstrap.Modal.getInstance(document.getElementById('managePartsModal')).hide();
+            } catch (e) {
+                alert("Error saving: " + e.message);
+            }
+        }
+
+        // --- OPENING MODALS ---
+        function openAddMachineModal() {
+            document.getElementById('addMachineForm').reset();
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addMachineModal'));
+            modal.show();
+        }
+
+        function openAddRecordModal(type) {
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordType').value = type;
+            document.getElementById('recDate').valueAsDate = new Date();
+
+            const isMaint = type === 'maintenance';
+            document.querySelectorAll('.maintenance-field').forEach(e => e.style.display = isMaint ? 'block' : 'none');
+            document.querySelectorAll('.problem-field').forEach(e => e.style.display = isMaint ? 'none' : 'block');
+
+            const header = document.getElementById('recordModalHeader');
+            header.className = isMaint ? "modal-header bg-primary text-white" : "modal-header bg-danger text-white";
+            document.getElementById('recordModalTitle').textContent = isMaint ? "تۆماری چاکسازی" : "تۆماری کێشە";
+
+            if (isMaint) {
+                updateCategoryDropdown();
+                document.getElementById('partName').innerHTML = "";
+                document.getElementById('partName').disabled = true;
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal'));
+            modal.show();
+        }
+
+        // --- REAL-TIME DATA ---
+        function subscribeToLogs(machineId) {
+            if (unsubscribeLogs) unsubscribeLogs();
+
+            unsubscribeLogs = db.collection('machine_logs')
+                .where('machineId', '==', machineId)
+                .orderBy('date', 'desc')
+                .onSnapshot(snap => {
+                    const logs = [];
+                    snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+                    processAndRender(logs);
+                }, err => {
+                    console.error("Error:", err);
+                    if (err.code === 'failed-precondition') {
+                        const link = err.message.match(/https:\/\/[^\s]+/);
+                        if (link) prompt("⚠️ Index Missing! Copy link:", link[0]);
+                    }
+                });
+        }
+
+        function processAndRender(logs) {
+            const maintLogs = logs.filter(l => l.type === 'maintenance');
+            const probLogs = logs.filter(l => l.type === 'problem');
+
+            renderMaintTable(maintLogs);
+            renderProbTable(probLogs);
+            calculateKPIs(probLogs, maintLogs);
+            renderDashboardVisuals(maintLogs);
+        }
+
+        function renderMaintTable(logs) {
+            const tbody = document.getElementById('maintenanceLogBody');
+            tbody.innerHTML = '';
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">نییە</td></tr>'; return; }
+
+            logs.forEach(log => {
+                const year = log.date.substring(0, 4);
+                const catLabel = currentPartsConfig?.[log.partCategory]?.label || log.partCategory || '-';
+                const part = log.partName || log.part || '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${log.date}</td>
+                        <td>${year}</td>
+                        <td><span class="badge-category">${catLabel}</span></td>
+                        <td><span class="badge-part">${part}</span></td>
+                        <td>${log.quantity || 1}</td>
+                        <td class="small text-muted">${log.note || ''}</td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderProbTable(logs) {
+            const tbody = document.getElementById('problemLogBody');
+            tbody.innerHTML = '';
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">نییە</td></tr>'; return; }
+
+            logs.forEach(log => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${log.date}</td>
+                        <td class="fw-bold text-danger">${log.problem}</td>
+                        <td>${log.rootCause || '-'}</td>
+                        <td><span class="badge bg-warning text-dark">${log.downtime || 0} h</span></td>
+                        <td>${log.solution || '-'}</td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderDashboardVisuals(logs) {
+            const pivotData = {};
+            const yearsSet = new Set();
+
+            logs.forEach(log => {
+                const y = log.date.substring(0, 4);
+                yearsSet.add(y);
+                const part = log.partName || log.part || 'General';
+
+                if (!pivotData[part]) pivotData[part] = {};
+                if (!pivotData[part][y]) pivotData[part][y] = 0;
+                pivotData[part][y] += parseInt(log.quantity || 1);
+            });
+
+            const years = Array.from(yearsSet).sort();
+
+            const pt = document.getElementById('pivotTable');
+            let html = `<thead><tr><th>Part Name</th>${years.map(y => `<th>${y}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
+
+            for (const [part, yData] of Object.entries(pivotData)) {
+                let total = 0;
+                html += `<tr><td class="pivot-row-header">${part}</td>`;
+                years.forEach(y => {
+                    const val = yData[y] || 0;
+                    total += val;
+                    html += `<td>${val || '-'}</td>`;
+                });
+                html += `<td class="total-row">${total}</td></tr>`;
+            }
+            html += '</tbody>';
+            pt.innerHTML = html;
+
+            const ctx = document.getElementById('maintenanceChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            // Blue Palette
+            const colors = ['#1976d2', '#2196f3', '#42a5f5', '#64b5f6', '#90caf9'];
+            const datasets = Object.keys(pivotData).map((part, i) => ({
+                label: part,
+                data: years.map(y => pivotData[part][y] || 0),
+                backgroundColor: colors[i % colors.length],
+                stack: 'group1'
+            }));
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: years, datasets: datasets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+        }
+
+        function calculateKPIs(pLogs, mLogs) {
+            const downtime = pLogs.reduce((acc, l) => acc + (parseFloat(l.downtime) || 0), 0);
+            const failures = pLogs.length;
+
+            document.getElementById('kpiDowntime').textContent = downtime.toFixed(1);
+            document.getElementById('kpiMTTR').textContent = failures ? (downtime / failures).toFixed(1) : 0;
+            const totalDays = 365;
+            const opHours = (totalDays * 24) - downtime;
+            document.getElementById('kpiMTBF').textContent = failures ? ((opHours / 24) / failures).toFixed(1) : 'OK';
+        }
+
+        // --- SUBMIT ---
+        document.getElementById('recordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('recordType').value;
+
             const data = {
                 machineId: currentMachineId,
-                date: document.getElementById('recDate').value,
                 type: type,
+                date: document.getElementById('recDate').value,
+                note: document.getElementById('recNote').value,
                 createdAt: new Date().toISOString()
             };
 
             if (type === 'maintenance') {
-                data.part = document.getElementById('recPart').value;
+                data.partCategory = document.getElementById('partCategory').value;
+                data.partName = document.getElementById('partName').value;
                 data.quantity = parseInt(document.getElementById('recQty').value);
-                data.frequency = parseInt(document.getElementById('recFreq').value);
+                data.part = data.partName;
             } else {
                 data.problem = document.getElementById('recProblem').value;
                 data.rootCause = document.getElementById('recRootCause').value;
@@ -632,30 +933,61 @@
                 data.solution = document.getElementById('recSolution').value;
             }
 
-            console.log("Adding record:", data);
-
             try {
                 await db.collection('machine_logs').add(data);
                 bootstrap.Modal.getInstance(document.getElementById('addRecordModal')).hide();
-                loadMachineData(currentMachineId);
                 alert("تۆمارکرا");
-            } catch (err) {
-                console.error("Error adding record:", err);
-                alert("هەڵە لە تۆمارکردن: " + err.message);
+            } catch (e) {
+                alert("Error: " + e.message);
             }
         });
 
-        async function deleteLog(id) {
-            if (!confirm("دڵنیایت لە سڕینەوە؟")) return;
-            try {
-                await db.collection('machine_logs').doc(id).delete();
-                loadMachineData(currentMachineId);
-                alert("سڕایەوە");
-            } catch (err) {
-                alert("هەڵە لە سڕینەوە: " + err.message);
+        document.getElementById('addMachineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await db.collection('machines').add({
+                name: document.getElementById('newMachineName').value,
+                department: document.getElementById('newMachineDept').value,
+                commissionDate: document.getElementById('newMachineDate').value,
+                partsConfig: defaultPartsConfig,
+                createdAt: new Date().toISOString()
+            });
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addMachineModal'));
+            modal.hide();
+            loadMachines(document.getElementById('departmentSelect').value);
+            alert("زیادکرا");
+        });
+
+        async function openManageMachinesModal() {
+            const tbody = document.getElementById('machinesListBody');
+            tbody.innerHTML = '<tr><td>Loading...</td></tr>';
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('manageMachinesModal'));
+            modal.show();
+
+            const snap = await db.collection('machines').get();
+            tbody.innerHTML = '';
+            snap.forEach(doc => {
+                const m = doc.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${m.department}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteMachine('${doc.id}')"><i class="bi bi-trash"></i></button></td>
+                    </tr>`;
+            });
+        }
+
+        async function deleteMachine(id) {
+            if (confirm("Are you sure?")) {
+                await db.collection('machines').doc(id).delete();
+                openManageMachinesModal();
+                loadMachines(document.getElementById('departmentSelect').value);
             }
         }
 
+        async function deleteLog(id) {
+            if (confirm("Delete this record?")) await db.collection('machine_logs').doc(id).delete();
+        }
     </script>
 </body>
 
