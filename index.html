@@ -8,105 +8,199 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rudaw&family=Segoe+UI:wght@400;600;700&display=swap"
+        rel="stylesheet">
 
     <style>
         :root {
             --primary-color: #c62828;
-            --secondary-color: #2c3e50;
+            --secondary-color: #1a237e;
+            --gradient-bg: linear-gradient(135deg, #8e0000 0%, #1a237e 100%);
         }
 
         body {
-            background: linear-gradient(135deg, #c62828, #2c3e50);
+            background: var(--gradient-bg);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
         }
 
+        /* Abstract Background Shapes */
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: -50px;
+        }
+
+        .shape-2 {
+            width: 200px;
+            height: 200px;
+            bottom: 50px;
+            right: 50px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(20px) scale(1.05);
+            }
+        }
+
+        /* Glassmorphism Card */
         .login-card {
-            width: 400px;
-            padding: 30px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* --- LOGO STYLING --- */
+        .brand-logo-img {
+            max-width: 130px;
+            /* Adjust this number to make logo bigger/smaller */
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
+            /* Adds shadow to the logo */
+            transition: transform 0.3s ease;
+        }
+
+        .brand-logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        .login-title {
+            color: #333;
+            font-weight: 800;
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+            letter-spacing: 1px;
+        }
+
+        .login-subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        /* Modern Inputs */
+        .form-floating>.form-control {
             border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            background-color: white;
+            border: 1px solid #d1d5db;
+            padding-right: 15px;
+            background: rgba(255, 255, 255, 0.8);
         }
 
-        .login-logo {
-            max-width: 200px;
-            margin-bottom: 20px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
+        .form-floating>.form-control:focus {
             border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
         }
 
-        .btn-primary:hover {
-            background-color: #b71c1c;
-            border-color: #b71c1c;
+        .form-floating>label {
+            right: 0;
+            left: auto;
+            padding-right: 15px;
         }
 
-        .brand-red-text {
-            color: var(--primary-color);
+        .btn-login {
+            background: linear-gradient(45deg, var(--primary-color), #b71c1c);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
             font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            color: white;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(45deg, #b71c1c, #d32f2f);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(198, 40, 40, 0.5);
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #777;
         }
     </style>
 </head>
 
 <body>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
     <div class="login-card">
-        <div class="text-center mb-4">
-            <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
-                alt="ASOBRICK FACTORY" class="login-logo">
-            <h3 class="brand-red-text">سیستەمی بەڕێوبردنی کارمەند</h3>
-            <p class="text-muted">تکایە بچۆ ژوورەوە بۆ بەردەوامبوون</p>
-        </div>
+
+        <img src="logo.png" alt="ASOBRICK Logo" class="brand-logo-img">
+
+        <h3 class="login-title">ASOBRICK</h3>
+        <p class="login-subtitle">تکایە زانیاریەکانت داخل بکە</p>
+
         <form id="loginForm">
-            <div class="mb-3">
-                <label for="username" class="form-label">ناوی بەکارهێنەر</label>
-                <input type="text" class="form-control" id="username" required>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" placeholder="ناوی بەکارهێنەر" required>
+                <label for="username"><i class="bi bi-person me-2"></i> ناوی بەکارهێنەر</label>
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">وشەی تێپەڕ</label>
-                <input type="password" class="form-control" id="password" required>
+
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" id="password" placeholder="وشەی تێپەڕ" required>
+                <label for="password"><i class="bi bi-lock me-2"></i> وشەی تێپەڕ</label>
             </div>
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">چوونە ژوورەوە</button>
-            </div>
+
+            <button type="submit" class="btn btn-login">
+                چوونەژوورەوە <i class="bi bi-arrow-left ms-2"></i>
+            </button>
         </form>
+
+        <div class="footer-text">
+            &copy; 2026 Asobrick Factory System
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check if already logged in
-        window.addEventListener('load', function () {
-            const currentUser = localStorage.getItem('currentUser');
-            if (currentUser) {
-                window.location.href = 'dashboard.html';
-            }
-        });
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
-            authDomain: "abf6-96dcf.firebaseapp.com",
-            projectId: "abf6-96dcf",
-            storageBucket: "abf6-96dcf.firebasestorage.app",
-            messagingSenderId: "405357996484",
-            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-
-        // User credentials
+        // --- CONFIGURATION ---
+        // Existing Users from your original file
         const users = {
-            admin: { password: 'admin2002', role: 'admin', department: 'all' },
-            manager: { password: 'manager1001', role: 'manager', department: 'all' },
+            admin: { password: 'admin2002', role: 'admin' },
+            manager: { password: 'manager1001', role: 'manager' },
+            // Supervisors
             himat: { password: 'himat6600', role: 'supervisor', department: 'cutting-setting' },
             hemn: { password: 'hemn1212', role: 'supervisor', department: 'crushing-prep' },
             samdar: { password: 'samdar7273', role: 'supervisor', department: 'unsetting' },
@@ -119,26 +213,63 @@
         document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.querySelector('.btn-login');
 
-            if (users[username] && users[username].password === password) {
-                const currentUser = {
-                    username: username,
-                    role: users[username].role,
-                    department: users[username].department
-                };
+            // Button Loading State
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner-border spinner-border-sm text-light" role="status"></div>';
+            btn.disabled = true;
 
-                // Store user data in localStorage
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            setTimeout(() => {
+                if (users[username] && users[username].password === password) {
+                    const currentUser = {
+                        username: username,
+                        role: users[username].role,
+                        department: users[username].department
+                    };
 
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-            } else {
-                alert('ناوی بەکارهێنەر یاخوود وشەی تێپەڕ هەڵەیە');
-            }
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    window.location.href = 'dashboard.html';
+                } else {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+
+                    // Shake animation for error
+                    const card = document.querySelector('.login-card');
+                    card.style.animation = 'shake 0.5s';
+                    setTimeout(() => card.style.animation = '', 500);
+
+                    alert('ناوی بەکارهێنەر یاخوود وشەی تێپەڕ هەڵەیە');
+                }
+            }, 600);
         });
     </script>
+
+    <style>
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(5px);
+            }
+
+            50% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+    </style>
 </body>
 
 </html>
