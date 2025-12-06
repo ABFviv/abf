@@ -59,19 +59,16 @@
             padding: 20px;
         }
 
-        /* --- UPDATED HEADER STYLE TO MATCH MANUALS --- */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), #8e0000);
+            background: linear-gradient(135deg, #9c0303, #ff0000);
             color: white;
             padding: 15px 30px;
             border-radius: 12px;
-            /* Manuals style radius */
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            /* Manuals style shadow */
         }
 
         .header-logo {
@@ -1188,26 +1185,30 @@
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardPage">
         <div class="header">
-            <div class="d-flex align-items-center">
-                <h3 class="m-0 fw-bold">
-                    <i class="bi bi-people-fill me-2"></i> سیستەمی بەڕێوبردنی کارمەند
-                </h3>
+            <div class="header-brand">
+                <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
+                    alt="ASOBRICK FACTORY" class="header-logo">
+                <div>
+                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
+                            class="brand-gray-text">FACTORY</span></h4>
+                    <p class="header-subtitle">سیستەمی بەڕێوبردنی کارمەند</p>
+                </div>
             </div>
-
-            <div class="d-flex align-items-center gap-2">
-
-                <button class="btn btn-outline-light position-relative" id="notificationsBtn"
-                    onclick="showNotificationsPage()">
-                    <i class="bi bi-bell"></i>
+            <div>
+                <span id="userInfo" class="me-3"></span>
+                <button class="btn btn-light btn-sm" id="logoutBtn">
+                    <i class="bi bi-box-arrow-right"></i> چوونەدەرەوە
+                </button>
+                <button class="btn btn-light btn-sm me-2" onclick="window.location.href='dashboard.html'">
+                    <i class="bi bi-house-door"></i> پەڕەی سەرەکی
+                </button>
+                <button class="btn btn-info btn-sm ms-2 position-relative" id="notificationsBtn"
+                    onclick="showNotificationsPage()" style="display: none;">
+                    <i class="bi bi-bell"></i> ئاگادارکردنەوەکان
                     <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
                 </button>
-
-                <button class="btn btn-outline-light" id="refreshBtn" title="نوێکردنەوە">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
-
-                <button class="btn btn-outline-light" onclick="window.location.href='dashboard.html'">
-                    <i class="bi bi-arrow-right"></i> گەڕانەوە
+                <button class="btn btn-warning btn-sm ms-2" id="refreshBtn">
+                    <i class="bi bi-arrow-clockwise"></i> نوێکردنەوە
                 </button>
             </div>
         </div>
