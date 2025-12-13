@@ -171,9 +171,9 @@
 
         /* --- CUTTING SPECIFIC STYLES --- */
         .cut-header {
-            background-color: #607d8b;
-            color: white;
-            padding: 4px 8px;
+            background-color: #607d8b; 
+            color: white; 
+            padding: 4px 8px; 
             margin-top: 5px;
             border-radius: 4px;
             font-weight: bold;
@@ -190,14 +190,12 @@
 
         /* The Tasks Table (Left) */
         .cut-tasks-col {
-            flex: 0 0 35%;
-            /* Takes 35% width */
+            flex: 0 0 35%; /* Takes 35% width */
         }
 
         /* The Carts Container (Right) */
         .cut-carts-col {
-            flex: 1;
-            /* Takes remaining space */
+            flex: 1; /* Takes remaining space */
             display: flex;
             gap: 2px;
         }
@@ -221,8 +219,7 @@
         .cart-list-table td {
             border: 1px solid #666;
             padding: 0 2px;
-            height: 18px;
-            /* Slightly taller for better readability on page */
+            height: 18px; /* Slightly taller for better readability on page */
             text-align: center;
             overflow: hidden;
             white-space: nowrap;
@@ -246,17 +243,16 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
+        
         /* Auto-Fill Controls in Header */
         .autofill-ctrls {
             display: flex;
             align-items: center;
             gap: 5px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             padding: 2px 5px;
             border-radius: 4px;
         }
-
         .autofill-ctrls input {
             background: white;
             border: none;
@@ -271,11 +267,10 @@
         .emp-selects {
             display: flex;
             gap: 3px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255,255,255,0.9);
             padding: 2px;
             border-radius: 4px;
         }
-
         .emp-selects select {
             font-size: 0.7rem;
             padding: 0 4px;
@@ -289,11 +284,9 @@
 
         /* Notes Dynamic Section */
         .note-row {
-            display: none;
-            /* Hidden by default */
+            display: none; /* Hidden by default */
             margin-bottom: 2px;
         }
-
         .note-row.visible {
             display: flex;
         }
@@ -301,8 +294,7 @@
         /* PRINT PAGE BREAK LOGIC */
         .page-break-container {
             margin-bottom: 20px;
-            border-bottom: 2px dashed #ccc;
-            /* Visual separator on screen */
+            border-bottom: 2px dashed #ccc; /* Visual separator on screen */
             padding-bottom: 20px;
         }
 
@@ -310,8 +302,7 @@
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 0.5cm;
-                /* Slight margin */
+                margin: 0.5cm; /* Slight margin */
             }
 
             body {
@@ -326,7 +317,7 @@
             .no-print,
             .toast-container,
             .autofill-ctrls,
-            .add-note-btn {
+            .add-note-btn { 
                 display: none !important;
             }
 
@@ -349,33 +340,28 @@
             /* Force Page Break After Each Shift Container */
             .page-break-container {
                 page-break-after: always;
-                border: none;
-                /* Remove visual separator in print */
+                border: none; /* Remove visual separator in print */
                 margin: 0;
                 padding: 0;
-                height: 100vh;
-                /* occupy full page */
+                height: 100vh; /* occupy full page */
             }
 
             .page-break-container:last-child {
-                page-break-after: auto;
-                /* No empty page after last shift */
+                page-break-after: auto; /* No empty page after last shift */
             }
 
-            .report-table,
-            .cart-list-table {
+            .report-table, .cart-list-table {
                 font-size: 0.65rem;
             }
-
+            
             .cut-header {
                 color: black;
                 background-color: #ddd;
                 border: 1px solid #000;
-                justify-content: flex-start;
-                /* Align left for print */
+                justify-content: flex-start; /* Align left for print */
                 gap: 15px;
             }
-
+            
             .border-dark {
                 border-color: #000 !important;
             }
@@ -592,7 +578,7 @@
                         } else {
                             el.value = value;
                         }
-
+                        
                         // --- Logic to Reveal Notes if they have Data ---
                         if (el.id.includes('_note') && value && value.trim() !== '') {
                             const noteRow = el.closest('.note-row');
@@ -654,7 +640,7 @@
             else if (dept === 'crushing-prep') renderCrushingTable(wrapper);
             else if (dept === 'preparation') renderPreparationTable(wrapper);
             else if (dept === 'klin') renderKilnTable(wrapper);
-            else if (dept === 'cutting') renderCuttingTable(wrapper);
+            else if (dept === 'cutting') renderCuttingTable(wrapper); 
         }
 
         // ====================================================================
@@ -726,7 +712,7 @@
                             <td><input type="text" id="cut_${shift.id}_c${i}_time" placeholder="کات"></td>
                             <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
-
+                    
                     // Right Cart Column (37 to 72)
                     let j = i + 36;
                     cartsCol2 += `
@@ -745,9 +731,9 @@
                         <button class="btn btn-sm btn-outline-primary py-0 px-2 add-note-btn" style="font-size:0.7rem;" onclick="addNoteField('${shift.id}')">+ Add Note</button>
                     </div>
                 `;
-
+                
                 // Create 6 hidden note inputs
-                for (let i = 1; i <= 6; i++) {
+                for (let i = 1; i <= 6; i++) { 
                     notesHtml += `
                         <div class="note-row align-items-center" id="cut_${shift.id}_note_row_${i}">
                             <span class="text-muted small me-2" style="width:15px;">${i}.</span>
@@ -792,7 +778,7 @@
                                 </table>
                                 <div class="mt-2 p-1 border rounded bg-light">
                                     <table class="report-table" style="font-size:0.65rem">
-                                        <thead class="table-secondary"><tr><th>ژمارەی سایلۆ</th><th>خشتی سەر یەک عەرەبانە</th><th>جۆر</th></tr></thead>
+                                        <thead class="table-secondary"><tr><th>سایلۆ</th><th>کۆی خشت</th><th>جۆر</th></tr></thead>
                                         <tbody>
                                             <tr>
                                                 <td><input type="number" id="cut_${shift.id}_silo"></td>
@@ -807,9 +793,9 @@
                                                     </select>
                                                 </td>
                                             </tr>
-                                            <tr class="table-secondary"><th colspan="2">کێشی خشتی کۆڵۆم ١</th><th>کێشی خشتی کۆڵۆم ٢</th></tr>
+                                            <tr class="table-secondary"><th colspan="2">Average Weight</th><th>Scrap</th></tr>
                                             <tr>
-                                                <td colspan="2"><input type="number" step="0.01" id="cut_${shift.id}_w1" placeholder="kg"></td>
+                                                <td colspan="2"><input type="number" step="0.01" id="cut_${shift.id}_w1" placeholder="Avg"></td>
                                                 <td><input type="number" id="cut_${shift.id}_scrap" placeholder="Kg"></td>
                                             </tr>
                                         </tbody>
@@ -819,12 +805,12 @@
 
                             <div class="cut-carts-col">
                                 <table class="cart-list-table">
-                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>ژمارەی عەرەبانە</th></tr></thead>
+                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>Cart No</th></tr></thead>
                                     <tbody>${cartsCol1}</tbody>
                                 </table>
                                 
                                 <table class="cart-list-table">
-                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>ژمارەی عەرەبانە</th></tr></thead>
+                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>Cart No</th></tr></thead>
                                     <tbody>${cartsCol2}</tbody>
                                 </table>
                             </div>
@@ -857,16 +843,16 @@
             for (let i = 1; i <= 72; i++) {
                 const inputId = `cut_${shiftId}_c${i}_time`;
                 const el = document.getElementById(inputId);
-
+                
                 if (el) {
                     // Format minutes back to HH:MM
                     let hh = Math.floor(currentMins / 60) % 24;
                     let mm = currentMins % 60;
                     const timeStr = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
-
+                    
                     el.value = timeStr;
                 }
-
+                
                 // Add interval for next cart
                 currentMins += intervalVal;
             }
@@ -875,7 +861,7 @@
         // --- NEW: Add Note Function ---
         function addNoteField(shiftId) {
             // Find the first hidden note row for this shift
-            for (let i = 1; i <= 6; i++) {
+            for(let i=1; i<=6; i++) {
                 const row = document.getElementById(`cut_${shiftId}_note_row_${i}`);
                 if (row && !row.classList.contains('visible')) {
                     row.classList.add('visible');
@@ -1382,4 +1368,3 @@
 </body>
 
 </html>
-
