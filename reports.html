@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ku" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASOBRICK FACTORY - ڕاپۆرتی ڕۆژانە</title>
+    <title>ASOBRICK - ڕاپۆرتی ڕۆژانە</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
@@ -13,446 +13,477 @@
 
     <style>
         :root {
-            --primary-color: #05084b;
-            --secondary-color: #2c3e50;
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --light-color: #ecf0f1;
-            --brand-red: #c62828;
+            --primary-bg: #2c3e50;
+            --primary-text: #fff;
+            --shift1-bg: #e3f2fd;
+            --shift2-bg: #fff3cd;
+            --shift3-bg: #d1e7dd;
+            --header-bg: #f8f9fa;
         }
 
         body {
-            background-color: #f5f7fa;
+            background-color: #f4f6f9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            padding: 15px;
         }
 
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), #8e0000);
+        /* --- Header & UI --- */
+        .header-bar {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
             color: white;
-            padding: 15px 30px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .header-logo {
-            height: 60px;
-            margin-left: 20px;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: rgb(249, 108, 0);
-            margin: 0;
-        }
-
-        .brand-red-text {
-            color: rgb(249, 108, 0);
-            font-weight: 700;
-        }
-
-        .brand-gray-text {
-            color: rgb(249, 108, 0);
-            font-weight: 500;
-        }
-
         .control-panel {
             background: white;
-            padding: 25px;
+            padding: 15px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-        }
-
-        .report-container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            overflow-x: auto;
-        }
-
-        .report-header {
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--primary-color);
         }
 
-        .report-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
+        /* --- VIEWS --- */
+        .view-section {
+            display: none;
         }
 
-        .report-info {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-            font-size: 1rem;
+        .active-view {
+            display: block;
         }
 
+        /* --- REPORT PAPER --- */
+        .report-paper {
+            background: white;
+            padding: 20px;
+            border-radius: 0;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            min-height: 297mm;
+        }
+
+        /* --- TABLES COMMON --- */
         .report-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            border: 2px solid #333;
         }
 
         .report-table th,
         .report-table td {
-            border: 1px solid #333;
-            padding: 6px;
+            border: 1px solid #555;
+            padding: 2px 4px;
+            vertical-align: middle;
             text-align: center;
         }
 
         .report-table th {
-            background-color: #e3f2fd;
-            font-weight: 600;
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #333;
         }
 
-        .report-table .row-header {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            text-align: right;
-            padding-right: 10px;
-            min-width: 180px;
+        /* Compact Rows */
+        .compact-rows td {
+            padding: 0 !important;
+            height: 20px !important;
+            font-size: 0.7rem;
         }
 
-        .report-table input[type="number"],
-        .report-table input[type="time"] {
+        .expanded-rows td {
+            padding: 6px 4px !important;
+            height: 35px !important;
+        }
+
+        /* Inputs */
+        .report-table input,
+        .report-table select,
+        .report-table textarea {
             width: 100%;
             border: none;
-            text-align: center;
             background: transparent;
-            font-size: 0.85rem;
-            padding: 2px;
-        }
-
-        .report-table input:focus {
-            outline: 2px solid var(--primary-color);
-            background-color: #fff;
-        }
-
-        .report-table select {
-            width: 100%;
-            border: none;
             text-align: center;
-            background: transparent;
-            font-size: 0.85rem;
-            padding: 2px;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            padding: 0;
+            margin: 0;
         }
 
-        .report-table select:focus {
-            outline: 2px solid var(--primary-color);
-            background-color: #fff;
+        input[type="time"] {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
         }
 
-        .btn-primary {
-            background-color: var(--brand-red);
-            border-color: var(--brand-red);
+        .report-table textarea {
+            resize: none;
+            overflow: hidden;
+            line-height: 1.2;
         }
 
-        .btn-primary:hover {
-            background-color: #b71c1c;
-            border-color: #b71c1c;
-        }
-
-        .summary-section {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-
-        .summary-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .summary-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 15px;
-        }
-
-        .summary-card label {
-            font-weight: 600;
-            color: var(--secondary-color);
+        /* Shift Colors */
+        .shift-box {
+            border: 2px solid #444;
             margin-bottom: 8px;
-            display: block;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .shift-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            border-bottom: 1px solid #444;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bg-s1 {
+            background-color: var(--shift1-bg);
+        }
+
+        .bg-s2 {
+            background-color: var(--shift2-bg);
+        }
+
+        .bg-s3 {
+            background-color: var(--shift3-bg);
+        }
+
+        tr.row-s1 td {
+            background-color: rgba(227, 242, 253, 0.4);
+        }
+
+        tr.row-s2 td {
+            background-color: rgba(255, 243, 205, 0.4);
+        }
+
+        tr.row-s3 td {
+            background-color: rgba(209, 231, 221, 0.4);
+        }
+
+        /* --- CUTTING SPECIFIC STYLES --- */
+        .cut-header {
+            background-color: #607d8b;
+            color: white;
+            padding: 4px 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cut-grid-container {
+            display: flex;
+            gap: 5px;
+            align-items: flex-start;
+        }
+
+        /* The Tasks Table (Left) */
+        .cut-tasks-col {
+            flex: 0 0 35%;
+            /* Takes 35% width */
+        }
+
+        /* The Carts Container (Right) */
+        .cut-carts-col {
+            flex: 1;
+            /* Takes remaining space */
+            display: flex;
+            gap: 2px;
+        }
+
+        /* Individual Cart Columns (36 rows each) */
+        .cart-list-table {
+            width: 50%;
+            font-size: 0.65rem;
+            border: 1px solid #333;
+            border-collapse: collapse;
+        }
+
+        .cart-list-table th {
+            background-color: #e9ecef;
+            border: 1px solid #666;
+            padding: 2px;
+            font-weight: bold;
             text-align: center;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
+        .cart-list-table td {
+            border: 1px solid #666;
+            padding: 0 2px;
+            height: 18px;
+            /* Slightly taller for better readability on page */
+            text-align: center;
+            overflow: hidden;
+            white-space: nowrap;
         }
 
-        @media print {
+        .cart-list-table input {
+            height: 100%;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            width: 100%;
+            background: transparent;
+        }
 
-            .control-panel,
-            .action-buttons,
-            .header button {
-                display: none;
+        .task-text {
+            font-size: 0.7rem;
+            text-align: right;
+            padding-right: 5px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Auto-Fill Controls in Header */
+        .autofill-ctrls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .autofill-ctrls input {
+            background: white;
+            border: none;
+            border-radius: 2px;
+            text-align: center;
+            height: 20px;
+            font-size: 0.7rem;
+            color: #333;
+        }
+
+        /* Emp Selects in Header */
+        .emp-selects {
+            display: flex;
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .emp-selects select {
+            font-size: 0.7rem;
+            padding: 0 4px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            width: 80px;
+            text-align: right;
+            color: #333;
+        }
+
+        /* Notes Dynamic Section */
+        .note-row {
+            display: none;
+            /* Hidden by default */
+            margin-bottom: 2px;
+        }
+
+        .note-row.visible {
+            display: flex;
+        }
+
+        /* PRINT PAGE BREAK LOGIC */
+        .page-break-container {
+            margin-bottom: 20px;
+            border-bottom: 2px dashed #ccc;
+            /* Visual separator on screen */
+            padding-bottom: 20px;
+        }
+
+        /* --- PRINT --- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.5cm;
+                /* Slight margin */
             }
 
             body {
                 padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            .report-container {
+            .header-bar,
+            .control-panel,
+            .no-print,
+            .toast-container,
+            .autofill-ctrls,
+            .add-note-btn {
+                display: none !important;
+            }
+
+            .report-paper {
+                display: block !important;
                 box-shadow: none;
+                padding: 0;
+                margin: 0;
+                width: 100%;
             }
-        }
 
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1050;
-        }
+            #historySection {
+                display: none !important;
+            }
 
-        .auto-number {
-            background-color: #e8f5e9;
-            font-weight: 600;
-        }
+            #reportSection {
+                display: block !important;
+            }
 
-        .shift-management {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
+            /* Force Page Break After Each Shift Container */
+            .page-break-container {
+                page-break-after: always;
+                border: none;
+                /* Remove visual separator in print */
+                margin: 0;
+                padding: 0;
+                height: 100vh;
+                /* occupy full page */
+            }
 
-        .shift-section {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
-        }
+            .page-break-container:last-child {
+                page-break-after: auto;
+                /* No empty page after last shift */
+            }
 
-        .shift-header {
-            background: linear-gradient(135deg, var(--primary-color), #8e0000);
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+            .report-table,
+            .cart-list-table {
+                font-size: 0.65rem;
+            }
 
-        .shift-entry {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            border: 1px solid #dee2e6;
-        }
+            .cut-header {
+                color: black;
+                background-color: #ddd;
+                border: 1px solid #000;
+                justify-content: flex-start;
+                /* Align left for print */
+                gap: 15px;
+            }
 
-        .shift-entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
+            .border-dark {
+                border-color: #000 !important;
+            }
 
-        .shift-entry-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            font-size: 0.9rem;
-        }
-
-        .btn-remove-shift {
-            padding: 2px 8px;
-            font-size: 0.75rem;
-        }
-
-        .employee-select-group {
-            margin-bottom: 8px;
-        }
-
-        .employee-select-group label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 3px;
-            display: block;
-        }
-
-        .employee-select-group select {
-            width: 100%;
-            font-size: 0.85rem;
-            padding: 4px;
-        }
-
-        .column-range-group {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-
-        .column-range-group label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin: 0;
-        }
-
-        .column-range-group input {
-            width: 50px;
-            font-size: 0.85rem;
-            padding: 4px;
-            text-align: center;
+            /* HIDE Placeholder Inputs on Print */
+            input::placeholder {
+                color: transparent;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="toast-container"></div>
+    <div class="toast-container position-fixed top-0 start-0 p-3"></div>
 
     <div class="container-fluid">
-        <div class="header">
-            <div class="header-brand">
-                <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
-                    alt="ASOBRICK FACTORY" class="header-logo">
-                <div>
-                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
-                            class="brand-gray-text">FACTORY</span></h4>
-                    <p class="mb-0" style="font-size: 0.9rem; color: #ffcdd2;">ڕاپۆرتی ڕۆژانە</p>
-                </div>
+        <div class="header-bar">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-grid-3x3-gap-fill fs-4"></i>
+                <h5 class="m-0 fw-bold">ASOBRICK REPORTS</h5>
             </div>
-            <div>
-                <span id="userInfo" class="me-3"></span>
-                <button class="btn btn-light btn-sm me-2" onclick="goBack()">
-                    <i class="bi bi-arrow-right-circle"></i> گەڕانەوە
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-light text-primary fw-bold" onclick="showHistory()">
+                    <i class="bi bi-clock-history"></i> History
                 </button>
-                <button class="btn btn-light btn-sm" id="logoutBtn">
-                    <i class="bi bi-box-arrow-right"></i> چوونەدەرەوە
-                </button>
+                <span class="badge bg-white text-dark d-flex align-items-center" id="userInfo">User</span>
+                <button class="btn btn-sm btn-outline-light"
+                    onclick="window.location.href='dashboard (2).html'">Back</button>
             </div>
         </div>
 
-        <div class="control-panel">
-            <h5 class="mb-4 text-center" style="color: var(--primary-color);">
-                <i class="bi bi-sliders"></i> ڕێکخستنەکانی ڕاپۆرت
-            </h5>
+        <div id="reportSection" class="view-section active-view">
+            <div class="control-panel">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">Department</label>
+                        <select class="form-select form-select-sm" id="departmentSelect">
+                            <option value="unsetting">داگرتن (Unsetting)</option>
+                            <option value="setting">بارکردن (Setting / H2)</option>
+                            <option value="crushing-prep">هاڕین (Crushing)</option>
+                            <option value="preparation">ئامادەکردن (Preparation)</option>
+                            <option value="klin">فڕن (Kiln)</option>
+                            <option value="cutting">بڕین (Cutting)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">Date</label>
+                        <input type="date" class="form-control form-control-sm" id="reportDate">
+                    </div>
 
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="departmentSelect" class="form-label">بەش</label>
-                    <select class="form-select" id="departmentSelect">
-                        <option value="">بەش هەڵبژێرە</option>
-                        <option value="crushing-prep">هاڕین و ئامادەکردن</option>
-                        <option value="cutting-setting">بڕین و بارکردن</option>
-                        <option value="klin">فڕن</option>
-                        <option value="unsetting">داگرتن</option>
-                        <option value="mechanical">میکانیک</option>
-                        <option value="electrical-ac">کارەبا</option>
-                        <option value="engineering">ئەندازیاریی</option>
-                        <option value="management">لێپرسراوەکان</option>
-                    </select>
+                    <div class="col-md-2 unsetting-ctrl">
+                        <label class="form-label small fw-bold text-muted">Start Time</label>
+                        <input type="time" class="form-control form-control-sm" id="startTime" value="08:00">
+                    </div>
+                    <div class="col-md-2 unsetting-ctrl">
+                        <label class="form-label small fw-bold text-muted">Interval (Min)</label>
+                        <input type="number" class="form-control form-control-sm" id="timeInterval" value="60" min="15"
+                            step="15">
+                    </div>
+
+                    <div class="col-md-3">
+                        <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="startNewReport()">
+                            <i class="bi bi-file-earmark-text me-1"></i> Generate / Clear
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <div class="col-md-3">
-                    <label for="reportDate" class="form-label">بەروار</label>
-                    <input type="date" class="form-control" id="reportDate">
+            <div class="report-paper" id="reportContainer" style="display:none;">
+                <div id="tableWrapper"></div>
+
+                <div class="no-print text-center mt-4 pt-3 border-top">
+                    <button class="btn btn-success px-4" onclick="saveReport()"><i class="bi bi-save me-1"></i> Save
+                        Data</button>
+                    <button class="btn btn-secondary px-4 ms-2" onclick="window.print()"><i
+                            class="bi bi-printer me-1"></i> Print A4</button>
                 </div>
+            </div>
+        </div>
 
-                <div class="col-md-2">
-                    <label for="numRows" class="form-label">ژمارەی ڕیزەکان</label>
-                    <input type="number" class="form-control" id="numRows" value="24" min="1" max="50">
-                </div>
-
-                <div class="col-md-2">
-                    <label for="timeScale" class="form-label">پێوانەی کات (کاتژمێر)</label>
-                    <input type="number" class="form-control" id="timeScale" value="1" min="0.5" max="4" step="0.5">
-                </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-primary w-100" onclick="generateReport()">
-                        <i class="bi bi-file-earmark-text"></i> دروستکردن
+        <div id="historySection" class="view-section">
+            <div class="control-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold m-0 text-primary">Report History</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="showReportView()">
+                        <i class="bi bi-x-lg"></i> Close
                     </button>
                 </div>
+                <div class="table-responsive">
+                    <table class="table table-hover history-table small">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Department</th>
+                                <th>Supervisor</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="report-container" id="reportContainer" style="display: none;">
-            <div class="report-header">
-                <h2 class="report-title">ڕاپۆرتی ڕۆژانە</h2>
-                <div class="report-info">
-                    <div><strong>بەش:</strong> <span id="reportDepartmentName"></span></div>
-                    <div><strong>بەروار:</strong> <span id="reportDateDisplay"></span></div>
-                </div>
-            </div>
-
-            <div id="reportTableContainer"></div>
-
-            <div class="summary-section" id="summarySection">
-                <h5 class="summary-title">کورتەی گشتی</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="summary-card">
-                            <label>total pcs. of unloading bricks</label>
-                            <input type="number" class="form-control text-center" id="totalLoadUnload" step="0.1">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="summary-card">
-                            <label>total pcs. brick for one kilncar</label>
-                            <input type="number" class="form-control text-center" id="totalBrickPerKlincar" step="0.1">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="summary-card">
-                            <label>total klincar</label>
-                            <input type="number" class="form-control text-center" id="totalKlincar" step="0.1">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="summary-card">
-                            <label>oil balance</label>
-                            <input type="number" class="form-control text-center" id="oilBalance" step="0.1">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-success" onclick="saveReport()">
-                    <i class="bi bi-save"></i> پاشەکەوتکردن
-                </button>
-                <button class="btn btn-info" onclick="window.print()">
-                    <i class="bi bi-printer"></i> چاپکردن
-                </button>
-                <button class="btn btn-secondary" onclick="exportToExcel()">
-                    <i class="bi bi-file-earmark-excel"></i> هەناردەکردن بۆ Excel
-                </button>
-            </div>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
             authDomain: "abf6-96dcf.firebaseapp.com",
@@ -461,537 +492,893 @@
             messagingSenderId: "405357996484",
             appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
         };
-
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Global variables
         let currentUser = null;
         let employees = [];
-        let reportData = {};
-        let brickTypes = ['بلۆک 20', 'خشتی', 'خشتی سپی', 'خشتی تایبەت'];
-        let shiftEntries = { shift1: [], shift2: [], shift3: [] };
-        let shiftCounter = { shift1: 0, shift2: 0, shift3: 0 };
+        let currentReportId = null;
 
-        // Check authentication
-        const storedUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!storedUser) {
-            window.location.href = 'index.html';
-        } else {
-            currentUser = storedUser;
-            document.getElementById('userInfo').textContent = `لە ژوورەوەیت وەک: ${currentUser.username} (${currentUser.role})`;
-        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const stored = JSON.parse(localStorage.getItem('currentUser'));
+            if (!stored) window.location.href = 'index.html';
+            currentUser = stored;
+            document.getElementById('userInfo').innerText = currentUser.username;
+            document.getElementById('reportDate').valueAsDate = new Date();
 
-        // Logout function
-        document.getElementById('logoutBtn').addEventListener('click', function () {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+            const deptSelect = document.getElementById('departmentSelect');
+            const toggleCtrls = () => {
+                const needsTimeControls = ['unsetting', 'klin', 'cutting'].includes(deptSelect.value);
+                const els = document.querySelectorAll('.unsetting-ctrl');
+                els.forEach(el => el.style.display = needsTimeControls ? 'block' : 'none');
+            };
+            deptSelect.addEventListener('change', toggleCtrls);
+            toggleCtrls();
+
+            const snap = await db.collection('employees').get();
+            snap.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
         });
 
-        // Go back function
-        function goBack() {
-            window.location.href = 'dashboard.html';
+        // --- NAVIGATION ---
+        function showHistory() {
+            document.getElementById('reportSection').classList.remove('active-view');
+            document.getElementById('historySection').classList.add('active-view');
+            loadHistoryData();
+        }
+        function showReportView() {
+            document.getElementById('historySection').classList.remove('active-view');
+            document.getElementById('reportSection').classList.add('active-view');
         }
 
-        // Load employees from Firebase
-        async function loadEmployees() {
+        // --- HISTORY LOGIC ---
+        async function loadHistoryData() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
             try {
-                const employeesSnapshot = await db.collection('employees').get();
-                employees = [];
-                employeesSnapshot.forEach(doc => {
-                    employees.push({ id: doc.id, ...doc.data() });
+                const snap = await db.collection('dailyReports').orderBy('createdAt', 'desc').limit(20).get();
+                tbody.innerHTML = '';
+                if (snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No reports found.</td></tr>';
+                    return;
+                }
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const row = `
+                        <tr>
+                            <td>${d.date}</td>
+                            <td>${formatDept(d.department)}</td>
+                            <td>${d.supervisor || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick='loadReportForView(${JSON.stringify(d)}, "${doc.id}")'>
+                                    <i class="bi bi-eye"></i> View/Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger ms-1" onclick="deleteReport('${doc.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
                 });
-                console.log('Loaded employees:', employees.length);
-            } catch (error) {
-                console.error('Error loading employees:', error);
-                showNotification('هەڵە لە بارکردنی کارمەندەکان', 'danger');
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Error loading history.</td></tr>';
             }
         }
-
-        // Get department display name
-        function getDepartmentDisplayName(department) {
-            const departmentNames = {
-                'crushing-prep': 'هاڕین و ئامادەکردن',
-                'cutting-setting': 'بڕین و بارکردن',
-                'klin': 'فڕن',
-                'unsetting': 'داگرتن',
-                'mechanical': 'میکانیک',
-                'electrical-ac': 'کارەبا',
-                'engineering': 'ئەندازیاریی',
-                'management': 'لێپرسراوەکان'
-            };
-            return departmentNames[department] || department;
+        function formatDept(d) {
+            if (d === 'unsetting') return 'داگرتن';
+            if (d === 'crushing-prep') return 'هاڕین';
+            if (d === 'preparation') return 'ئامادەکردن';
+            if (d === 'klin') return 'فڕن';
+            if (d === 'cutting') return 'بڕین';
+            return d;
         }
 
-        // Generate time for row based on start time and scale
-        function generateTimeForRow(rowIndex, timeScale) {
-            const startHour = 8; // Default start at 08:00
-            const totalHours = rowIndex * timeScale;
-            const hour = Math.floor(startHour + totalHours) % 24;
-            const minute = ((totalHours % 1) * 60);
-            return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        }
+        function fillReportData(data) {
+            if (data.tableData) {
+                for (const [key, value] of Object.entries(data.tableData)) {
+                    const el = document.getElementById(key);
+                    if (el) {
+                        if (el.type === 'checkbox') {
+                            el.checked = value;
+                        } else if (el.tagName === 'SELECT') {
+                            let optionExists = Array.from(el.options).some(opt => opt.value === value);
+                            if (optionExists) {
+                                el.value = value;
+                            } else if (value && value !== "") {
+                                const newOption = new Option(value, value, true, true);
+                                el.add(newOption);
+                            }
+                        } else {
+                            el.value = value;
+                        }
 
-        // Auto-fill brick type for entire column from selected row onwards
-        function autoFillBrickType(columnType, fromRow, value) {
-            const numRows = parseInt(document.getElementById('numRows').value);
-            for (let i = fromRow; i < numRows; i++) {
-                const cellId = `${columnType}-${i}`;
-                const selectElement = document.getElementById(cellId);
-                if (selectElement) {
-                    selectElement.value = value;
-                    reportData[cellId] = value;
+                        // --- Logic to Reveal Notes if they have Data ---
+                        if (el.id.includes('_note') && value && value.trim() !== '') {
+                            const noteRow = el.closest('.note-row');
+                            if (noteRow) noteRow.classList.add('visible');
+                        }
+
+                        if (el.onchange) el.onchange();
+                    }
                 }
             }
+            showToast('Report Loaded', 'success');
         }
 
-        // Generate report
+        function loadReportForView(data, id) {
+            currentReportId = id;
+            showReportView();
+            document.getElementById('departmentSelect').value = data.department;
+            document.getElementById('reportDate').value = data.date;
+
+            generateReport();
+
+            if (data.department === 'klin' && data.tableData && data.tableData['k_rows_setting']) {
+                const savedRows = data.tableData['k_rows_setting'];
+                const input = document.getElementById('k_rows_setting');
+                if (input && input.value !== savedRows.toString()) {
+                    input.value = savedRows;
+                    generateReport();
+                    setTimeout(() => { fillReportData(data); }, 300);
+                    return;
+                }
+            }
+
+            setTimeout(() => {
+                fillReportData(data);
+                showToast('Report Loaded - You can now Edit', 'info');
+            }, 100);
+        }
+
+        async function deleteReport(id) {
+            if (!confirm('Are you sure you want to delete this report?')) return;
+            try {
+                await db.collection('dailyReports').doc(id).delete();
+                showToast('Report deleted', 'success');
+                loadHistoryData();
+            } catch (e) {
+                console.error(e);
+                showToast('Error deleting report', 'danger');
+            }
+        }
+
+        // --- REPORT GENERATION ---
         function generateReport() {
-            const department = document.getElementById('departmentSelect').value;
-            const date = document.getElementById('reportDate').value;
-            const numRows = parseInt(document.getElementById('numRows').value);
-            const timeScale = parseFloat(document.getElementById('timeScale').value);
-
-            if (!department) {
-                showNotification('تکایە بەشێک هەڵبژێرە', 'warning');
-                return;
-            }
-
-            if (!date) {
-                showNotification('تکایە بەروار هەڵبژێرە', 'warning');
-                return;
-            }
-
-            // Update report header info
-            document.getElementById('reportDepartmentName').textContent = getDepartmentDisplayName(department);
-            document.getElementById('reportDateDisplay').textContent = date;
-
-            // Reset shift entries
-            shiftEntries = { shift1: [], shift2: [], shift3: [] };
-            shiftCounter = { shift1: 0, shift2: 0, shift3: 0 };
-
-            // Generate table
-            generateReportTable(numRows, timeScale);
-
-            // Show report container
+            const dept = document.getElementById('departmentSelect').value;
             document.getElementById('reportContainer').style.display = 'block';
+            const wrapper = document.getElementById('tableWrapper');
 
-            // Scroll to report
-            document.getElementById('reportContainer').scrollIntoView({ behavior: 'smooth' });
+            if (dept === 'unsetting') renderUnsettingTable(wrapper);
+            else if (dept === 'setting') renderSettingTable(wrapper);
+            else if (dept === 'crushing-prep') renderCrushingTable(wrapper);
+            else if (dept === 'preparation') renderPreparationTable(wrapper);
+            else if (dept === 'klin') renderKilnTable(wrapper);
+            else if (dept === 'cutting') renderCuttingTable(wrapper);
         }
 
-        // Generate report table (PORTRAIT orientation)
-        function generateReportTable(numRows, timeScale) {
-            const tableContainer = document.getElementById('reportTableContainer');
-            const departmentEmployees = employees.filter(emp => emp.department === document.getElementById('departmentSelect').value);
+        // ====================================================================
+        // === CUTTING (بڕین) REPORT - PAGE BREAK PER SHIFT ===================
+        // ====================================================================
+        const cuttingTasks = [
+            "1- چێکی سەرجەم خشتەکان بە ڤێرنە",
+            "2- چێکی سەرجەم سیمەکان",
+            "3- کاتی گۆڕینی سیمەکان",
+            "4- چێکی ڤاکیۆم ئاو بەتاڵکردن+ پلەی گەرمی",
+            "5- چێکی ئێسکاڤیدەر و بۆکسفیدەر + چەورکردن",
+            "٦- چێکی ئێکسترودەر و ڕۆتەیتەر",
+            "٧- چێکی گریپەر فریمەکان و ستاکەر",
+            "٨ - چێکی موبەریدە و سپلێتی بۆردی کارەبایی",
+            "٩- پاکردنەوەی هۆپەری میکسەر",
+            "١٠ - پاکردنەوەی ژووری ڤاکیۆم + گۆڕینی فلتەر",
+            "١١- ئێکستروژن",
+            "١٢- چێکی ترانسێرکاری دخوول تەنها شەفتی ڕۆژ",
+            "١٣ - چێکی ترانسێرکاری خروج تەنها شەفتی ڕۆژ",
+            "١٤ - فلتەری ڕۆنی ڤاکیۆم",
+            "١٥- چێکی ئێلیڤەیتەر + گەراجی فرەیمەکان",
+            "١٦- چێکی گەراجی عەرەبانەکانی درایەر",
+            "١٧- چەورکردن زنجیرەکان",
+            "١٨ - پاکردنەوەی پولییەکان",
+            "١٩ - پاکردنەوەی بۆکسفیدەر",
+            "٢٠- تێستی قالپ",
+            "٢١- ئاوڕشێن کردنی سایلۆ",
+            "٢٢ - گۆڕینی سکراپەر",
+            "٢٣ - کارەبا بڕان"
+        ];
 
-            let tableHTML = '<div class="row">';
+        function renderCuttingTable(wrapper) {
+            const dateValue = document.getElementById('reportDate').value;
+            const shifts = [
+                { id: 's1', name: 'Shift 1 (بەیانیان)', defStart: '08:00' },
+                { id: 's2', name: 'Shift 2 (ئێواران)', defStart: '16:00' },
+                { id: 's3', name: 'Shift 3 (شەوان)', defStart: '00:00' }
+            ];
 
-            // Main table (portrait - rows are time slots)
-            tableHTML += '<div class="col-md-8">';
-            tableHTML += '<table class="report-table">';
+            // Filter Employees
+            const cuttingEmps = employees.filter(e => e.department === 'cutting' || e.department === 'setting' || e.department === 'all');
+            let empOptions = `<option value="">Select...</option>`;
+            cuttingEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
 
-            // Header row
-            tableHTML += '<thead><tr>';
-            tableHTML += '<th class="row-header">ژ</th>';
-            tableHTML += '<th class="row-header">ژمارەی عەرەبانەی دخول</th>';
-            tableHTML += '<th class="row-header">جۆری خشت (دخول)</th>';
-            tableHTML += '<th class="row-header">ژمارەی عەرەبانەی خروج</th>';
-            tableHTML += '<th class="row-header">جۆری خشت (خروج)</th>';
-            tableHTML += '<th class="row-header">کات</th>';
-            tableHTML += '</tr></thead>';
+            let html = '';
 
-            tableHTML += '<tbody>';
+            shifts.forEach((shift) => {
+                // --- 1. Tasks Column (Left) ---
+                let tasksHtml = '';
+                cuttingTasks.forEach((task, index) => {
+                    const rowIdBase = `cut_${shift.id}_r${index}`;
+                    tasksHtml += `
+                        <tr>
+                            <td class="task-text">${task}</td>
+                            <td style="width: 30px; background:#fff;"><input type="checkbox" id="${rowIdBase}_check"></td>
+                        </tr>
+                    `;
+                });
 
-            // Each row is a time slot
-            for (let i = 0; i < numRows; i++) {
-                tableHTML += '<tr>';
+                // --- 2. Carts Columns (Right: 1-36 and 37-72) ---
+                let cartsCol1 = '';
+                let cartsCol2 = '';
 
-                // ژ - Auto number
-                tableHTML += `<td class="auto-number">${i + 1}</td>`;
+                for (let i = 1; i <= 36; i++) {
+                    // Left Cart Column (1 to 36)
+                    cartsCol1 += `
+                        <tr>
+                            <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
+                            <td><input type="text" id="cut_${shift.id}_c${i}_time" placeholder="کات"></td>
+                            <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                        </tr>`;
 
-                // ژمارەی عەرەبانەی دخول - Manual entry
-                const entryCartsId = `entry-carts-${i}`;
-                tableHTML += `<td><input type="number" id="${entryCartsId}" onchange="updateReportData('${entryCartsId}', this.value)" style="width: 70px;"></td>`;
+                    // Right Cart Column (37 to 72)
+                    let j = i + 36;
+                    cartsCol2 += `
+                        <tr>
+                            <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
+                            <td><input type="text" id="cut_${shift.id}_c${j}_time" placeholder="کات"></td>
+                            <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                        </tr>`;
+                }
 
-                // جۆری خشت (دخول) - Selective with auto-fill
-                const entryBrickId = `entry-brick-type-${i}`;
-                tableHTML += `<td><select id="${entryBrickId}" onchange="autoFillBrickType('entry-brick-type', ${i}, this.value)" style="width: 110px;">
-                    <option value="">هەڵبژێرە</option>
-                    ${brickTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                </select></td>`;
+                // --- 3. Dynamic Shift Notes ---
+                let notesHtml = `
+                <div class="mt-2" id="cut_${shift.id}_notes_container">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <strong style="font-size:0.8rem;">تێبینیەکان (Notes):</strong>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 add-note-btn" style="font-size:0.7rem;" onclick="addNoteField('${shift.id}')">+ Add Note</button>
+                    </div>
+                `;
 
-                // ژمارەی عەرەبانەی خروج - Manual entry
-                const exitCartsId = `exit-carts-${i}`;
-                tableHTML += `<td><input type="number" id="${exitCartsId}" onchange="updateReportData('${exitCartsId}', this.value)" style="width: 70px;"></td>`;
+                // Create 6 hidden note inputs
+                for (let i = 1; i <= 6; i++) {
+                    notesHtml += `
+                        <div class="note-row align-items-center" id="cut_${shift.id}_note_row_${i}">
+                            <span class="text-muted small me-2" style="width:15px;">${i}.</span>
+                            <input type="text" id="cut_${shift.id}_note${i}" class="form-control form-control-sm shadow-none p-1 border-bottom border-0 rounded-0" placeholder="تێبینی بنووسە..." style="font-size:0.8rem; background: #fdfdfd;">
+                        </div>`;
+                }
+                notesHtml += '</div>';
 
-                // جۆری خشت (خروج) - Selective with auto-fill
-                const exitBrickId = `exit-brick-type-${i}`;
-                tableHTML += `<td><select id="${exitBrickId}" onchange="autoFillBrickType('exit-brick-type', ${i}, this.value)" style="width: 110px;">
-                    <option value="">هەڵبژێرە</option>
-                    ${brickTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                </select></td>`;
+                // --- WRAP EACH SHIFT IN A PAGE-BREAK CONTAINER ---
+                html += `
+                <div class="page-break-container">
+                    <div class="text-center mb-1 border-bottom pb-1">
+                        <h5 class="fw-bold m-0">ڕاپۆرتی ڕۆژانەی بەشی بڕین (Cutting)</h5>
+                        <div class="text-muted small">${dateValue}</div>
+                    </div>
 
-                // کات - Auto-manual timer
-                const timeId = `time-${i}`;
-                const autoTime = generateTimeForRow(i, timeScale);
-                tableHTML += `<td><input type="time" id="${timeId}" value="${autoTime}" onchange="updateReportData('${timeId}', this.value)" style="width: 100px;"></td>`;
+                    <div class="cut-header">
+                        <span>${shift.name}</span>
+                        
+                        <div class="autofill-ctrls">
+                            <span style="font-size:0.6rem;">Start:</span>
+                            <input type="time" id="cut_${shift.id}_start" value="${shift.defStart}" style="width:50px;">
+                            <span style="font-size:0.6rem;">Int:</span>
+                            <input type="number" id="cut_${shift.id}_int" value="10" style="width:30px;">
+                            <button class="btn btn-sm btn-light py-0 px-2" style="font-size:0.7rem; font-weight:bold;" onclick="autoFillCutTimes('${shift.id}')">Fill</button>
+                        </div>
 
-                tableHTML += '</tr>';
+                        <div class="emp-selects">
+                            <i class="bi bi-people-fill text-secondary" style="font-size:0.8rem; padding:0 3px;"></i>
+                            <select id="cut_${shift.id}_emp1">${empOptions}</select>
+                            <select id="cut_${shift.id}_emp2">${empOptions}</select>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-dark p-1 mb-2 bg-white">
+                        <div class="cut-grid-container">
+                            
+                            <div class="cut-tasks-col">
+                                <table class="report-table" style="background: #fafafa;">
+                                    <thead class="table-light"><tr><th>کارەکان</th><th>✓</th></tr></thead>
+                                    <tbody>${tasksHtml}</tbody>
+                                </table>
+                                <div class="mt-2 p-1 border rounded bg-light">
+                                    <table class="report-table" style="font-size:0.65rem">
+                                        <thead class="table-secondary"><tr><th>ژمارەی سایلۆ</th><th>خشتی سەر یەک عەرەبانە</th><th>جۆر</th></tr></thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="number" id="cut_${shift.id}_silo"></td>
+                                                <td><input type="number" id="cut_${shift.id}_total_brick"></td>
+                                                <td>
+                                                    <select id="cut_${shift.id}_type" style="font-size:0.65rem">
+                                                        <option value="">-</option>
+                                                        <option value="20x40">20x40</option>
+                                                        <option value="15x40">15x40</option>
+                                                        <option value="10x40">10x40</option>
+                                                        <option value="Blok">Blok</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr class="table-secondary"><th colspan="2">کێشی خشتی کۆڵۆم ١</th><th>کێشی خشتی کۆڵۆم ٢</th></tr>
+                                            <tr>
+                                                <td colspan="2"><input type="number" step="0.01" id="cut_${shift.id}_w1" placeholder="kg"></td>
+                                                <td><input type="number" id="cut_${shift.id}_scrap" placeholder="Kg"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="cut-carts-col">
+                                <table class="cart-list-table">
+                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>ژمارەی عەرەبانە</th></tr></thead>
+                                    <tbody>${cartsCol1}</tbody>
+                                </table>
+                                
+                                <table class="cart-list-table">
+                                    <thead class="table-light"><tr><th>#</th><th>Time</th><th>ژمارەی عەرەبانە</th></tr></thead>
+                                    <tbody>${cartsCol2}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        ${notesHtml}
+                    </div>
+                </div>
+                `;
+            });
+
+            wrapper.innerHTML = html;
+        }
+
+        function autoFillCutTimes(shiftId) {
+            // Get Start Time and Interval from the specific shift header inputs
+            const startVal = document.getElementById(`cut_${shiftId}_start`).value;
+            const intervalVal = parseInt(document.getElementById(`cut_${shiftId}_int`).value) || 10;
+
+            if (!startVal) {
+                alert("Please set a start time.");
+                return;
             }
 
-            tableHTML += '</tbody>';
-            tableHTML += '</table>';
-            tableHTML += '</div>';
+            // Parse Start Time
+            const [h, m] = startVal.split(':').map(Number);
+            let currentMins = h * 60 + m;
 
-            // Employee shift section (next to table)
-            tableHTML += '<div class="col-md-4">';
-            tableHTML += '<div class="shift-management">';
-            tableHTML += '<h6 class="text-center mb-3" style="color: var(--primary-color); font-weight: 600;">شیفتەکانی کارمەندان</h6>';
+            // Loop through 72 carts
+            for (let i = 1; i <= 72; i++) {
+                const inputId = `cut_${shiftId}_c${i}_time`;
+                const el = document.getElementById(inputId);
 
-            // Shift 1
-            tableHTML += '<div class="shift-section mb-3">';
-            tableHTML += '<div class="shift-header">شیفتی یەکەم</div>';
-            tableHTML += '<div id="shift1-entries"></div>';
-            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift1\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
-            tableHTML += '</div>';
+                if (el) {
+                    // Format minutes back to HH:MM
+                    let hh = Math.floor(currentMins / 60) % 24;
+                    let mm = currentMins % 60;
+                    const timeStr = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
 
-            // Shift 2
-            tableHTML += '<div class="shift-section mb-3">';
-            tableHTML += '<div class="shift-header">شیفتی دووەم</div>';
-            tableHTML += '<div id="shift2-entries"></div>';
-            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift2\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
-            tableHTML += '</div>';
+                    el.value = timeStr;
+                }
 
-            // Shift 3
-            tableHTML += '<div class="shift-section mb-3">';
-            tableHTML += '<div class="shift-header">شیفتی سێیەم</div>';
-            tableHTML += '<div id="shift3-entries"></div>';
-            tableHTML += '<button class="btn btn-sm btn-primary w-100 mt-2" onclick="addShiftEntry(\'shift3\')"><i class="bi bi-plus-circle"></i> زیادکردنی شیفت</button>';
-            tableHTML += '</div>';
-
-            tableHTML += '</div>';
-            tableHTML += '</div>';
-
-            tableHTML += '</div>'; // End row
-
-            tableContainer.innerHTML = tableHTML;
-
-            // Store department employees for shift entries
-            window.currentDepartmentEmployees = departmentEmployees;
+                // Add interval for next cart
+                currentMins += intervalVal;
+            }
         }
 
-        // Add shift entry
-        function addShiftEntry(shiftId) {
-            const entryId = shiftCounter[shiftId]++;
-            const container = document.getElementById(`${shiftId}-entries`);
-            const departmentEmployees = window.currentDepartmentEmployees || [];
+        // --- NEW: Add Note Function ---
+        function addNoteField(shiftId) {
+            // Find the first hidden note row for this shift
+            for (let i = 1; i <= 6; i++) {
+                const row = document.getElementById(`cut_${shiftId}_note_row_${i}`);
+                if (row && !row.classList.contains('visible')) {
+                    row.classList.add('visible');
+                    return; // Stop after showing one
+                }
+            }
+            alert("Max 6 notes allowed.");
+        }
 
-            const entryHTML = `
-                <div class="shift-entry" id="${shiftId}-entry-${entryId}">
-                    <div class="shift-entry-header">
-                        <span class="shift-entry-title">شیفت ${entryId + 1}</span>
-                        <button class="btn btn-sm btn-danger btn-remove-shift" onclick="removeShiftEntry('${shiftId}', ${entryId})">
-                            <i class="bi bi-trash"></i>
-                        </button>
+
+        // ====================================================================
+        // === SETTING (بارکردن) REPORT =======================================
+        // ====================================================================
+        function renderSettingTable(wrapper) {
+            const settingEmps = employees.filter(e => e.department === 'setting' || e.department === 'all' || e.department === 'klin');
+            let empOptions = `<option value="">Select...</option>`;
+            settingEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
+
+            const dateValue = document.getElementById('reportDate').value;
+            const startTimeStr = document.getElementById('startTime').value;
+            const interval = parseInt(document.getElementById('timeInterval').value) || 60;
+
+            function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
+            function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
+
+            let currentMins = getMinutes(startTimeStr);
+            const maxRows = 30;
+            let rowsHtml = '';
+
+            for (let i = 1; i <= maxRows; i++) {
+                const timeLabel = formatTime(currentMins);
+                let rowClass = 'row-s3';
+                let dayMins = currentMins % 1440;
+                if (dayMins >= 480 && dayMins < 960) rowClass = 'row-s1';
+                else if (dayMins >= 960) rowClass = 'row-s2';
+                else rowClass = 'row-s3';
+
+                const rid = `set_r${i}`;
+
+                rowsHtml += `
+                <tr class="${rowClass} compact-rows">
+                    <td>${i}</td>
+                    <td><input type="number" id="${rid}_kilncar" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
+                    <td><input type="time" value="${timeLabel}"></td>
+                    <td><input type="number" id="${rid}_d1"></td>
+                    <td><input type="number" id="${rid}_d2"></td>
+                    <td><input type="number" id="${rid}_d3"></td>
+                    <td><input type="number" id="${rid}_d4"></td>
+                    <td><input type="number" id="${rid}_d5"></td>
+                </tr>
+                `;
+                currentMins += interval;
+            }
+
+            const html = `
+             <div class="row g-0">
+                <div class="col-8 pe-2">
+                    <div class="report-title-box text-center border border-2 border-dark p-1 mb-1 bg-light">
+                        <h6 class="m-0 fw-bold">بەشی بارکردن هێڵی دوو (Setting)</h6>
+                        <small>${dateValue}</small>
                     </div>
-                    
-                    <div class="employee-select-group">
-                        <label>کارمەند ١</label>
-                        <select class="form-select form-select-sm" id="${shiftId}-${entryId}-emp1">
-                            <option value="">هەڵبژێرە</option>
-                            ${departmentEmployees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('')}
-                        </select>
+                    <table class="table table-bordered table-sm set-table border-dark table-hover report-table">
+                        <thead class="table-light border-dark">
+                            <tr>
+                                <th rowspan="2" style="width:5%">#</th>
+                                <th rowspan="2" style="width:15%">ژ. عەرەبانە<br>(Kilncar)</th>
+                                <th rowspan="2" style="width:15%">کات<br>(Time)</th>
+                                <th colspan="5">ژمارەی عەرەبانەکان ناو درایەر (Dryer Carts)</th>
+                            </tr>
+                            <tr>
+                                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>
+                <div class="col-4">
+                     <div class="shift-box bg-s1">
+                        <div class="shift-header">Shift 1 (08-16)</div>
+                        <div class="p-1">
+                            <label>ناوی کارمەند:</label>
+                            <select id="set_s1_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
+                        </div>
+                        <div class="d-flex gap-1 mb-1 align-items-center px-1">
+                            <span>کێشی خشت:</span>
+                            <input type="number" id="set_s1_w1" class="form-control form-control-sm p-0 text-center" placeholder="W1">
+                            <input type="number" id="set_s1_w2" class="form-control form-control-sm p-0 text-center" placeholder="W2">
+                        </div>
+                        <div class="d-flex justify-content-between bg-white px-1 border rounded mx-1">
+                           <span>ژ. عەرەبانە:</span>
+                           <span id="set_s1_total" class="fw-bold text-primary">0</span>
+                        </div>
+                        <textarea id="set_s1_note" rows="2" class="form-control form-control-sm mt-1" placeholder="تێبینی..."></textarea>
+                     </div>
+
+                     <div class="shift-box bg-s2">
+                        <div class="shift-header">Shift 2 (16-24)</div>
+                        <div class="p-1">
+                            <label>ناوی کارمەند:</label>
+                            <select id="set_s2_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
+                        </div>
+                        <div class="d-flex gap-1 mb-1 align-items-center px-1">
+                            <span>کێشی خشت:</span>
+                            <input type="number" id="set_s2_w1" class="form-control form-control-sm p-0 text-center" placeholder="W1">
+                            <input type="number" id="set_s2_w2" class="form-control form-control-sm p-0 text-center" placeholder="W2">
+                        </div>
+                        <div class="d-flex justify-content-between bg-white px-1 border rounded mx-1">
+                           <span>ژ. عەرەبانە:</span>
+                           <span id="set_s2_total" class="fw-bold text-primary">0</span>
+                        </div>
+                        <textarea id="set_s2_note" rows="2" class="form-control form-control-sm mt-1" placeholder="تێبینی..."></textarea>
+                     </div>
+
+                     <div class="shift-box bg-s3">
+                        <div class="shift-header">Shift 3 (24-08)</div>
+                        <div class="p-1">
+                            <label>ناوی کارمەند:</label>
+                            <select id="set_s3_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
+                        </div>
+                        <div class="d-flex gap-1 mb-1 align-items-center px-1">
+                            <span>کێشی خشت:</span>
+                            <input type="number" id="set_s3_w1" class="form-control form-control-sm p-0 text-center" placeholder="W1">
+                            <input type="number" id="set_s3_w2" class="form-control form-control-sm p-0 text-center" placeholder="W2">
+                        </div>
+                        <div class="d-flex justify-content-between bg-white px-1 border rounded mx-1">
+                           <span>ژ. عەرەبانە:</span>
+                           <span id="set_s3_total" class="fw-bold text-primary">0</span>
+                        </div>
+                        <textarea id="set_s3_note" rows="2" class="form-control form-control-sm mt-1" placeholder="تێبینی..."></textarea>
+                     </div>
+
+                     <div class="card p-2 bg-light border-dark mt-2">
+                        <h6 class="fw-bold text-center border-bottom pb-1">Summary (کۆی گشتی)</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="fw-bold">Total Carts:</small>
+                            <input type="number" id="set_grand_total_carts" readonly class="form-control form-control-sm w-50 fw-bold text-end bg-white">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                             <small>Brick/Kilncar:</small>
+                             <input type="number" id="set_brick_per_car" class="form-control form-control-sm w-50 text-end">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                             <small>Garage Kilncars:</small>
+                             <input type="number" id="set_garage_cars" class="form-control form-control-sm w-50 text-end">
+                        </div>
+                         <div class="d-flex justify-content-between align-items-center mb-1">
+                             <small>Total Cutting:</small>
+                             <input type="number" id="set_total_cutting" class="form-control form-control-sm w-50 text-end">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-1">
+                             <small class="fw-bold text-danger">Total Kilncars:</small>
+                             <input type="number" id="set_total_kilncars" class="form-control form-control-sm w-50 fw-bold text-end text-danger">
+                        </div>
+                     </div>
+                </div>
+             </div>
+            `;
+            wrapper.innerHTML = html;
+        }
+
+        function calcSettingTotals() {
+            let s1 = 0, s2 = 0, s3 = 0;
+            document.querySelectorAll('tr.row-s1 input[id$="_kilncar"]').forEach(i => { if (i.value) s1++; });
+            document.querySelectorAll('tr.row-s2 input[id$="_kilncar"]').forEach(i => { if (i.value) s2++; });
+            document.querySelectorAll('tr.row-s3 input[id$="_kilncar"]').forEach(i => { if (i.value) s3++; });
+
+            document.getElementById('set_s1_total').innerText = s1;
+            document.getElementById('set_s2_total').innerText = s2;
+            document.getElementById('set_s3_total').innerText = s3;
+
+            const total = s1 + s2 + s3;
+            document.getElementById('set_grand_total_carts').value = total;
+        }
+
+        // ====================================================================
+        // === KILN (فڕن) REPORT ==============================================
+        // ====================================================================
+        function renderKilnTable(wrapper) {
+            const kilnEmps = employees.filter(e => e.department === 'klin' || e.department === 'all');
+            let empOptions = `<option value="">Select...</option>`;
+            kilnEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
+
+            const dateValue = document.getElementById('reportDate').value;
+            const startTimeStr = document.getElementById('startTime').value;
+            const interval = parseInt(document.getElementById('timeInterval').value) || 60;
+
+            const existingRowsInput = document.getElementById('k_rows_setting');
+            const rowCount = existingRowsInput ? parseInt(existingRowsInput.value) || 24 : 24;
+
+            const brickTypes = [
+                { val: "", label: "" }, { val: "Blok 20", label: "Blok 20" }, { val: "Blok 15", label: "Blok 15" },
+                { val: "Blok 10", label: "Blok 10" }, { val: "Hori", label: "Hori" }, { val: "Perkh", label: "Perkh" }, { val: "Jomhur", label: "Jomhur" }
+            ];
+            let brickOptions = "";
+            brickTypes.forEach(t => brickOptions += `<option value="${t.val}">${t.label}</option>`);
+
+            function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
+            function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
+            let currentMins = getMinutes(startTimeStr);
+            let rowsHtml = '';
+
+            for (let i = 1; i <= rowCount; i++) {
+                const timeLabel = formatTime(currentMins);
+                const rid = `k_r${i}`;
+                rowsHtml += `
+                    <tr class="compact-rows">
+                        <td>${i}</td>
+                        <td><input type="time" class="fw-bold" value="${timeLabel}"></td>
+                        <td><select id="${rid}_type_out" onchange="autoFillType(this, 'type_out', ${rowCount})">${brickOptions}</select></td>
+                        <td><input type="number" id="${rid}_cart_out"></td>
+                        <td><select id="${rid}_type_in" onchange="autoFillType(this, 'type_in', ${rowCount})">${brickOptions}</select></td>
+                        <td><input type="number" id="${rid}_cart_in"></td>
+                    </tr>
+                `;
+                currentMins += interval;
+            }
+
+            const html = `
+                <div class="d-flex justify-content-between mb-2 p-2 border border-2 border-dark rounded bg-light">
+                    <div class="fw-bold small">بەروار: ${dateValue}</div>
+                    <div class="fw-bold fs-6">ڕاپۆرتی ڕۆژانەی بەشی فڕن</div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="fw-bold small">ژمارەی ڕیز:</span>
+                        <input type="number" id="k_rows_setting" value="${rowCount}" style="width:50px; border:1px solid #999; text-align:center; border-radius:4px;" onchange="generateReport()">
                     </div>
-                    
-                    <div class="employee-select-group">
-                        <label>کارمەند ٢</label>
-                        <select class="form-select form-select-sm" id="${shiftId}-${entryId}-emp2">
-                            <option value="">هەڵبژێرە</option>
-                            ${departmentEmployees.map(emp => `<option value="${emp.id}">${emp.name}</option>`).join('')}
-                        </select>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-5">
+                        <div class="shift-box bg-s1"><div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s1_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">کێشەکان و چاککردن</td></tr><tr><td colspan="2"><textarea id="k_s1_note" rows="4"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s2_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">کێشەکان و چاککردن</td></tr><tr><td colspan="2"><textarea id="k_s2_note" rows="4"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s3_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">کێشەکان و چاککردن</td></tr><tr><td colspan="2"><textarea id="k_s3_note" rows="4"></textarea></td></tr></table></div>
                     </div>
-                    
-                    <div class="column-range-group">
-                        <label>لە ڕیزی:</label>
-                        <input type="number" class="form-control form-control-sm" id="${shiftId}-${entryId}-from" min="1" max="${document.getElementById('numRows').value}" value="1">
-                        <label>بۆ:</label>
-                        <input type="number" class="form-control form-control-sm" id="${shiftId}-${entryId}-to" min="1" max="${document.getElementById('numRows').value}" value="8">
+                    <div class="col-7">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width:5%">#</th>
+                                    <th rowspan="2" style="width:15%">کات</th>
+                                    <th colspan="2" style="background:#f8f9fa">عەرەبانەی دەرچوو (خروج)</th>
+                                    <th colspan="2" style="background:#e9ecef">عەرەبانەی هاتوو (دخول)</th>
+                                </tr>
+                                <tr>
+                                    <th style="width:20%">جۆری خشت</th>
+                                    <th style="width:15%">ژمارە</th>
+                                    <th style="width:20%">جۆری خشت</th>
+                                    <th style="width:15%">ژمارە</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-8">
+                        <table class="report-table"><thead><tr class="bg-light"><th>Oil Balance</th><th>Total Kilncars</th><th>Total pcs. brick (1 car)</th><th>Total pcs. Unloading</th></tr></thead><tbody><tr><td><input type="number" id="k_oil_bal" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_cars" class="fw-bold fs-6"></td><td><input type="number" id="k_pcs_car" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_unload" class="fw-bold fs-6"></td></tr></tbody></table>
+                    </div>
+                    <div class="col-4">
+                        <table class="report-table"><tr><td class="bg-light fw-bold" style="font-size:0.7rem">پاککردنەوەی عەرەبانەکان</td><td><select id="k_clean_cart">${empOptions}</select></td></tr><tr><td class="bg-light fw-bold" style="font-size:0.7rem">گسک دانی فڕن و درایەر</td><td><select id="k_sweep_kiln">${empOptions}</select></td></tr></table>
                     </div>
                 </div>
             `;
-
-            container.insertAdjacentHTML('beforeend', entryHTML);
-
-            // Store entry data
-            shiftEntries[shiftId].push({
-                id: entryId,
-                emp1: null,
-                emp2: null,
-                from: 1,
-                to: 8
-            });
+            wrapper.innerHTML = html;
         }
 
-        // Remove shift entry
-        function removeShiftEntry(shiftId, entryId) {
-            const entryElement = document.getElementById(`${shiftId}-entry-${entryId}`);
-            if (entryElement) {
-                entryElement.remove();
+        window.autoFillType = function (el, typeSuffix, maxRows) {
+            const val = el.value;
+            if (!val) return;
+            const currentId = el.id;
+            const parts = currentId.split('_');
+            const currentRowNum = parseInt(parts[1].substring(1));
+            for (let i = currentRowNum + 1; i <= maxRows; i++) {
+                const nextId = `k_r${i}_${typeSuffix}`;
+                const nextEl = document.getElementById(nextId);
+                if (nextEl && (nextEl.value === "" || nextEl.value === "Select...")) {
+                    nextEl.value = val;
+                }
             }
-            shiftEntries[shiftId] = shiftEntries[shiftId].filter(entry => entry.id !== entryId);
+        };
+
+        // --- PREPARATION ---
+        function renderPreparationTable(wrapper) {
+            const prepEmps = employees.filter(e => e.department === 'preparation' || e.department === 'crushing-prep' || e.department === 'all');
+            let empOptions = `<option value="">Select...</option>`;
+            prepEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
+
+            const dateValue = document.getElementById('reportDate').value;
+
+            const html = `
+                <div class="report-title-box text-center border border-2 border-dark p-2 mb-3 bg-light">
+                    <h5 class="m-0 fw-bold">کارکردنی ڕۆژانەی بەشی ئامادەکردنی خۆڵ</h5>
+                    <small>${dateValue}</small>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="shift-box bg-s1">
+                            <div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div>
+                            <table class="report-table expanded-rows" style="border:none;">
+                                <tr><td style="width:15%" class="fw-bold">ناوى کارمەند</td><td colspan="3"><select id="p_s1_emp1">${empOptions}</select></td></tr>
+                                <tr><td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td><td colspan="3"><input type="text" id="p_s1_dur" onchange="calcPrepTotals()" placeholder="نموونە: 6:30 یان 8:00" style="font-weight:bold;"></td></tr>
+                                <tr><td class="fw-bold">خۆڵی ئامادەکراو (طەن)</td><td colspan="3"><input type="number" id="p_s1_tons" onchange="calcPrepTotals()" placeholder="0"></td></tr>
+                                <tr><td class="fw-bold">تێبینی</td><td colspan="3"><textarea id="p_s1_note" rows="5"></textarea></td></tr>
+                            </table>
+                        </div>
+                        <div class="shift-box bg-s3">
+                            <div class="shift-header">شیفتی دووەم (00:00 - 08:00)</div>
+                            <table class="report-table expanded-rows" style="border:none;">
+                                <tr><td style="width:15%" class="fw-bold">ناوى کارمەند</td><td colspan="3"><select id="p_s2_emp1">${empOptions}</select></td></tr>
+                                <tr><td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td><td colspan="3"><input type="text" id="p_s2_dur" onchange="calcPrepTotals()" placeholder="نموونە: 5:30 یان 6:00" style="font-weight:bold;"></td></tr>
+                                <tr><td class="fw-bold">خۆڵی ئامادەکراو (طەن)</td><td colspan="3"><input type="number" id="p_s2_tons" onchange="calcPrepTotals()" placeholder="0"></td></tr>
+                                <tr><td class="fw-bold">تێبینی</td><td colspan="3"><textarea id="p_s2_note" rows="5"></textarea></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                         <div class="p-3 border rounded bg-light">
+                            <h6 class="text-center fw-bold border-bottom pb-2">پوختەی ڕۆژانە</h6>
+                            <div class="row text-center">
+                                <div class="col-6 border-end"><div class="text-muted small fw-bold">کۆی گشتی خۆڵی ئامادەکراو (طەن)</div><input type="number" id="p_total_tons" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
+                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="p_total_hours" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            wrapper.innerHTML = html;
         }
 
-        // Update report data
-        function updateReportData(cellId, value) {
-            reportData[cellId] = value;
+        function calcPrepTotals() {
+            const t1 = parseFloat(document.getElementById('p_s1_tons').value) || 0;
+            const t2 = parseFloat(document.getElementById('p_s2_tons').value) || 0;
+            document.getElementById('p_total_tons').value = t1 + t2;
+            const parseDur = (val) => { if (!val) return 0; val = val.toString().replace('.', ':'); const parts = val.split(':'); return (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0); };
+            const minsToTime = (m) => `${Math.floor(m / 60)}:${(m % 60).toString().padStart(2, '0')}`;
+            const d1 = parseDur(document.getElementById('p_s1_dur').value);
+            const d2 = parseDur(document.getElementById('p_s2_dur').value);
+            document.getElementById('p_total_hours').value = minsToTime(d1 + d2);
         }
 
-        // Collect shift data before saving
-        function collectShiftData() {
-            const allShiftData = {};
+        // --- UNSETTING ---
+        function renderUnsettingTable(wrapper) {
+            const unsettingEmps = employees.filter(e => e.department === 'unsetting' || e.department === 'all');
+            let empOptions = `<option value="">Select...</option>`;
+            unsettingEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
 
-            ['shift1', 'shift2', 'shift3'].forEach(shiftId => {
-                allShiftData[shiftId] = [];
-                shiftEntries[shiftId].forEach(entry => {
-                    const emp1Element = document.getElementById(`${shiftId}-${entry.id}-emp1`);
-                    const emp2Element = document.getElementById(`${shiftId}-${entry.id}-emp2`);
-                    const fromElement = document.getElementById(`${shiftId}-${entry.id}-from`);
-                    const toElement = document.getElementById(`${shiftId}-${entry.id}-to`);
+            const dateValue = document.getElementById('reportDate').value;
+            const startTimeStr = document.getElementById('startTime').value;
+            const interval = parseInt(document.getElementById('timeInterval').value) || 60;
+            const getShiftHours = (id) => { const el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 8; };
+            const s1h = getShiftHours('s1_hours_input');
+            const s2h = getShiftHours('s2_hours_input');
+            const s3h = getShiftHours('s3_hours_input');
+            function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
+            function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
 
-                    if (emp1Element && emp2Element && fromElement && toElement) {
-                        allShiftData[shiftId].push({
-                            emp1: emp1Element.value,
-                            emp2: emp2Element.value,
-                            from: parseInt(fromElement.value),
-                            to: parseInt(toElement.value)
-                        });
-                    }
-                });
-            });
+            const startMins = getMinutes(startTimeStr);
+            const s1End = startMins + (s1h * 60);
+            const s2End = s1End + (s2h * 60);
+            const s3End = s2End + (s3h * 60);
 
-            return allShiftData;
+            let currentMins = startMins;
+            let rowsHtml = '';
+            let rowCount = 1;
+
+            while (currentMins < s3End) {
+                let colorClass = '';
+                if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
+                const timeLabel = formatTime(currentMins);
+                const rid = `r${rowCount}`;
+                rowsHtml += `<tr class="${colorClass} compact-rows"><td>${rowCount}</td><td><input type="time" class="fw-bold" value="${timeLabel}"></td><td><input type="time" id="${rid}_end"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
+                currentMins += interval; rowCount++;
+            }
+
+            const html = `
+                <div class="d-flex justify-content-between mb-2 p-2 border border-2 border-dark rounded bg-light">
+                    <div class="fw-bold small">بەروار: ${dateValue}</div><div class="fw-bold fs-6">ڕاپۆرتی داگرتن / ڕۆژانە</div><div class="fw-bold small">ژمارە: <input type="text" style="width:60px; border-bottom:1px solid #000;"></div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:30px;" onchange="generateReport()"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s1_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:30px;" onchange="generateReport()"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s2_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:30px;" onchange="generateReport()"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s3_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-white mt-2"><div class="shift-header bg-light">وردەکاری تەکنیکی</div><table class="report-table expanded-rows" style="border:none;"><tr><td>کێشی سەروەرە</td><td><input type="number" id="w_top"></td></tr><tr><td>کێشی ناوەڕاست</td><td><input type="number" id="w_mid"></td></tr><tr><td>کێشی خوارەوە</td><td><input type="number" id="w_bot"></td></tr><tr><td>ژ. کۆڵۆم</td><td><input type="number" id="tech_col"></td></tr><tr><td>ژ. ڕیز</td><td><input type="number" id="tech_row"></td></tr></table></div>
+                    </div>
+                    <div class="col-6">
+                        <table class="report-table"><thead><tr><th style="width:10%">#</th><th style="width:25%">دەستپێک</th><th style="width:25%">تەواوبوون</th><th style="width:20%">ژ. عەرەبانە</th><th style="width:20%">درز</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="3" class="text-end">کۆی گشتی بالێت:</td><td colspan="2"><input type="number" id="total_pallets" readonly></td></tr><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="3" class="text-end">کۆی گشتی عەرەبانە:</td><td colspan="2"><input type="number" id="total_carts" readonly></td></tr></tfoot></table>
+                    </div>
+                </div>`;
+            wrapper.innerHTML = html;
+            updateUnsettingTotals();
+        }
+        function updateUnsettingTotals() {
+            const s1p = parseFloat(document.getElementById('s1_pallets').value) || 0;
+            const s2p = parseFloat(document.getElementById('s2_pallets').value) || 0;
+            const s3p = parseFloat(document.getElementById('s3_pallets').value) || 0;
+            document.getElementById('total_pallets').value = s1p + s2p + s3p;
+            let s1c = 0, s2c = 0, s3c = 0;
+            document.querySelectorAll('tr.row-s1 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s1c++; });
+            document.querySelectorAll('tr.row-s2 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s2c++; });
+            document.querySelectorAll('tr.row-s3 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s3c++; });
+            document.getElementById('s1_carts').value = s1c; document.getElementById('s2_carts').value = s2c; document.getElementById('s3_carts').value = s3c;
+            document.getElementById('total_carts').value = s1c + s2c + s3c;
         }
 
-        // Save report to Firebase
+        // --- CRUSHING ---
+        function renderCrushingTable(wrapper) {
+            const crushingEmps = employees.filter(e => e.department === 'crushing-prep' || e.department === 'all');
+            let empOptions = `<option value="">Select...</option>`;
+            crushingEmps.forEach(e => empOptions += `<option value="${e.name}">${e.name}</option>`);
+            let percentOptions = `<option value="">%</option>`;
+            for (let i = 0; i <= 100; i += 5) percentOptions += `<option value="${i}%">${i}%</option>`;
+            const dateValue = document.getElementById('reportDate').value;
+
+            const html = `
+                <div class="report-title-box text-center border border-2 border-dark p-2 mb-3 bg-light"><h5 class="m-0 fw-bold">کارکردنی ڕۆژانەی بەشی هاڕینی خۆڵ / هێڵی دوو</h5><small>${dateValue}</small></div>
+                <table class="report-table"><thead><tr><th style="width: 25%;">بابەت / زانیاری</th><th style="width: 25%;">شیفتی یەکەم (08-16)</th><th style="width: 25%;">شیفتی دووەم (16-24)</th><th style="width: 25%;">شیفتی سێیەم (24-08)</th></tr></thead>
+                <tbody><tr><td class="fw-bold bg-light">ناوى کارمەند</td><td><select id="c_s1_emp">${empOptions}</select></td><td><select id="c_s2_emp">${empOptions}</select></td><td><select id="c_s3_emp">${empOptions}</select></td></tr>
+                <tr><td class="fw-bold bg-light">کاتی دەوام</td><td><input type="text" id="c_s1_time"></td><td><input type="text" id="c_s2_time"></td><td><input type="text" id="c_s3_time"></td></tr>
+                <tr><td class="fw-bold bg-light">خێرایی بۆکسفیدەر</td><td><select id="c_s1_speed">${percentOptions}</select></td><td><select id="c_s2_speed">${percentOptions}</select></td><td><select id="c_s3_speed">${percentOptions}</select></td></tr>
+                <tr><td class="fw-bold bg-light">ماوەی کارکردن (HH:MM)</td><td><input type="text" id="c_s1_dur" onchange="calcCrush()"></td><td><input type="text" id="c_s2_dur" onchange="calcCrush()"></td><td><input type="text" id="c_s3_dur" onchange="calcCrush()"></td></tr>
+                <tr><td class="fw-bold bg-light">بڕی خۆڵ (طەن)</td><td><input type="number" id="c_s1_ton" onchange="calcCrush()"></td><td><input type="number" id="c_s2_ton" onchange="calcCrush()"></td><td><input type="number" id="c_s3_ton" onchange="calcCrush()"></td></tr>
+                <tr><td class="fw-bold bg-light" style="height:60px">تێبینی</td><td><textarea id="c_s1_note" style="height:100%"></textarea></td><td><textarea id="c_s2_note" style="height:100%"></textarea></td><td><textarea id="c_s3_note" style="height:100%"></textarea></td></tr></tbody>
+                <tfoot><tr class="bg-light fw-bold"><td class="text-end">کۆی گشتی کاتژمێر:</td><td colspan="3"><input type="text" id="c_total_dur" readonly></td></tr><tr class="bg-light fw-bold"><td class="text-end">کۆی گشتی طەن:</td><td colspan="3"><input type="number" id="c_total_ton" readonly></td></tr></tfoot></table>`;
+            wrapper.innerHTML = html;
+        }
+        function calcCrush() {
+            const toMins = (t) => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+            const toTime = (m) => { const h = Math.floor(m / 60); const mn = m % 60; return `${h}:${mn.toString().padStart(2, '0')}`; };
+            const d1 = toMins(document.getElementById('c_s1_dur').value); const d2 = toMins(document.getElementById('c_s2_dur').value); const d3 = toMins(document.getElementById('c_s3_dur').value);
+            document.getElementById('c_total_dur').value = toTime(d1 + d2 + d3);
+            const t1 = parseFloat(document.getElementById('c_s1_ton').value) || 0; const t2 = parseFloat(document.getElementById('c_s2_ton').value) || 0; const t3 = parseFloat(document.getElementById('c_s3_ton').value) || 0;
+            document.getElementById('c_total_ton').value = t1 + t2 + t3;
+        }
+
         async function saveReport() {
-            const department = document.getElementById('departmentSelect').value;
             const date = document.getElementById('reportDate').value;
-            const numRows = parseInt(document.getElementById('numRows').value);
-            const timeScale = parseFloat(document.getElementById('timeScale').value);
+            const dept = document.getElementById('departmentSelect').value;
+            const reportId = `${dept}_${date}_${Date.now()}`;
+            const inputs = document.getElementById('tableWrapper').querySelectorAll('input, select, textarea');
+            let tableData = {};
 
-            const reportId = `report-${department}-${date}-${Date.now()}`;
-
-            const reportDocument = {
-                id: reportId,
-                department: department,
-                date: date,
-                numRows: numRows,
-                timeScale: timeScale,
-                reportData: reportData,
-                shiftData: collectShiftData(),
-                summaryData: {
-                    totalLoadUnload: document.getElementById('totalLoadUnload').value,
-                    totalBrickPerKlincar: document.getElementById('totalBrickPerKlincar').value,
-                    totalKlincar: document.getElementById('totalKlincar').value,
-                    oilBalance: document.getElementById('oilBalance').value
-                },
-                createdAt: new Date().toISOString(),
-                createdBy: currentUser.username
-            };
-
-            try {
-                await db.collection('dailyReports').doc(reportId).set(reportDocument);
-                showNotification('ڕاپۆرت بە سەرکەوتوویی پاشەکەوت کرا', 'success');
-            } catch (error) {
-                console.error('Error saving report:', error);
-                showNotification('هەڵە لە پاشەکەوتکردنی ڕاپۆرت', 'danger');
-            }
-        }
-
-        // Export to Excel (simplified version)
-        function exportToExcel() {
-            showNotification('تایبەتمەندی هەناردەکردن بۆ Excel بەم زووانە زیاد دەکرێت', 'info');
-        }
-
-        // Show notification
-        function showNotification(message, type = 'info') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = 'toast-' + Date.now();
-
-            const bgColors = {
-                'success': 'bg-success',
-                'danger': 'bg-danger',
-                'warning': 'bg-warning',
-                'info': 'bg-info'
-            };
-
-            const toastHTML = `
-                <div id="${toastId}" class="toast align-items-center text-white ${bgColors[type]} border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">${message}</div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>
-            `;
-
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            const toastElement = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
-            toast.show();
-
-            toastElement.addEventListener('hidden.bs.toast', function () {
-                toastElement.remove();
+            inputs.forEach(inp => {
+                if (inp.id) {
+                    // Checkbox handling logic
+                    tableData[inp.id] = inp.type === 'checkbox' ? inp.checked : inp.value;
+                }
             });
-        }
 
-        // View history of saved reports
-        async function viewHistory() {
-            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
-            const historyContainer = document.getElementById('historyContainer');
-
-            historyContainer.innerHTML = '<p class="text-center text-muted"><i class="bi bi-hourglass-split"></i>ڕاپۆرتەکان</p>';
-            historyModal.show();
-
-            try {
-                const reportsSnapshot = await db.collection('dailyReports')
-                    .orderBy('createdAt', 'desc')
-                    .limit(50)
-                    .get();
-
-                if (reportsSnapshot.empty) {
-                    historyContainer.innerHTML = '<p class="text-center text-muted">هیچ ڕاپۆرتێک ئەنجام نەدراوە</p>';
-                    return;
+            if (dept === 'klin') {
+                const rowsSetting = document.getElementById('k_rows_setting');
+                if (rowsSetting) {
+                    tableData['k_rows_setting'] = rowsSetting.value;
                 }
-
-                let historyHTML = '<div class="table-responsive"><table class="table table-hover">';
-                historyHTML += '<thead><tr>';
-                historyHTML += '<th>بەروار</th>';
-                historyHTML += '<th>بەش</th>';
-                historyHTML += '<th>دروستکراوە لەلایەن</th>';
-                historyHTML += '<th>کات</th>';
-                historyHTML += '<th>سەیرکردن و سڕینەوە</th>';
-                historyHTML += '</tr></thead><tbody>';
-
-                reportsSnapshot.forEach(doc => {
-                    const report = doc.data();
-                    const createdDate = new Date(report.createdAt);
-                    const formattedDate = createdDate.toLocaleDateString('en-GB');
-                    const formattedTime = createdDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-                    historyHTML += '<tr>';
-                    historyHTML += `<td>${report.date}</td>`;
-                    historyHTML += `<td>${getDepartmentDisplayName(report.department)}</td>`;
-                    historyHTML += `<td>${report.createdBy}</td>`;
-                    historyHTML += `<td>${formattedDate} ${formattedTime}</td>`;
-                    historyHTML += `<td>
-                        <button class="btn btn-sm btn-primary" onclick="loadReport('${doc.id}')">
-                            <i class="bi bi-eye"></i> سەیرکردن
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteReport('${doc.id}')">
-                            <i class="bi bi-trash"></i> سڕینەوە
-                        </button>
-                    </td>`;
-                    historyHTML += '</tr>';
-                });
-
-                historyHTML += '</tbody></table></div>';
-                historyContainer.innerHTML = historyHTML;
-
-            } catch (error) {
-                console.error('Error loading history:', error);
-                historyContainer.innerHTML = '<p class="text-center text-danger">هەڵە</p>';
             }
-        }
 
-        // Load a saved report
-        async function loadReport(reportId) {
+            const finalReportId = currentReportId || reportId;
+
+            const payload = {
+                id: finalReportId,
+                department: dept,
+                date: date,
+                supervisor: currentUser.username,
+                createdAt: currentReportId ? undefined : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                tableData: tableData
+            };
+
+            if (currentReportId) delete payload.createdAt;
+
             try {
-                const reportDoc = await db.collection('dailyReports').doc(reportId).get();
-                if (!reportDoc.exists) {
-                    showNotification('هەڵە', 'danger');
-                    return;
+                if (currentReportId) {
+                    await db.collection('dailyReports').doc(finalReportId).update(payload);
+                    showToast('Report Updated Successfully', 'success');
+                } else {
+                    await db.collection('dailyReports').doc(finalReportId).set(payload);
+                    currentReportId = finalReportId;
+                    showToast('Report Saved Successfully', 'success');
                 }
-
-                const report = reportDoc.data();
-
-                document.getElementById('departmentSelect').value = report.department;
-                document.getElementById('reportDate').value = report.date;
-                document.getElementById('numRows').value = report.numRows;
-                document.getElementById('timeScale').value = report.timeScale;
-
-                reportData = report.reportData || {};
-                shiftEntries = report.shiftData || { shift1: [], shift2: [], shift3: [] };
-
-                generateReport();
-
-                setTimeout(() => {
-                    Object.keys(reportData).forEach(key => {
-                        const element = document.getElementById(key);
-                        if (element) element.value = reportData[key];
-                    });
-
-                    if (report.summaryData) {
-                        document.getElementById('totalLoadUnload').value = report.summaryData.totalLoadUnload || '';
-                        document.getElementById('totalBrickPerKlincar').value = report.summaryData.totalBrickPerKlincar || '';
-                        document.getElementById('totalKlincar').value = report.summaryData.totalKlincar || '';
-                        document.getElementById('oilBalance').value = report.summaryData.oilBalance || '';
-                    }
-                }, 500);
-
-                const historyModal = bootstrap.Modal.getInstance(document.getElementById('historyModal'));
-                if (historyModal) historyModal.hide();
-
-                showNotification('سەرکەوتوو بوو', 'success');
-
-            } catch (error) {
-                console.error('Error loading report:', error);
-                showNotification('هەڵە', 'danger');
+            } catch (e) {
+                console.error(e);
+                showToast('Error saving report', 'danger');
             }
         }
 
-        // Delete a saved report
-        async function deleteReport(reportId) {
-            if (!confirm('دڵنیایت لە سڕینەوە؟')) return;
-
-            try {
-                await db.collection('dailyReports').doc(reportId).delete();
-                showNotification('سڕینەوە سەرکەوتوو بوو', 'success');
-                viewHistory();
-            } catch (error) {
-                console.error('Error deleting report:', error);
-                showNotification('سڕینەوە سەرکەوتوو نەبوو', 'danger');
-            }
+        const originalGenerateReport = generateReport;
+        generateReport = function () {
+            originalGenerateReport();
         }
 
-        // Set default date to today
-        document.getElementById('reportDate').valueAsDate = new Date();
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function () {
-            loadEmployees();
-        });
+        function startNewReport() {
+            currentReportId = null;
+            generateReport();
+            document.getElementById('reportContainer').style.display = 'block';
+        }
+        function showToast(msg, type) {
+            const container = document.querySelector('.toast-container');
+            const el = document.createElement('div');
+            el.className = `toast show align-items-center text-white bg-${type} border-0 shadow`;
+            el.innerHTML = `<div class=\"d-flex\"><div class=\"toast-body\">${msg}</div><button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\"></button></div>`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
     </script>
-
-    <div class="modal fade" id="historyModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header"
-                    style="background: linear-gradient(135deg, var(--primary-color), #8e0000); color: white;">
-                    <h5 class="modal-title">ڕاپۆرتە ئەنجام دراوەکان</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="historyContainer">
-                        <p class="text-center text-muted">ڕاپۆرتەکان</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>
-
-```
