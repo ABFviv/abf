@@ -436,7 +436,6 @@
                                     <th>ساڵ</th>
                                     <th>بەشی سەرەکی (Category)</th>
                                     <th>ناوی پارچە (Part)</th>
-                                    <th>ژمارە</th>
                                     <th>سایڵک (ڕۆژ)</th>
                                     <th>تێبینی</th>
                                     <th>کردار</th>
@@ -511,11 +510,7 @@
                                     <option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 maintenance-field">
-                                <label class="form-label">ژمارە (Qty)</label>
-                                <input type="number" class="form-control" id="recQty" value="1" min="1">
-                            </div>
-                            <div class="col-md-3 maintenance-field">
+                            <div class="col-md-6 maintenance-field">
                                 <label class="form-label text-success fw-bold">ماوەی ژیان (ڕۆژ)</label>
                                 <input type="number" class="form-control" id="recCycle" value="365" min="1"
                                     placeholder="365">
@@ -1078,20 +1073,20 @@
         function renderMaintTable(logs) {
             const tbody = document.getElementById('maintenanceLogBody');
             tbody.innerHTML = '';
-            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">نییە</td></tr>'; return; }
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">نییە</td></tr>'; return; } // Reduced colspan to 7
 
             logs.forEach(log => {
                 const year = log.date.substring(0, 4);
                 const catLabel = currentPartsConfig?.[log.partCategory]?.label || log.partCategory || '-';
                 const part = log.partName || log.part || '-';
 
+                // QTY COLUMN REMOVED BELOW
                 tbody.innerHTML += `
                     <tr>
                         <td>${log.date}</td>
                         <td>${year}</td>
                         <td><span class="badge-category">${catLabel}</span></td>
                         <td><span class="badge-part">${part}</span></td>
-                        <td>${log.quantity || 1}</td>
                         <td>${log.cycleDays || 365}</td>
                         <td class="small text-muted">${log.note || ''}</td>
                         <td>
@@ -1191,14 +1186,14 @@
         function renderMainChart(pivotData, years) {
             const ctx = document.getElementById('maintenanceChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            const colors = ['#1E88E5', '#43A047', '#FB8C00', '#E53935', '#8E24AA', '#00ACC1', '#3949AB'];
+            const colors = ['#FF0000', '#008080', '#000080', '#808080', '#808000', '#800080', '#00FFFF'];
             const datasets = Object.keys(pivotData).map((part, i) => ({
                 label: part,
                 data: years.map(y => pivotData[part][y] || 0),
                 backgroundColor: colors[i % colors.length],
                 borderRadius: 4,
-                borderSkipped: false,
-                stack: 'group1'
+                borderSkipped: false
+                // REMOVED stack: 'group1' here so bars sit side-by-side
             }));
             chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -1206,7 +1201,8 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } },
+                    // Changed stacked to false to show side-by-side bars
+                    scales: { x: { stacked: false, grid: { display: false } }, y: { stacked: false, beginAtZero: true } },
                     plugins: { legend: { position: 'top' } }
                 }
             });
@@ -1244,24 +1240,12 @@
             const downtime = pLogs.reduce((acc, l) => acc + (parseFloat(l.downtime) || 0), 0);
             const failures = pLogs.length;
 
-            // 1. MTTR (Mean Time To Repair) = Total Downtime / No. of Failures
             document.getElementById('kpiDowntime').textContent = downtime.toFixed(1);
             document.getElementById('kpiMTTR').textContent = failures ? (downtime / failures).toFixed(1) : 0;
-
-            // 2. MTBF (Mean Time Between Failures) = Total Operational Time / Failures
-            // Assuming 365 days of operation (8760 hours) minus downtime
             const totalHours = 365 * 24;
             const uptime = totalHours - downtime;
-
-            // In maintenance, MTBF often includes the repair time (Time between failures), 
-            // but for reliability, it's uptime / failures.
             const mtbf = failures ? ((uptime / 24) / failures).toFixed(1) : 'OK';
             document.getElementById('kpiMTBF').textContent = mtbf;
-
-            // 3. MTTF (Mean Time To Failure)
-            // For repairable items, MTTF is essentially the average uptime (Uptime / Failures)
-            // It is mathematically similar to MTBF in many simple definitions, but conceptually distinct.
-            // Here, we display it as Days.
             document.getElementById('kpiMTTF').textContent = mtbf;
         }
 
@@ -1281,7 +1265,8 @@
             if (type === 'maintenance') {
                 data.partCategory = document.getElementById('partCategory').value;
                 data.partName = document.getElementById('partName').value;
-                data.quantity = parseInt(document.getElementById('recQty').value);
+                // QTY INPUT REMOVED, DEFAULT TO 1
+                data.quantity = 1;
                 data.cycleDays = parseInt(document.getElementById('recCycle').value);
                 data.part = data.partName;
             } else {
@@ -1364,7 +1349,7 @@
                 document.getElementById('partCategory').value = log.partCategory;
                 document.getElementById('partName').setAttribute('data-selected', log.partName);
                 updateSubParts();
-                document.getElementById('recQty').value = log.quantity || 1;
+                // QTY Removed from UI
                 document.getElementById('recCycle').value = log.cycleDays || 365;
             } else {
                 document.getElementById('recProblem').value = log.problem;
