@@ -146,6 +146,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
             height: 350px;
+            position: relative;
         }
 
         .badge-category {
@@ -305,6 +306,22 @@
             <div class="tab-content">
 
                 <div class="tab-pane fade show active" id="dashboard">
+
+                    <div class="d-flex justify-content-end align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2 bg-white p-2 rounded shadow-sm border">
+                            <label class="fw-bold text-secondary small"><i class="bi bi-calendar3"></i> فلتەری
+                                کات:</label>
+                            <select id="dashboardDateFilter"
+                                class="form-select form-select-sm border-0 bg-light fw-bold" style="width: auto;"
+                                onchange="updateDashboard()">
+                                <option value="all">All Time (هەموو کاتەکان)</option>
+                                <option value="this_year">This Year (ئەمساڵ)</option>
+                                <option value="this_month">This Month (ئەم مانگە)</option>
+                                <option value="last_30">Last 30 Days (٣٠ ڕۆژی ڕابردوو)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
                             <div class="kpi-card" style="border-bottom-color: var(--danger-color);">
@@ -356,7 +373,7 @@
                         </div>
                     </div>
 
-                    <div class="row g-4">
+                    <div class="row g-4 mb-4">
                         <div class="col-lg-6">
                             <div class="chart-container">
                                 <h5 class="mb-3 text-danger"><i class="bi bi-graph-down"></i> هێڵکاری وەستانەکان
@@ -385,6 +402,28 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="chart-container">
+                                <h5 class="mb-3 text-success"><i class="bi bi-graph-up-arrow"></i> شیکاری متمانەپێکراوی
+                                    (Reliability Trends)</h5>
+                                <div style="height: 300px; width: 100%;">
+                                    <canvas id="reliabilityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="chart-container">
+                                <h5 class="mb-3 text-warning"><i class="bi bi-pie-chart-fill"></i> دابەشبوونی کێشەکان
+                                    (Top Problems)</h5>
+                                <div style="height: 300px; width: 100%;">
+                                    <canvas id="problemParetoChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="tab-pane fade" id="schedule">
@@ -711,6 +750,8 @@
         // Chart Instances
         let chartInstance = null;
         let downtimeChartInstance = null;
+        let reliabilityChartInstance = null;
+        let problemParetoInstance = null; // New chart for problems
         let unsubscribeLogs = null;
 
         // Edit Mode Tracking
@@ -940,7 +981,7 @@
             });
         }
 
-        // --- REAL-TIME DATA ---
+        // --- REAL-TIME DATA & FILTERING ---
         function subscribeToLogs(machineId) {
             if (unsubscribeLogs) unsubscribeLogs();
 
@@ -951,7 +992,7 @@
                     const logs = [];
                     snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
                     globalLogsCache = logs;
-                    processAndRender(logs);
+                    updateDashboard(); // Initial Render
                 }, err => {
                     console.error("Error:", err);
                     if (err.code === 'failed-precondition') {
@@ -961,16 +1002,45 @@
                 });
         }
 
-        function processAndRender(logs) {
-            const maintLogs = logs.filter(l => l.type === 'maintenance');
-            const probLogs = logs.filter(l => l.type === 'problem');
-            const planLogs = logs.filter(l => l.type === 'plan');
+        function updateDashboard() {
+            const filterType = document.getElementById('dashboardDateFilter').value;
+            const filteredLogs = filterLogsByDate(globalLogsCache, filterType);
+            processAndRender(filteredLogs, globalLogsCache);
+        }
+
+        function filterLogsByDate(logs, filterType) {
+            if (filterType === 'all') return logs;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            return logs.filter(log => {
+                const logDate = new Date(log.date);
+                if (filterType === 'this_year') {
+                    return logDate.getFullYear() === currentYear;
+                } else if (filterType === 'this_month') {
+                    return logDate.getFullYear() === currentYear && logDate.getMonth() === currentMonth;
+                } else if (filterType === 'last_30') {
+                    const diffTime = Math.abs(now - logDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 30;
+                }
+                return true;
+            });
+        }
+
+        function processAndRender(filteredLogs, allLogs) {
+            const maintLogs = filteredLogs.filter(l => l.type === 'maintenance');
+            const probLogs = filteredLogs.filter(l => l.type === 'problem');
+            const planLogs = allLogs.filter(l => l.type === 'plan'); // Plans use all logs typically
 
             renderMaintTable(maintLogs);
             renderProbTable(probLogs);
             calculateKPIs(probLogs, maintLogs);
-            renderDashboardVisuals(maintLogs, probLogs, logs);
+            renderDashboardVisuals(maintLogs, probLogs, allLogs);
             renderScheduleTable(maintLogs, planLogs);
+            renderReliabilityChart(probLogs);
+            renderProblemParetoChart(probLogs); // RENDER NEW PROBLEM CHART
         }
 
         // --- SMART SCHEDULE TABLE RENDERER ---
@@ -1084,8 +1154,6 @@
                 const catLabel = currentPartsConfig?.[log.partCategory]?.label || log.partCategory || '-';
                 const part = log.partName || log.part || '-';
 
-                // DISPLAY FREQUENCY IN TABLE (NOT DAYS)
-                // If cycleDays is 365, show 1. If 182.5, show 2.
                 let freq = 1;
                 if (log.cycleDays && log.cycleDays > 0) {
                     freq = (365 / log.cycleDays).toFixed(1);
@@ -1198,8 +1266,7 @@
             const ctx = document.getElementById('maintenanceChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
-            // COLORS APPLIED HERE
-            const colors = ['#BA732D', '#B9BA2D', '#73BA2D', '#2D73BA', '#732DBA', '#BA342D', '#BA2D73'];
+            const colors = ['#A61E62', '#A61E1E', '#A6621E', '#1EA662', '#1E62A6', '#B1BA20', '#20BAAB'];
 
             const datasets = Object.keys(pivotData).map((part, i) => ({
                 label: part,
@@ -1215,22 +1282,17 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    // ENHANCED ANIMATION
                     animation: {
-                        duration: 2000, // 2 Seconds
-                        easing: 'easeOutQuart', // Smooth easing
+                        duration: 2000,
+                        easing: 'easeOutQuart',
                         delay: (context) => {
                             let delay = 0;
-                            // Stagger effect: wait longer for later bars
                             if (context.type === 'data' && context.mode === 'default') {
                                 delay = context.dataIndex * 200 + context.datasetIndex * 100;
                             }
                             return delay;
                         },
-                        // Force growth from zero
-                        y: {
-                            from: 0
-                        }
+                        y: { from: 0 }
                     },
                     scales: { x: { stacked: false, grid: { display: false } }, y: { stacked: false, beginAtZero: true } },
                     plugins: { legend: { position: 'top' } }
@@ -1266,17 +1328,226 @@
             });
         }
 
+        // --- IMPROVED: RELIABILITY CHART ---
+        function renderReliabilityChart(probLogs) {
+            const ctx = document.getElementById('reliabilityChart').getContext('2d');
+            if (reliabilityChartInstance) reliabilityChartInstance.destroy();
+
+            const statsByMonth = {};
+            probLogs.forEach(l => {
+                const month = l.date.substring(0, 7);
+                if (!statsByMonth[month]) statsByMonth[month] = { downtime: 0, failures: 0 };
+                statsByMonth[month].downtime += parseFloat(l.downtime || 0);
+                statsByMonth[month].failures += 1;
+            });
+
+            const labels = Object.keys(statsByMonth).sort();
+            const mtbfData = []; // Days
+            const mttfData = []; // Days (approx same as MTBF here, but technically Uptime/Failures)
+            const mttrData = []; // Hours
+
+            labels.forEach(m => {
+                const d = statsByMonth[m];
+                const totalHours = 720;
+                const uptime = totalHours - d.downtime;
+
+                let mtbf = 30; // Default if 0 failures
+                if (d.failures > 0) mtbf = (totalHours / 24) / d.failures; // Simple Time Between
+
+                let mttf = 30;
+                if (d.failures > 0) mttf = (uptime / 24) / d.failures; // Mean Time To Failure (Pure Uptime)
+
+                let mttr = 0;
+                if (d.failures > 0) mttr = d.downtime / d.failures;
+
+                mtbfData.push(mtbf.toFixed(1));
+                mttfData.push(mttf.toFixed(1));
+                mttrData.push(mttr.toFixed(1));
+            });
+
+            reliabilityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'MTBF (Days) - Time Between Failures',
+                            data: mtbfData,
+                            borderColor: '#2ecc71', // Green
+                            backgroundColor: (context) => {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                                gradient.addColorStop(0, 'rgba(46, 204, 113, 0.4)');
+                                gradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+                                return gradient;
+                            },
+                            yAxisID: 'y',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'MTTF (Days) - Time To Failure',
+                            data: mttfData,
+                            borderColor: '#3498db', // Blue
+                            borderDash: [5, 5],
+                            backgroundColor: 'transparent',
+                            yAxisID: 'y',
+                            tension: 0.4,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'MTTR (Hours) - Repair Time',
+                            data: mttrData,
+                            backgroundColor: '#e74c3c', // Red Bars
+                            yAxisID: 'y1',
+                            type: 'bar',
+                            barThickness: 15,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Days (Higher is Better)' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Hours (Lower is Better)' },
+                            grid: { drawOnChartArea: true, color: '#f0f0f0' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- NEW: PROBLEM DOUGHNUT CHART ---
+        function renderProblemParetoChart(probLogs) {
+            const ctx = document.getElementById('problemParetoChart').getContext('2d');
+            if (problemParetoInstance) problemParetoInstance.destroy();
+
+            // 1. Group by Problem Name
+            const problemStats = {};
+            let totalDowntime = 0;
+            probLogs.forEach(l => {
+                const pName = l.problem || 'Unknown';
+                const dt = parseFloat(l.downtime || 0);
+                if (!problemStats[pName]) problemStats[pName] = 0;
+                problemStats[pName] += dt;
+                totalDowntime += dt;
+            });
+
+            // 2. Sort & Limit to Top 5 + Others
+            let sorted = Object.entries(problemStats).sort((a, b) => b[1] - a[1]);
+
+            const topN = 5;
+            let finalLabels = [];
+            let finalData = [];
+            let othersSum = 0;
+
+            sorted.forEach((item, index) => {
+                if (index < topN) {
+                    finalLabels.push(item[0]);
+                    finalData.push(item[1]);
+                } else {
+                    othersSum += item[1];
+                }
+            });
+
+            if (othersSum > 0) {
+                finalLabels.push('Other Problems');
+                finalData.push(othersSum);
+            }
+
+            // Colors for Doughnut
+            const doughnutColors = [
+                '#e74c3c', // Red
+                '#f39c12', // Orange
+                '#f1c40f', // Yellow
+                '#3498db', // Blue
+                '#9b59b6', // Purple
+                '#95a5a6'  // Grey (Others)
+            ];
+
+            // 3. Render Doughnut
+            problemParetoInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: finalLabels,
+                    datasets: [{
+                        data: finalData,
+                        backgroundColor: doughnutColors,
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 15 } },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => {
+                                    const val = c.raw;
+                                    const pct = ((val / totalDowntime) * 100).toFixed(1);
+                                    return ` ${c.label}: ${val}h (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%', // Make it a ring
+                }
+            });
+        }
+
         function calculateKPIs(pLogs, mLogs) {
             const downtime = pLogs.reduce((acc, l) => acc + (parseFloat(l.downtime) || 0), 0);
             const failures = pLogs.length;
 
             document.getElementById('kpiDowntime').textContent = downtime.toFixed(1);
             document.getElementById('kpiMTTR').textContent = failures ? (downtime / failures).toFixed(1) : 0;
+            // CORRECTED KPI CALC FOR GLOBAL NUMBERS
             const totalHours = 365 * 24;
             const uptime = totalHours - downtime;
-            const mtbf = failures ? ((uptime / 24) / failures).toFixed(1) : 'OK';
+
+            // MTBF: Total Time / Failures
+            const mtbf = failures ? ((totalHours / 24) / failures).toFixed(1) : 'OK';
+
+            // MTTF: Uptime / Failures
+            const mttf = failures ? ((uptime / 24) / failures).toFixed(1) : 'OK';
+
             document.getElementById('kpiMTBF').textContent = mtbf;
-            document.getElementById('kpiMTTF').textContent = mtbf;
+            document.getElementById('kpiMTTF').textContent = mttf;
         }
 
         // --- SUBMITS ---
@@ -1295,13 +1566,9 @@
             if (type === 'maintenance') {
                 data.partCategory = document.getElementById('partCategory').value;
                 data.partName = document.getElementById('partName').value;
-                // QTY INPUT REMOVED, DEFAULT TO 1
                 data.quantity = 1;
-
-                // CONVERT FREQUENCY TO DAYS
                 const freq = parseFloat(document.getElementById('recCycle').value) || 1;
                 data.cycleDays = Math.round(365 / freq);
-
                 data.part = data.partName;
             } else {
                 data.problem = document.getElementById('recProblem').value;
@@ -1385,12 +1652,10 @@
                 document.getElementById('partName').setAttribute('data-selected', log.partName);
                 updateSubParts();
 
-                // CONVERT DAYS BACK TO FREQUENCY FOR EDITING
                 let freq = 1;
                 if (log.cycleDays && log.cycleDays > 0) {
                     freq = 365 / log.cycleDays;
                 }
-                // Fix to 1 decimal if needed, but remove .0
                 let freqVal = freq.toFixed(2);
                 if (freqVal.endsWith('.00')) freqVal = freqVal.replace('.00', '');
                 else if (freqVal.endsWith('0')) freqVal = freqVal.slice(0, -1);
@@ -1425,7 +1690,7 @@
             tbody.innerHTML = '';
             snap.forEach(doc => {
                 const m = doc.data();
-                tbody.innerHTML += `<tr><td>${m.name}</td><td>${m.department}</td><td><button class="btn btn-sm btn-danger" onclick="deleteMachine('${doc.id}')"><i class="bi bi-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr><td>${m.name}</td><td>${m.department}</td><td><button class=\"btn btn-sm btn-danger\" onclick=\"deleteMachine('${doc.id}')\"><i class=\"bi bi-trash\"></i></button></td></tr>`;
             });
         }
         async function deleteMachine(id) { if (confirm("Are you sure?")) { await db.collection('machines').doc(id).delete(); openManageMachinesModal(); loadMachines(document.getElementById('departmentSelect').value); } }
