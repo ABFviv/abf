@@ -436,7 +436,7 @@
                                     <th>ساڵ</th>
                                     <th>بەشی سەرەکی (Category)</th>
                                     <th>ناوی پارچە (Part)</th>
-                                    <th>سایڵک (ڕۆژ)</th>
+                                    <th>ساڵانە چەند جار؟</th>
                                     <th>تێبینی</th>
                                     <th>کردار</th>
                                 </tr>
@@ -511,9 +511,13 @@
                                 </select>
                             </div>
                             <div class="col-md-6 maintenance-field">
-                                <label class="form-label text-success fw-bold">ماوەی ژیان (ڕۆژ)</label>
-                                <input type="number" class="form-control" id="recCycle" value="365" min="1"
-                                    placeholder="365">
+                                <label class="form-label text-success fw-bold">ساڵانە چەند جار پێویستە؟
+                                    (Times/Year)</label>
+                                <input type="number" step="0.1" class="form-control" id="recCycle" value="1" min="0.1"
+                                    placeholder="1">
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    نموونە: 1 = ساڵێک جارێک | 2 = شەش مانگ جارێک | 0.5 = دوو ساڵ جارێک
+                                </small>
                             </div>
 
                             <div class="col-md-12 problem-field" style="display:none;">
@@ -1073,21 +1077,28 @@
         function renderMaintTable(logs) {
             const tbody = document.getElementById('maintenanceLogBody');
             tbody.innerHTML = '';
-            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">نییە</td></tr>'; return; } // Reduced colspan to 7
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">نییە</td></tr>'; return; }
 
             logs.forEach(log => {
                 const year = log.date.substring(0, 4);
                 const catLabel = currentPartsConfig?.[log.partCategory]?.label || log.partCategory || '-';
                 const part = log.partName || log.part || '-';
 
-                // QTY COLUMN REMOVED BELOW
+                // DISPLAY FREQUENCY IN TABLE (NOT DAYS)
+                // If cycleDays is 365, show 1. If 182.5, show 2.
+                let freq = 1;
+                if (log.cycleDays && log.cycleDays > 0) {
+                    freq = (365 / log.cycleDays).toFixed(1);
+                    if (freq.endsWith('.0')) freq = freq.replace('.0', '');
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${log.date}</td>
                         <td>${year}</td>
                         <td><span class="badge-category">${catLabel}</span></td>
                         <td><span class="badge-part">${part}</span></td>
-                        <td>${log.cycleDays || 365}</td>
+                        <td>${freq}</td>
                         <td class="small text-muted">${log.note || ''}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>
@@ -1186,22 +1197,41 @@
         function renderMainChart(pivotData, years) {
             const ctx = document.getElementById('maintenanceChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            const colors = ['#FF0000', '#008080', '#000080', '#808080', '#808000', '#800080', '#00FFFF'];
+
+            // COLORS APPLIED HERE
+            const colors = ['#BA732D', '#B9BA2D', '#73BA2D', '#2D73BA', '#732DBA', '#BA342D', '#BA2D73'];
+
             const datasets = Object.keys(pivotData).map((part, i) => ({
                 label: part,
                 data: years.map(y => pivotData[part][y] || 0),
                 backgroundColor: colors[i % colors.length],
                 borderRadius: 4,
                 borderSkipped: false
-                // REMOVED stack: 'group1' here so bars sit side-by-side
             }));
+
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: years, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    // Changed stacked to false to show side-by-side bars
+                    // ENHANCED ANIMATION
+                    animation: {
+                        duration: 2000, // 2 Seconds
+                        easing: 'easeOutQuart', // Smooth easing
+                        delay: (context) => {
+                            let delay = 0;
+                            // Stagger effect: wait longer for later bars
+                            if (context.type === 'data' && context.mode === 'default') {
+                                delay = context.dataIndex * 200 + context.datasetIndex * 100;
+                            }
+                            return delay;
+                        },
+                        // Force growth from zero
+                        y: {
+                            from: 0
+                        }
+                    },
                     scales: { x: { stacked: false, grid: { display: false } }, y: { stacked: false, beginAtZero: true } },
                     plugins: { legend: { position: 'top' } }
                 }
@@ -1267,7 +1297,11 @@
                 data.partName = document.getElementById('partName').value;
                 // QTY INPUT REMOVED, DEFAULT TO 1
                 data.quantity = 1;
-                data.cycleDays = parseInt(document.getElementById('recCycle').value);
+
+                // CONVERT FREQUENCY TO DAYS
+                const freq = parseFloat(document.getElementById('recCycle').value) || 1;
+                data.cycleDays = Math.round(365 / freq);
+
                 data.part = data.partName;
             } else {
                 data.problem = document.getElementById('recProblem').value;
@@ -1329,7 +1363,8 @@
                 updateCategoryDropdown();
                 document.getElementById('partName').innerHTML = "";
                 document.getElementById('partName').disabled = true;
-                document.getElementById('recCycle').value = 365;
+                // Reset frequency to 1 (default)
+                document.getElementById('recCycle').value = 1;
             }
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal'));
             modal.show();
@@ -1349,8 +1384,19 @@
                 document.getElementById('partCategory').value = log.partCategory;
                 document.getElementById('partName').setAttribute('data-selected', log.partName);
                 updateSubParts();
-                // QTY Removed from UI
-                document.getElementById('recCycle').value = log.cycleDays || 365;
+
+                // CONVERT DAYS BACK TO FREQUENCY FOR EDITING
+                let freq = 1;
+                if (log.cycleDays && log.cycleDays > 0) {
+                    freq = 365 / log.cycleDays;
+                }
+                // Fix to 1 decimal if needed, but remove .0
+                let freqVal = freq.toFixed(2);
+                if (freqVal.endsWith('.00')) freqVal = freqVal.replace('.00', '');
+                else if (freqVal.endsWith('0')) freqVal = freqVal.slice(0, -1);
+
+                document.getElementById('recCycle').value = freqVal;
+
             } else {
                 document.getElementById('recProblem').value = log.problem;
                 document.getElementById('recRootCause').value = log.rootCause || '';
