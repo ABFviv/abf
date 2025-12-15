@@ -14,13 +14,14 @@
 
     <style>
         :root {
-            /* Blue Theme Restored */
+            /* Blue Theme */
             --primary-color: #1976d2;
             --primary-gradient: linear-gradient(135deg, #42a5f5, #0d47a1);
             --secondary-color: #2c3e50;
             --success-color: #2ecc71;
             --danger-color: #e74c3c;
             --warning-color: #f39c12;
+            --info-color: #0dcaf0;
             --light-bg: #f0f2f5;
         }
 
@@ -28,25 +29,20 @@
             background-color: var(--light-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
-            /* Added padding to match Notes layout */
             padding-bottom: 50px;
         }
 
-        /* --- HEADER: NOTES FILE FORMAT --- */
-        /* Rounded corners (12px), floating style, blue gradient */
+        /* --- HEADER --- */
         .header {
             background: var(--primary-gradient);
             color: white;
             padding: 15px 30px;
             border-radius: 12px;
-            /* Matches Notes file */
             margin-bottom: 30px;
-            /* Matches Notes file */
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            /* Matches Notes file */
         }
 
         /* Selectors Box */
@@ -56,7 +52,6 @@
             border-radius: 12px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             margin-bottom: 25px;
-            /* Removed side margins to align with container */
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -79,19 +74,10 @@
             background: transparent;
         }
 
-        .nav-tabs .nav-link:hover {
-            color: var(--primary-color);
-        }
-
         /* Buttons */
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
-        }
-
-        .btn-primary:hover {
-            background-color: #1565c0;
-            border-color: #1565c0;
         }
 
         /* KPI Cards */
@@ -106,14 +92,14 @@
         }
 
         .kpi-value {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: var(--secondary-color);
         }
 
         .kpi-label {
             color: #7f8c8d;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
         }
 
@@ -159,7 +145,7 @@
             border-radius: 12px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
-            height: 400px;
+            height: 350px;
         }
 
         .badge-category {
@@ -183,6 +169,62 @@
             padding: 10px;
             margin-bottom: 10px;
             background: #f9f9f9;
+        }
+
+        /* Schedule Table Status */
+        .status-ok {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .status-warning {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            font-weight: bold;
+        }
+
+        .status-danger {
+            background-color: #ffebee;
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .type-manual {
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .type-auto {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        /* Recent Activity List */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            max-height: 250px;
+        }
+
+        .activity-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
         }
     </style>
 </head>
@@ -244,6 +286,11 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#schedule">
+                        <i class="bi bi-calendar-check me-2"></i>پلان و پێشبینی
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#records">
                         <i class="bi bi-clipboard-data me-2"></i>تۆماری چاکسازی
                     </button>
@@ -259,45 +306,73 @@
 
                 <div class="tab-pane fade show active" id="dashboard">
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="kpi-card" style="border-bottom-color: var(--danger-color);">
                                 <div class="kpi-value" id="kpiMTTR">--</div>
                                 <div class="kpi-label">MTTR (کاتژمێر)</div>
                                 <small class="text-muted">ناوەندی کاتی چاککردنەوە</small>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="kpi-card" style="border-bottom-color: var(--success-color);">
                                 <div class="kpi-value" id="kpiMTBF">--</div>
                                 <div class="kpi-label">MTBF (ڕۆژ)</div>
-                                <small class="text-muted">ناوەندی کات نێوان وەستانەکان</small>
+                                <small class="text-muted">ماوەی نێوان دوو وەستان</small>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="kpi-card" style="border-bottom-color: var(--info-color);">
+                                <div class="kpi-value" id="kpiMTTF">--</div>
+                                <div class="kpi-label">MTTF (ڕۆژ)</div>
+                                <small class="text-muted">ناوەندی کاتی کارکردن</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="kpi-card" style="border-bottom-color: var(--warning-color);">
                                 <div class="kpi-value" id="kpiDowntime">0</div>
-                                <div class="kpi-label">کۆی کاتژمێری وەستان</div>
+                                <div class="kpi-label">کۆی وەستان (کاتژمێر)</div>
+                                <small class="text-muted">Total Downtime</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="chart-container">
+                                <h5 class="mb-3 text-secondary"><i class="bi bi-bar-chart-fill"></i> شیکاری بەکارهێنانی
+                                    پارچەکان</h5>
+                                <div style="height: 300px; width: 100%;">
+                                    <canvas id="maintenanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="chart-container">
+                                <h5 class="mb-3 text-secondary"><i class="bi bi-activity"></i> دوایین چالاکییەکان</h5>
+                                <ul class="activity-list" id="recentActivitiesList">
+                                    <li class="text-muted text-center py-4">داتا باردەکرێت...</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
                     <div class="row g-4">
-                        <div class="col-lg-7">
+                        <div class="col-lg-6">
                             <div class="chart-container">
-                                <h5 class="mb-3 text-secondary"><i class="bi bi-bar-chart-fill"></i> شیکاری بەکارهێنانی
-                                    پارچەکان</h5>
-                                <div style="height: 320px; width: 100%;">
-                                    <canvas id="maintenanceChart"></canvas>
+                                <h5 class="mb-3 text-danger"><i class="bi bi-graph-down"></i> هێڵکاری وەستانەکان
+                                    (Downtime)</h5>
+                                <div style="height: 280px; width: 100%;">
+                                    <canvas id="downtimeChart"></canvas>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-5">
+                        <div class="col-lg-6">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-header bg-white fw-bold py-3 border-bottom">
                                     <i class="bi bi-table text-primary"></i> پوختەی ساڵانە (Pivot)
                                 </div>
                                 <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 400px;">
+                                    <div class="table-responsive" style="max-height: 350px;">
                                         <table class="excel-table" id="pivotTable">
                                             <tbody>
                                                 <tr>
@@ -307,6 +382,40 @@
                                         </table>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="schedule">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-success fw-bold">خشتەی چاکسازی (Auto & Manual Plan)</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success" onclick="openPlanModal()">
+                                <i class="bi bi-calendar-plus"></i> زیادکردنی پلان
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="printSchedule()">
+                                <i class="bi bi-printer"></i> چاپکردن
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="excel-table table-hover">
+                                    <thead class="bg-success text-white">
+                                        <tr>
+                                            <th>ناوی چاکسازی (Part)</th>
+                                            <th>جۆری پلان (Type)</th>
+                                            <th>کۆتا چاکسازی (Last Date)</th>
+                                            <th>چاکسازی داهاتوو (Date)</th>
+                                            <th>ماوە (ڕۆژ) (Remaining)</th>
+                                            <th>کردار</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scheduleBody">
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -328,6 +437,7 @@
                                     <th>بەشی سەرەکی (Category)</th>
                                     <th>ناوی پارچە (Part)</th>
                                     <th>ژمارە</th>
+                                    <th>سایڵک (ڕۆژ)</th>
                                     <th>تێبینی</th>
                                     <th>کردار</th>
                                 </tr>
@@ -381,6 +491,8 @@
                 <div class="modal-body">
                     <form id="recordForm">
                         <input type="hidden" id="recordType">
+                        <input type="hidden" id="editingLogId">
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">بەروار</label>
@@ -399,9 +511,14 @@
                                     <option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 maintenance-field">
+                            <div class="col-md-3 maintenance-field">
                                 <label class="form-label">ژمارە (Qty)</label>
                                 <input type="number" class="form-control" id="recQty" value="1" min="1">
+                            </div>
+                            <div class="col-md-3 maintenance-field">
+                                <label class="form-label text-success fw-bold">ماوەی ژیان (ڕۆژ)</label>
+                                <input type="number" class="form-control" id="recCycle" value="365" min="1"
+                                    placeholder="365">
                             </div>
 
                             <div class="col-md-12 problem-field" style="display:none;">
@@ -427,8 +544,44 @@
                             </div>
                         </div>
                         <div class="mt-4 d-grid">
-                            <button type="submit" class="btn btn-primary">تۆمارکردن</button>
+                            <button type="submit" class="btn btn-primary" id="saveBtnLabel">تۆمارکردن</button>
                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="planModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">دیاریکردنی پلان بۆ داهاتوو</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="planForm">
+                        <div class="mb-3">
+                            <label class="form-label">بەش (Category)</label>
+                            <select class="form-select" id="planCategory" onchange="updatePlanSubParts()" required>
+                                <option value="">هەڵبژێرە...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">پارچە (Part)</label>
+                            <select class="form-select" id="planPart" required disabled>
+                                <option value="">سەرەتا بەش هەڵبژێرە</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">بەرواری پلان (Planned Date)</label>
+                            <input type="date" class="form-control" id="planDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">تێبینی</label>
+                            <textarea class="form-control" id="planNote" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">زیادکردنی پلان</button>
                     </form>
                 </div>
             </div>
@@ -555,8 +708,14 @@
         let currentUser = null;
         let currentMachineId = null;
         let currentPartsConfig = null;
+
+        // Chart Instances
         let chartInstance = null;
+        let downtimeChartInstance = null;
         let unsubscribeLogs = null;
+
+        // Edit Mode Tracking
+        let globalLogsCache = [];
 
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) window.location.href = 'index.html';
@@ -637,6 +796,7 @@
         // --- HIERARCHY LOGIC ---
         function updateCategoryDropdown() {
             const catSelect = document.getElementById('partCategory');
+            const currentVal = catSelect.value;
             catSelect.innerHTML = '<option value="">هەڵبژێرە...</option>';
 
             if (!currentPartsConfig) return;
@@ -644,11 +804,14 @@
             for (const [key, val] of Object.entries(currentPartsConfig)) {
                 catSelect.innerHTML += `<option value="${key}">${val.label}</option>`;
             }
+            if (currentVal) catSelect.value = currentVal;
         }
 
         function updateSubParts() {
             const catKey = document.getElementById('partCategory').value;
             const partSelect = document.getElementById('partName');
+            const existingPart = partSelect.getAttribute('data-selected');
+
             partSelect.innerHTML = '';
 
             if (!catKey || !currentPartsConfig[catKey]) {
@@ -660,6 +823,11 @@
             currentPartsConfig[catKey].parts.forEach(p => {
                 partSelect.innerHTML += `<option value="${p}">${p}</option>`;
             });
+
+            if (existingPart) {
+                partSelect.value = existingPart;
+                partSelect.removeAttribute('data-selected');
+            }
         }
 
         // --- MANAGE PARTS LOGIC ---
@@ -699,9 +867,7 @@
             const key = document.getElementById('newCatInput').value.trim();
             const label = document.getElementById('newCatLabel').value.trim();
             if (!key || !label) return alert("Please enter Key and Label");
-
             if (currentPartsConfig[key]) return alert("Category exists!");
-
             currentPartsConfig[key] = { label: label, parts: [] };
             renderManagePartsUI();
         }
@@ -717,7 +883,6 @@
             const input = document.getElementById(`newPartInput-${catKey}`);
             const val = input.value.trim();
             if (!val) return;
-
             currentPartsConfig[catKey].parts.push(val);
             renderManagePartsUI();
         }
@@ -743,34 +908,37 @@
             }
         }
 
-        // --- OPENING MODALS ---
-        function openAddMachineModal() {
-            document.getElementById('addMachineForm').reset();
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addMachineModal'));
+        // --- PLAN MODAL LOGIC ---
+        function openPlanModal() {
+            const catSelect = document.getElementById('planCategory');
+            catSelect.innerHTML = '<option value="">هەڵبژێرە...</option>';
+            if (currentPartsConfig) {
+                for (const [key, val] of Object.entries(currentPartsConfig)) {
+                    catSelect.innerHTML += `<option value="${key}">${val.label}</option>`;
+                }
+            }
+            document.getElementById('planPart').innerHTML = '<option value="">سەرەتا بەش هەڵبژێرە</option>';
+            document.getElementById('planPart').disabled = true;
+            document.getElementById('planDate').value = "";
+            document.getElementById('planNote').value = "";
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('planModal'));
             modal.show();
         }
 
-        function openAddRecordModal(type) {
-            document.getElementById('recordForm').reset();
-            document.getElementById('recordType').value = type;
-            document.getElementById('recDate').valueAsDate = new Date();
-
-            const isMaint = type === 'maintenance';
-            document.querySelectorAll('.maintenance-field').forEach(e => e.style.display = isMaint ? 'block' : 'none');
-            document.querySelectorAll('.problem-field').forEach(e => e.style.display = isMaint ? 'none' : 'block');
-
-            const header = document.getElementById('recordModalHeader');
-            header.className = isMaint ? "modal-header bg-primary text-white" : "modal-header bg-danger text-white";
-            document.getElementById('recordModalTitle').textContent = isMaint ? "تۆماری چاکسازی" : "تۆماری کێشە";
-
-            if (isMaint) {
-                updateCategoryDropdown();
-                document.getElementById('partName').innerHTML = "";
-                document.getElementById('partName').disabled = true;
+        function updatePlanSubParts() {
+            const catKey = document.getElementById('planCategory').value;
+            const partSelect = document.getElementById('planPart');
+            partSelect.innerHTML = '';
+            if (!catKey || !currentPartsConfig[catKey]) {
+                partSelect.disabled = true;
+                partSelect.innerHTML = '<option value="">سەرەتا بەش هەڵبژێرە</option>';
+                return;
             }
-
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal'));
-            modal.show();
+            partSelect.disabled = false;
+            currentPartsConfig[catKey].parts.forEach(p => {
+                partSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
         }
 
         // --- REAL-TIME DATA ---
@@ -783,6 +951,7 @@
                 .onSnapshot(snap => {
                     const logs = [];
                     snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+                    globalLogsCache = logs;
                     processAndRender(logs);
                 }, err => {
                     console.error("Error:", err);
@@ -796,17 +965,120 @@
         function processAndRender(logs) {
             const maintLogs = logs.filter(l => l.type === 'maintenance');
             const probLogs = logs.filter(l => l.type === 'problem');
+            const planLogs = logs.filter(l => l.type === 'plan');
 
             renderMaintTable(maintLogs);
             renderProbTable(probLogs);
             calculateKPIs(probLogs, maintLogs);
-            renderDashboardVisuals(maintLogs);
+            renderDashboardVisuals(maintLogs, probLogs, logs);
+            renderScheduleTable(maintLogs, planLogs);
         }
 
+        // --- SMART SCHEDULE TABLE RENDERER ---
+        function renderScheduleTable(maintLogs, planLogs) {
+            const tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+
+            const allParts = [];
+            if (currentPartsConfig) {
+                Object.values(currentPartsConfig).forEach(cat => {
+                    cat.parts.forEach(p => allParts.push(p));
+                });
+            }
+
+            const partData = {};
+
+            allParts.forEach(p => {
+                partData[p] = {
+                    lastMaint: null,
+                    lastCycle: 365,
+                    manualPlan: null
+                };
+            });
+
+            maintLogs.forEach(log => {
+                const p = log.partName || log.part;
+                if (partData[p] && !partData[p].lastMaint) {
+                    partData[p].lastMaint = log.date;
+                    partData[p].lastCycle = parseInt(log.cycleDays) || 365;
+                }
+            });
+
+            const today = new Date();
+            planLogs.forEach(log => {
+                const p = log.partName;
+                if (partData[p]) {
+                    if (!partData[p].manualPlan || new Date(log.date) > new Date(partData[p].manualPlan.date)) {
+                        partData[p].manualPlan = log;
+                    }
+                }
+            });
+
+            Object.keys(partData).sort().forEach(part => {
+                const data = partData[part];
+                let nextDate = null;
+                let typeLabel = "";
+                let typeClass = "";
+                let deleteBtn = "";
+
+                if (data.manualPlan && new Date(data.manualPlan.date) >= new Date().setHours(0, 0, 0, 0)) {
+                    nextDate = new Date(data.manualPlan.date);
+                    typeLabel = "Manual (دەستی)";
+                    typeClass = "type-manual";
+                    deleteBtn = `<button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteLog('${data.manualPlan.id}')" title="Delete Plan"><i class="bi bi-trash"></i></button>`;
+                } else if (data.lastMaint) {
+                    const last = new Date(data.lastMaint);
+                    nextDate = new Date(last);
+                    nextDate.setDate(last.getDate() + data.lastCycle);
+                    typeLabel = "Auto (ئۆتۆماتیک)";
+                    typeClass = "type-auto";
+                }
+
+                if (nextDate) {
+                    const diffTime = nextDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    let rowClass = '';
+                    if (diffDays < 0) rowClass = 'status-danger';
+                    else if (diffDays < 30) rowClass = 'status-warning';
+                    else rowClass = 'status-ok';
+
+                    const formattedNextDate = nextDate.toISOString().split('T')[0];
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${part}</td>
+                            <td class="${typeClass}">${typeLabel}</td>
+                            <td>${data.lastMaint || '-'}</td>
+                            <td>${formattedNextDate}</td>
+                            <td class="${rowClass}">${diffDays}</td>
+                            <td>${deleteBtn}</td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${part}</td>
+                            <td class="text-muted">-</td>
+                            <td class="text-muted">-</td>
+                            <td class="text-muted">-</td>
+                            <td class="text-muted">-</td>
+                            <td></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function printSchedule() {
+            window.print();
+        }
+
+        // --- EXISTING RENDERS ---
         function renderMaintTable(logs) {
             const tbody = document.getElementById('maintenanceLogBody');
             tbody.innerHTML = '';
-            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">نییە</td></tr>'; return; }
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">نییە</td></tr>'; return; }
 
             logs.forEach(log => {
                 const year = log.date.substring(0, 4);
@@ -820,8 +1092,12 @@
                         <td><span class="badge-category">${catLabel}</span></td>
                         <td><span class="badge-part">${part}</span></td>
                         <td>${log.quantity || 1}</td>
+                        <td>${log.cycleDays || 365}</td>
                         <td class="small text-muted">${log.note || ''}</td>
-                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
@@ -840,31 +1116,64 @@
                         <td>${log.rootCause || '-'}</td>
                         <td><span class="badge bg-warning text-dark">${log.downtime || 0} h</span></td>
                         <td>${log.solution || '-'}</td>
-                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        function renderDashboardVisuals(logs) {
+        function renderDashboardVisuals(maintLogs, probLogs, allLogs) {
             const pivotData = {};
             const yearsSet = new Set();
-
-            logs.forEach(log => {
+            maintLogs.forEach(log => {
                 const y = log.date.substring(0, 4);
                 yearsSet.add(y);
                 const part = log.partName || log.part || 'General';
-
                 if (!pivotData[part]) pivotData[part] = {};
                 if (!pivotData[part][y]) pivotData[part][y] = 0;
                 pivotData[part][y] += parseInt(log.quantity || 1);
             });
-
             const years = Array.from(yearsSet).sort();
+            renderPivotTable(pivotData, years);
+            renderMainChart(pivotData, years);
+            renderDowntimeChart(probLogs);
+            renderRecentActivity(allLogs);
+        }
 
+        function renderRecentActivity(allLogs) {
+            const list = document.getElementById('recentActivitiesList');
+            list.innerHTML = '';
+            const history = allLogs.filter(l => l.type !== 'plan').slice(0, 5);
+
+            if (history.length === 0) {
+                list.innerHTML = '<li class="text-muted text-center py-4">هیچ چالاکییەک نییە</li>';
+                return;
+            }
+
+            history.forEach(log => {
+                const isMaint = log.type === 'maintenance';
+                const icon = isMaint ? '<i class="bi bi-tools"></i>' : '<i class="bi bi-exclamation-triangle-fill"></i>';
+                const color = isMaint ? 'bg-primary' : 'bg-danger';
+                const title = isMaint ? (log.partName || 'Maintenance') : (log.problem || 'Problem');
+
+                list.innerHTML += `
+                    <li class="activity-item">
+                        <div class="activity-icon ${color}">${icon}</div>
+                        <div>
+                            <div class="fw-bold small">${title}</div>
+                            <div class="text-muted" style="font-size:0.8rem">${log.date}</div>
+                        </div>
+                    </li>
+                `;
+            });
+        }
+
+        function renderPivotTable(pivotData, years) {
             const pt = document.getElementById('pivotTable');
             let html = `<thead><tr><th>Part Name</th>${years.map(y => `<th>${y}</th>`).join('')}<th>Total</th></tr></thead><tbody>`;
-
             for (const [part, yData] of Object.entries(pivotData)) {
                 let total = 0;
                 html += `<tr><td class="pivot-row-header">${part}</td>`;
@@ -877,23 +1186,57 @@
             }
             html += '</tbody>';
             pt.innerHTML = html;
+        }
 
+        function renderMainChart(pivotData, years) {
             const ctx = document.getElementById('maintenanceChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-
-            // Blue Palette
-            const colors = ['#1976d2', '#2196f3', '#42a5f5', '#64b5f6', '#90caf9'];
+            const colors = ['#1E88E5', '#43A047', '#FB8C00', '#E53935', '#8E24AA', '#00ACC1', '#3949AB'];
             const datasets = Object.keys(pivotData).map((part, i) => ({
                 label: part,
                 data: years.map(y => pivotData[part][y] || 0),
                 backgroundColor: colors[i % colors.length],
+                borderRadius: 4,
+                borderSkipped: false,
                 stack: 'group1'
             }));
-
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: years, datasets: datasets },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true } },
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        }
+
+        function renderDowntimeChart(probLogs) {
+            const ctx = document.getElementById('downtimeChart').getContext('2d');
+            if (downtimeChartInstance) downtimeChartInstance.destroy();
+            const downtimeByMonth = {};
+            probLogs.forEach(l => {
+                const month = l.date.substring(0, 7);
+                if (!downtimeByMonth[month]) downtimeByMonth[month] = 0;
+                downtimeByMonth[month] += parseFloat(l.downtime || 0);
+            });
+            const labels = Object.keys(downtimeByMonth).sort();
+            const values = labels.map(m => downtimeByMonth[m]);
+            downtimeChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Downtime (Hours)',
+                        data: values,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
             });
         }
 
@@ -901,30 +1244,45 @@
             const downtime = pLogs.reduce((acc, l) => acc + (parseFloat(l.downtime) || 0), 0);
             const failures = pLogs.length;
 
+            // 1. MTTR (Mean Time To Repair) = Total Downtime / No. of Failures
             document.getElementById('kpiDowntime').textContent = downtime.toFixed(1);
             document.getElementById('kpiMTTR').textContent = failures ? (downtime / failures).toFixed(1) : 0;
-            const totalDays = 365;
-            const opHours = (totalDays * 24) - downtime;
-            document.getElementById('kpiMTBF').textContent = failures ? ((opHours / 24) / failures).toFixed(1) : 'OK';
+
+            // 2. MTBF (Mean Time Between Failures) = Total Operational Time / Failures
+            // Assuming 365 days of operation (8760 hours) minus downtime
+            const totalHours = 365 * 24;
+            const uptime = totalHours - downtime;
+
+            // In maintenance, MTBF often includes the repair time (Time between failures), 
+            // but for reliability, it's uptime / failures.
+            const mtbf = failures ? ((uptime / 24) / failures).toFixed(1) : 'OK';
+            document.getElementById('kpiMTBF').textContent = mtbf;
+
+            // 3. MTTF (Mean Time To Failure)
+            // For repairable items, MTTF is essentially the average uptime (Uptime / Failures)
+            // It is mathematically similar to MTBF in many simple definitions, but conceptually distinct.
+            // Here, we display it as Days.
+            document.getElementById('kpiMTTF').textContent = mtbf;
         }
 
-        // --- SUBMIT ---
+        // --- SUBMITS ---
         document.getElementById('recordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const type = document.getElementById('recordType').value;
-
+            const editId = document.getElementById('editingLogId').value;
             const data = {
                 machineId: currentMachineId,
                 type: type,
                 date: document.getElementById('recDate').value,
                 note: document.getElementById('recNote').value,
-                createdAt: new Date().toISOString()
             };
+            if (!editId) data.createdAt = new Date().toISOString();
 
             if (type === 'maintenance') {
                 data.partCategory = document.getElementById('partCategory').value;
                 data.partName = document.getElementById('partName').value;
                 data.quantity = parseInt(document.getElementById('recQty').value);
+                data.cycleDays = parseInt(document.getElementById('recCycle').value);
                 data.part = data.partName;
             } else {
                 data.problem = document.getElementById('recProblem').value;
@@ -934,12 +1292,29 @@
             }
 
             try {
-                await db.collection('machine_logs').add(data);
+                if (editId) { await db.collection('machine_logs').doc(editId).update(data); alert("نوێکرایەوە"); }
+                else { await db.collection('machine_logs').add(data); alert("تۆمارکرا"); }
                 bootstrap.Modal.getInstance(document.getElementById('addRecordModal')).hide();
-                alert("تۆمارکرا");
-            } catch (e) {
-                alert("Error: " + e.message);
-            }
+            } catch (e) { alert("Error: " + e.message); }
+        });
+
+        // Add Plan Submit
+        document.getElementById('planForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                machineId: currentMachineId,
+                type: 'plan',
+                partCategory: document.getElementById('planCategory').value,
+                partName: document.getElementById('planPart').value,
+                date: document.getElementById('planDate').value,
+                note: document.getElementById('planNote').value,
+                createdAt: new Date().toISOString()
+            };
+            try {
+                await db.collection('machine_logs').add(data);
+                alert("پلان زیادکرا");
+                bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+            } catch (e) { alert("Error: " + e.message); }
         });
 
         document.getElementById('addMachineForm').addEventListener('submit', async (e) => {
@@ -957,37 +1332,73 @@
             alert("زیادکرا");
         });
 
+        // Add Edit Functionality 
+        function openAddRecordModal(type) {
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordType').value = type;
+            document.getElementById('editingLogId').value = "";
+            document.getElementById('recDate').valueAsDate = new Date();
+            document.getElementById('saveBtnLabel').textContent = "تۆمارکردن";
+            setupModalFields(type);
+            if (type === 'maintenance') {
+                updateCategoryDropdown();
+                document.getElementById('partName').innerHTML = "";
+                document.getElementById('partName').disabled = true;
+                document.getElementById('recCycle').value = 365;
+            }
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal'));
+            modal.show();
+        }
+
+        function editLog(logId) {
+            const log = globalLogsCache.find(l => l.id === logId);
+            if (!log) return alert("Log not found");
+            document.getElementById('recordType').value = log.type;
+            document.getElementById('editingLogId').value = log.id;
+            document.getElementById('recDate').value = log.date;
+            document.getElementById('recNote').value = log.note || '';
+            document.getElementById('saveBtnLabel').textContent = "نوێکردنەوە";
+            setupModalFields(log.type);
+            if (log.type === 'maintenance') {
+                updateCategoryDropdown();
+                document.getElementById('partCategory').value = log.partCategory;
+                document.getElementById('partName').setAttribute('data-selected', log.partName);
+                updateSubParts();
+                document.getElementById('recQty').value = log.quantity || 1;
+                document.getElementById('recCycle').value = log.cycleDays || 365;
+            } else {
+                document.getElementById('recProblem').value = log.problem;
+                document.getElementById('recRootCause').value = log.rootCause || '';
+                document.getElementById('recDowntime').value = log.downtime || 0;
+                document.getElementById('recSolution').value = log.solution || '';
+            }
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal'));
+            modal.show();
+        }
+
+        function setupModalFields(type) {
+            const isMaint = type === 'maintenance';
+            document.querySelectorAll('.maintenance-field').forEach(e => e.style.display = isMaint ? 'block' : 'none');
+            document.querySelectorAll('.problem-field').forEach(e => e.style.display = isMaint ? 'none' : 'block');
+            const header = document.getElementById('recordModalHeader');
+            header.className = isMaint ? "modal-header bg-primary text-white" : "modal-header bg-danger text-white";
+            document.getElementById('recordModalTitle').textContent = isMaint ? "تۆماری چاکسازی" : "تۆماری کێشە";
+        }
+
         async function openManageMachinesModal() {
             const tbody = document.getElementById('machinesListBody');
             tbody.innerHTML = '<tr><td>Loading...</td></tr>';
-
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('manageMachinesModal'));
             modal.show();
-
             const snap = await db.collection('machines').get();
             tbody.innerHTML = '';
             snap.forEach(doc => {
                 const m = doc.data();
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${m.name}</td>
-                        <td>${m.department}</td>
-                        <td><button class="btn btn-sm btn-danger" onclick="deleteMachine('${doc.id}')"><i class="bi bi-trash"></i></button></td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td>${m.name}</td><td>${m.department}</td><td><button class="btn btn-sm btn-danger" onclick="deleteMachine('${doc.id}')"><i class="bi bi-trash"></i></button></td></tr>`;
             });
         }
-
-        async function deleteMachine(id) {
-            if (confirm("Are you sure?")) {
-                await db.collection('machines').doc(id).delete();
-                openManageMachinesModal();
-                loadMachines(document.getElementById('departmentSelect').value);
-            }
-        }
-
-        async function deleteLog(id) {
-            if (confirm("Delete this record?")) await db.collection('machine_logs').doc(id).delete();
-        }
+        async function deleteMachine(id) { if (confirm("Are you sure?")) { await db.collection('machines').doc(id).delete(); openManageMachinesModal(); loadMachines(document.getElementById('departmentSelect').value); } }
+        async function deleteLog(id) { if (confirm("Delete this record?")) await db.collection('machine_logs').doc(id).delete(); }
     </script>
 </body>
 
