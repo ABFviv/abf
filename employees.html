@@ -1290,6 +1290,9 @@
                     <button class="btn btn-success ms-2 quick-record-only" id="quickRecordBtn" style="display: none;">
                         <i class="bi bi-plus-circle"></i> زیادکردنی تۆمار
                     </button>
+                    <button class="btn btn-info ms-2 cleaning-work-only" id="cleaningWorkBtn" style="display: none;">
+                        <i class="bi bi-stars"></i> کاری پاککردنەوە
+                    </button>
                     <button class="btn btn-primary ms-2" id="viewTotalsBtn" onclick="showTotalsPage()">
                         <i class="bi bi-bar-chart-line"></i> کۆی گشتی
                     </button>
@@ -2238,6 +2241,70 @@
         </div>
     </div>
 
+    <div class="modal fade" id="cleaningWorkModal" tabindex="-1" aria-labelledby="cleaningWorkModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title w-100 text-center" id="cleaningWorkModalLabel">زیادکردنی کاری پاککردنەوە</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cleaningWorkForm">
+                        <div class="mb-3">
+                            <label for="cleaningWorkDate" class="form-label text-center w-100">بەروار</label>
+                            <input type="date" class="form-control text-center" id="cleaningWorkDate" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-center w-100">هەڵبژاردنی کارمەند</label>
+                            <div class="employee-selection-container" id="cleaningWorkEmployeesContainer">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cleaningWorkName" class="form-label text-center w-100">ناوی پاککردنەوە</label>
+                            <input type="text" class="form-control text-center" id="cleaningWorkName"
+                                placeholder="نموونە: پاککردنەوەی ژێر هێڵەکان" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cleaningWorkRating" class="form-label text-center w-100">هەڵسەنگاندن (-100 بۆ
+                                100)</label>
+                            <div class="rating-control">
+                                <div class="rating-slider-container">
+                                    <div class="rating-arrows">
+                                        <button type="button" class="rating-arrow-btn"
+                                            onclick="adjustRating('cleaningWorkRating', 1)">
+                                            <i class="bi bi-arrow-up"></i>
+                                        </button>
+                                        <button type="button" class="rating-arrow-btn"
+                                            onclick="adjustRating('cleaningWorkRating', -1)">
+                                            <i class="bi bi-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                    <input type="range" class="form-range" id="cleaningWorkRating" min="-100" max="100"
+                                        value="0" required>
+                                    <span id="cleaningWorkRatingValue"
+                                        class="employee-rating-value text-center">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cleaningWorkNote" class="form-label text-center w-100">تێبینی</label>
+                            <textarea class="form-control text-center" id="cleaningWorkNote" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">پاشگەزبوونەوە</button>
+                    <button type="button" class="btn btn-primary" id="saveCleaningWorkBtn">تۆمارکردن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast-container">
         <div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true"
@@ -2766,6 +2833,17 @@
                 }
             });
 
+            // Inside setupEventListeners()
+
+            // Cleaning Work Button
+            document.getElementById('cleaningWorkBtn').addEventListener('click', openCleaningWorkModal);
+            document.getElementById('saveCleaningWorkBtn').addEventListener('click', saveCleaningWork);
+
+            // Cleaning Rating Listener
+            document.getElementById('cleaningWorkRating').addEventListener('input', function () {
+                document.getElementById('cleaningWorkRatingValue').textContent = this.value;
+            });
+
             // Final confirm/reject notification buttons
             document.getElementById('finalConfirmNotificationBtn').addEventListener('click', finalConfirmNotification);
             document.getElementById('finalRejectNotificationBtn').addEventListener('click', finalRejectNotification);
@@ -2985,6 +3063,15 @@
 
             document.getElementById('printBtn').style.display =
                 (currentUser.role === 'admin' || currentUser.role === 'supervisor' || currentUser.role === 'manager') ? 'inline-block' : 'none';
+
+            // Inside showDashboard() ...
+
+            // Show Cleaning Work button ONLY for Cutting and Unsetting (and Admin)
+            const cleaningWorkElements = document.querySelectorAll('.cleaning-work-only');
+            const showCleaningWork = ['cutting-setting', 'unsetting'].includes(currentUser.department) || currentUser.role === 'admin';
+            cleaningWorkElements.forEach(element => {
+                element.style.display = showCleaningWork ? 'inline-block' : 'none';
+            });
 
             // Load and display employees
             renderEmployeeTable();
@@ -4116,33 +4203,53 @@
             if (!employee) return;
 
             console.log('Opening modal for employee:', employee.id, employee.name, employee.department, employee.position);
+            if (employee.id === '014') {
+                document.getElementById('dailyWorkCartsContainer').style.display = 'none';
+                document.getElementById('dailyWorkNameContainer').style.display = 'block';
 
-            // Special handling for klin department
-            if (employee.department === 'klin') {
-                // Define which employees in klin should have carts
-                // CHANGE THESE IDs TO YOUR ACTUAL EMPLOYEE IDs
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
+                // Pre-fill the name with "Cleaning Work"
+                document.getElementById('dailyWorkName').value = "کاری پاکردنەوەی ڕۆژانە";
+                document.getElementById('dailyWorkName').readOnly = true; // Optional: Lock it so they can't change it
 
-                console.log('Klin employee check:', {
-                    employeeId: employee.id,
-                    position: employee.position,
-                    hasCarts: klinCartEmployees.includes(employee.id),
-                    isKarpekker: employee.position === 'کارپێکەر'
-                });
+                // Set validation
+                document.getElementById('dailyWorkCarts').required = false;
+                document.getElementById('dailyWorkName').required = true;
 
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                    // These specific employees show carts field with auto rating
-                    console.log('Showing carts field for:', employee.id);
-                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+                // Special handling for klin department
+                if (employee.department === 'klin') {
+                    // Define which employees in klin should have carts
+                    // CHANGE THESE IDs TO YOUR ACTUAL EMPLOYEE IDs
+                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
 
-                    // Set proper validation
-                    document.getElementById('dailyWorkCarts').required = true;
-                    document.getElementById('dailyWorkName').required = false;
-                } else {
-                    // Other employees in klin show "ناوی کار" field and NO carts
-                    console.log('Showing name field for:', employee.id);
+                    console.log('Klin employee check:', {
+                        employeeId: employee.id,
+                        position: employee.position,
+                        hasCarts: klinCartEmployees.includes(employee.id),
+                        isKarpekker: employee.position === 'کارپێکەر'
+                    });
+
+                    if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                        // These specific employees show carts field with auto rating
+                        console.log('Showing carts field for:', employee.id);
+                        document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                        document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                        document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+
+                        // Set proper validation
+                        document.getElementById('dailyWorkCarts').required = true;
+                        document.getElementById('dailyWorkName').required = false;
+                    } else {
+                        // Other employees in klin show "ناوی کار" field and NO carts
+                        console.log('Showing name field for:', employee.id);
+                        document.getElementById('dailyWorkCartsContainer').style.display = 'none';
+                        document.getElementById('dailyWorkNameContainer').style.display = 'block';
+                        document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
+
+                        // Set proper validation
+                        document.getElementById('dailyWorkCarts').required = false;
+                        document.getElementById('dailyWorkName').required = true;
+                    }
+                } else if (employee.department === 'engineering' || employee.department === 'management') {
                     document.getElementById('dailyWorkCartsContainer').style.display = 'none';
                     document.getElementById('dailyWorkNameContainer').style.display = 'block';
                     document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
@@ -4150,36 +4257,28 @@
                     // Set proper validation
                     document.getElementById('dailyWorkCarts').required = false;
                     document.getElementById('dailyWorkName').required = true;
+                } else if (employee.department === 'crushing-prep') {
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی طەنی خۆڵ';
+
+                    // Set proper validation
+                    document.getElementById('dailyWorkCarts').required = true;
+                    document.getElementById('dailyWorkName').required = false;
+                } else {
+                    // Default for other departments (cutting-setting, unsetting, etc.)
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+
+                    // Set proper validation
+                    document.getElementById('dailyWorkCarts').required = true;
+                    document.getElementById('dailyWorkName').required = false;
                 }
-            } else if (employee.department === 'engineering' || employee.department === 'management') {
-                document.getElementById('dailyWorkCartsContainer').style.display = 'none';
-                document.getElementById('dailyWorkNameContainer').style.display = 'block';
-                document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
 
-                // Set proper validation
-                document.getElementById('dailyWorkCarts').required = false;
-                document.getElementById('dailyWorkName').required = true;
-            } else if (employee.department === 'crushing-prep') {
-                document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی طەنی خۆڵ';
-
-                // Set proper validation
-                document.getElementById('dailyWorkCarts').required = true;
-                document.getElementById('dailyWorkName').required = false;
-            } else {
-                // Default for other departments (cutting-setting, unsetting, etc.)
-                document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
-
-                // Set proper validation
-                document.getElementById('dailyWorkCarts').required = true;
-                document.getElementById('dailyWorkName').required = false;
+                const modal = new bootstrap.Modal(document.getElementById('addDailyWorkModal'));
+                modal.show();
             }
-
-            const modal = new bootstrap.Modal(document.getElementById('addDailyWorkModal'));
-            modal.show();
         }
 
         // Open add other work modal
@@ -4411,87 +4510,100 @@
                 employee.dailyWork = [];
             }
 
-            // Check what field should be required based on department and employee
-            if (employee.department === 'klin') {
-                // Define which employees in klin should have carts
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                    // These employees need carts
-                    if (!carts) {
-                        showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
-                        return;
-                    }
-                } else {
-                    // Other klin employees need name
-                    if (!name) {
-                        showNotification('تکایە ناوی کار بنووسە', 'danger');
-                        return;
-                    }
-                }
-            } else if (employee.department === 'engineering' || employee.department === 'management') {
-                // These need name
+            // --- NEW VALIDATION LOGIC START ---
+            if (employee.id === '014') {
+                // Validation for Cleaner 014
                 if (!name) {
                     showNotification('تکایە ناوی کار بنووسە', 'danger');
                     return;
                 }
-            } else if (employee.department === 'crushing-prep') {
-                // These need clay tons
-                if (!carts) {
-                    showNotification('تکایە ژمارەی طەنی خۆڵ بنووسە', 'danger');
-                    return;
-                }
-            } else {
-                // Other departments need carts
-                if (!carts) {
-                    showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
-                    return;
-                }
-            }
 
-            const workRecord = {
-                date,
-                rate,
-                note,
-                createdAt: new Date().toISOString()
-            };
+                // Check what field should be required based on department and employee
+                if (employee.department === 'klin') {
+                    // Define which employees in klin should have carts
+                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
 
-            // Special handling for klin department
-            if (employee.department === 'klin') {
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                    // These employees have carts
-                    workRecord.carts = carts;
+                    if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                        // These employees need carts
+                        if (!carts) {
+                            showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
+                            return;
+                        }
+                    } else {
+                        // Other klin employees need name
+                        if (!name) {
+                            showNotification('تکایە ناوی کار بنووسە', 'danger');
+                            return;
+                        }
+                    }
+                } else if (employee.department === 'engineering' || employee.department === 'management') {
+                    // These need name
+                    if (!name) {
+                        showNotification('تکایە ناوی کار بنووسە', 'danger');
+                        return;
+                    }
+                } else if (employee.department === 'crushing-prep') {
+                    // These need clay tons
+                    if (!carts) {
+                        showNotification('تکایە ژمارەی طەنی خۆڵ بنووسە', 'danger');
+                        return;
+                    }
                 } else {
-                    // Other klin employees have name
-                    workRecord.name = name;
+                    // Other departments need carts
+                    if (!carts) {
+                        showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
+                        return;
+                    }
                 }
-            } else if (employee.department === 'engineering' || employee.department === 'management') {
-                workRecord.name = name;
-            } else if (employee.department === 'crushing-prep') {
-                workRecord.clayTons = carts;
-            } else {
-                workRecord.carts = carts;
-            }
 
-            employee.dailyWork.push(workRecord);
+                const workRecord = {
+                    date,
+                    rate,
+                    note,
+                    createdAt: new Date().toISOString()
+                };
 
-            const success = await saveEmployeeToFirebase(employee);
+                // --- NEW SAVING LOGIC START ---
+                if (employee.id === '014') {
+                    workRecord.name = name; // Save as Name
 
-            if (success) {
-                loadWorkRecords(employee);
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
-                modal.show();
-                showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
+                    // Special handling for klin department
+                    if (employee.department === 'klin') {
+                        const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
 
-                // Update daily work totals
-                updateDailyWorkTotals();
-                updateElectricalMechanicalTotals();
-            } else {
-                showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
+                        if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                            // These employees have carts
+                            workRecord.carts = carts;
+                        } else {
+                            // Other klin employees have name
+                            workRecord.name = name;
+                        }
+                    } else if (employee.department === 'engineering' || employee.department === 'management') {
+                        workRecord.name = name;
+                    } else if (employee.department === 'crushing-prep') {
+                        workRecord.clayTons = carts;
+                    } else {
+                        workRecord.carts = carts;
+                    }
+
+                    employee.dailyWork.push(workRecord);
+
+                    const success = await saveEmployeeToFirebase(employee);
+
+                    if (success) {
+                        loadWorkRecords(employee);
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
+                        modal.show();
+                        showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
+                        updateDailyWorkTotals();
+                        updateElectricalMechanicalTotals();
+                    } else {
+                        showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
+                    }
+                }
             }
         }
+
 
         // Save other work record
         async function saveOtherWorkRecord() {
@@ -7099,9 +7211,100 @@
 
         // Call this in console or add a temporary button
         // debugKlinEmployees();
+
+        // Open Cleaning Work Modal
+        function openCleaningWorkModal() {
+            document.getElementById('cleaningWorkForm').reset();
+            document.getElementById('cleaningWorkRatingValue').textContent = '0';
+            document.getElementById('cleaningWorkDate').valueAsDate = new Date();
+
+            // Populate employees based on current department
+            const employeesContainer = document.getElementById('cleaningWorkEmployeesContainer');
+            employeesContainer.innerHTML = '';
+
+            // Filter employees: Admin sees all, Supervisors see their own department
+            let departmentEmployees = [];
+            if (currentUser.role === 'admin') {
+                // If admin, show employees from cutting and unsetting
+                departmentEmployees = employees.filter(emp =>
+                    emp.department === 'cutting-setting' || emp.department === 'unsetting'
+                );
+            } else {
+                departmentEmployees = employees.filter(emp => emp.department === currentUser.department);
+            }
+
+            if (departmentEmployees.length === 0) {
+                employeesContainer.innerHTML = '<p class="text-muted text-center">هیچ کارمەندێک لەم بەشەدا نییە</p>';
+                return;
+            }
+
+            departmentEmployees.forEach(employee => {
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'employee-checkbox-label';
+                checkboxDiv.innerHTML = `
+            <input type="checkbox" class="employee-checkbox" id="clean-emp-${employee.id}" value="${employee.id}">
+            <label for="clean-emp-${employee.id}">${employee.name}</label>
+        `;
+                employeesContainer.appendChild(checkboxDiv);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('cleaningWorkModal'));
+            modal.show();
+        }
+
+        // Save Cleaning Work
+        async function saveCleaningWork() {
+            const date = document.getElementById('cleaningWorkDate').value;
+            const workName = document.getElementById('cleaningWorkName').value;
+            const rate = document.getElementById('cleaningWorkRating').value;
+            const note = document.getElementById('cleaningWorkNote').value;
+
+            // Get selected employees
+            const selectedCheckboxes = document.querySelectorAll('#cleaningWorkEmployeesContainer .employee-checkbox:checked');
+            const selectedEmployees = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+
+            if (selectedEmployees.length === 0) {
+                showNotification('تکایە کەمێک کارمەند هەڵبژێرە', 'danger');
+                return;
+            }
+
+            if (!workName) {
+                showNotification('تکایە ناوی پاککردنەوە بنووسە', 'danger');
+                return;
+            }
+
+            // Loop through selected employees and save
+            for (const employeeId of selectedEmployees) {
+                const employee = employees.find(emp => emp.id === employeeId);
+                if (!employee) continue;
+
+                if (!employee.dailyWork) {
+                    employee.dailyWork = [];
+                }
+
+                const workRecord = {
+                    date: date,
+                    name: `پاککردنەوە: ${workName}`, // Save as "Cleaning: [Name]"
+                    rate: rate,
+                    note: note,
+                    createdAt: new Date().toISOString(),
+                    isCleaning: true // Optional flag if you want to filter later
+                };
+
+                employee.dailyWork.push(workRecord);
+                await saveEmployeeToFirebase(employee);
+            }
+
+            showNotification(`کاری پاککردنەوە بۆ ${selectedEmployees.length} کارمەند تۆمارکرا`, 'success');
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('cleaningWorkModal'));
+            modal.hide();
+
+            // Refresh tables
+            renderEmployeeTable();
+            updateDailyWorkTotals();
+        }
     </script>
 </body>
 
 </html>
-
-
