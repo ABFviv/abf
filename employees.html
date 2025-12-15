@@ -1293,6 +1293,9 @@
                     <button class="btn btn-info ms-2 cleaning-work-only" id="cleaningWorkBtn" style="display: none;">
                         <i class="bi bi-stars"></i> کاری پاککردنەوە
                     </button>
+                    <button class="btn btn-warning ms-2 greasing-work-only" id="greasingWorkBtn" style="display: none;">
+                        <i class="bi bi-gear-wide-connected"></i> کاری گریسین
+                    </button>
                     <button class="btn btn-primary ms-2" id="viewTotalsBtn" onclick="showTotalsPage()">
                         <i class="bi bi-bar-chart-line"></i> کۆی گشتی
                     </button>
@@ -2305,6 +2308,71 @@
         </div>
     </div>
 
+    <div class="modal fade" id="greasingWorkModal" tabindex="-1" aria-labelledby="greasingWorkModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title w-100 text-center" id="greasingWorkModalLabel">زیادکردنی کاری گریسین</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="greasingWorkForm">
+                        <div class="mb-3">
+                            <label for="greasingWorkDate" class="form-label text-center w-100">بەروار</label>
+                            <input type="date" class="form-control text-center" id="greasingWorkDate" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-center w-100">هەڵبژاردنی کارمەند (میکانیک)</label>
+                            <div class="employee-selection-container" id="greasingWorkEmployeesContainer">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-center w-100">شوێنی کار (بەشەکان)</label>
+                            <div class="employee-selection-container" id="greasingWorkDepartmentsContainer">
+                            </div>
+                            <div class="form-text text-center">دەتوانیت زیاتر لە یەک بەش هەڵبژێریت</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="greasingWorkRating" class="form-label text-center w-100">هەڵسەنگاندن (-100 بۆ
+                                100)</label>
+                            <div class="rating-control">
+                                <div class="rating-slider-container">
+                                    <div class="rating-arrows">
+                                        <button type="button" class="rating-arrow-btn"
+                                            onclick="adjustRating('greasingWorkRating', 1)">
+                                            <i class="bi bi-arrow-up"></i>
+                                        </button>
+                                        <button type="button" class="rating-arrow-btn"
+                                            onclick="adjustRating('greasingWorkRating', -1)">
+                                            <i class="bi bi-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                    <input type="range" class="form-range" id="greasingWorkRating" min="-100" max="100"
+                                        value="0" required>
+                                    <span id="greasingWorkRatingValue"
+                                        class="employee-rating-value text-center">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="greasingWorkNote" class="form-label text-center w-100">تێبینی</label>
+                            <textarea class="form-control text-center" id="greasingWorkNote" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">پاشگەزبوونەوە</button>
+                    <button type="button" class="btn btn-primary" id="saveGreasingWorkBtn">تۆمارکردن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="toast-container">
         <div class="toast" id="notificationToast" role="alert" aria-live="assertive" aria-atomic="true"
@@ -2522,60 +2590,64 @@
             // This will be called after employees are loaded
         }
 
-        // Firebase Data Functions
         async function loadDataFromFirebase() {
             try {
                 console.log('📥 Loading data from Firebase...');
 
-                // Load employees
+                // 1. Load Employees
                 const employeesSnapshot = await db.collection('employees').get();
                 employees = [];
                 employeesSnapshot.forEach(doc => {
-                    console.log('👤 Found employee:', doc.id, doc.data().name);
                     employees.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Load projects
+                // 2. Load Projects
                 const projectsSnapshot = await db.collection('projects').get();
                 projects = [];
                 projectsSnapshot.forEach(doc => {
-                    console.log('📋 Found project:', doc.id, doc.data().name);
                     projects.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Load notifications
+                // 3. Load Notifications
                 const notificationsSnapshot = await db.collection('notifications').get();
                 notifications = [];
                 notificationsSnapshot.forEach(doc => {
-                    console.log('🔔 Found notification:', doc.id, doc.data().type);
                     notifications.push({ id: doc.id, ...doc.data() });
                 });
 
-                console.log(`✅ Loaded ${employees.length} employees, ${projects.length} projects, and ${notifications.length} notifications from Firebase`);
+                console.log(`✅ Loaded ${employees.length} employees`);
 
-                // If no data in Firebase, initialize with sample data
-                if (employees.length === 0) {
-                    console.log('📝 No data found, initializing sample data...');
-                    await initializeSampleData();
+                // --- SAFE UPDATE STEPS (Prevent crashing) ---
+
+                try { updatePositionDropdown(); } catch (e) { console.error('Error updating positions:', e); }
+
+                try { updateNotificationCount(); } catch (e) { console.error('Error updating notifications:', e); }
+
+                try {
+                    // Check if function exists before calling
+                    if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
+                } catch (e) { console.error('Error updating daily totals:', e); }
+
+                try {
+                    if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+                } catch (e) { console.error('Error updating elec/mech totals:', e); }
+
+                // --- FINAL STEP: SHOW TABLE ---
+                // This is the most important part. We call it last to ensure data shows up.
+                if (typeof applyFilters === 'function') {
+                    applyFilters();
+                } else {
+                    renderEmployeeTable();
                 }
 
-                // Update position dropdown with unique positions from employees
-                updatePositionDropdown();
-
-                // Update notification count
-                updateNotificationCount();
-
-                // Update daily work totals
-                updateDailyWorkTotals();
-
-                // Update electrical/mechanical work totals
-                updateElectricalMechanicalTotals();
-
-                renderEmployeeTable();
-
             } catch (error) {
-                console.error('❌ Error loading data from Firebase:', error);
-                showNotification('هەڵە لە بارکردنی داتا لە بنکەی دراوە', 'danger');
+                console.error('❌ CRITICAL Error loading data:', error);
+                showNotification('هەڵە لە بارکردنی داتا: ' + error.message, 'danger');
+
+                // Even if critical error, try to show whatever we have
+                if (employees.length > 0) {
+                    renderEmployeeTable();
+                }
             }
         }
 
@@ -2847,6 +2919,17 @@
             // Final confirm/reject notification buttons
             document.getElementById('finalConfirmNotificationBtn').addEventListener('click', finalConfirmNotification);
             document.getElementById('finalRejectNotificationBtn').addEventListener('click', finalRejectNotification);
+
+            // Inside setupEventListeners()
+
+            // Greasing Work Button
+            document.getElementById('greasingWorkBtn').addEventListener('click', openGreasingWorkModal);
+            document.getElementById('saveGreasingWorkBtn').addEventListener('click', saveGreasingWork);
+
+            // Greasing Rating Listener
+            document.getElementById('greasingWorkRating').addEventListener('input', function () {
+                document.getElementById('greasingWorkRatingValue').textContent = this.value;
+            });
         }
 
 
@@ -3072,6 +3155,17 @@
             cleaningWorkElements.forEach(element => {
                 element.style.display = showCleaningWork ? 'inline-block' : 'none';
             });
+
+            // Inside showDashboard() ...
+
+            // Show Greasing Work button ONLY for Mechanical (and Admin)
+            const greasingWorkElements = document.querySelectorAll('.greasing-work-only');
+            const showGreasingWork = currentUser.department === 'mechanical' || currentUser.role === 'admin';
+            greasingWorkElements.forEach(element => {
+                element.style.display = showGreasingWork ? 'inline-block' : 'none';
+            });
+
+            applyFilters();
 
             // Load and display employees
             renderEmployeeTable();
@@ -4909,41 +5003,41 @@
             updateDailyWorkTotals();
         }
 
-        // Update daily work totals for all employees
         function updateDailyWorkTotals() {
+            // Safety check: ensure elements exist before using them
             const dailyWorkTotalsSection = document.getElementById('dailyWorkTotalsSection');
             const dailyWorkTotalsBody = document.getElementById('dailyWorkTotalsBody');
             const cartsColumnHeader = document.getElementById('cartsColumnHeader');
             const clayTonsColumnHeader = document.getElementById('clayTonsColumnHeader');
 
-            // Show the section only for specific departments and admin (EXCLUDE electrical and mechanical)
+            if (!dailyWorkTotalsSection || !dailyWorkTotalsBody) return;
+
+            // Show the section only for specific departments and admin
             const showTotals = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) || currentUser.role === 'admin';
 
             if (showTotals) {
                 dailyWorkTotalsSection.style.display = 'block';
 
-                // Get selected departments from checkboxes
+                // Get selected departments
                 const checkboxes = document.querySelectorAll('.department-checkbox:checked');
                 const selectedDepartments = Array.from(checkboxes).map(checkbox => checkbox.value);
 
-                // Show appropriate columns based on department
+                // SAFE COLUMN TOGGLING
                 if (currentUser.role === 'admin') {
-                    // Admin sees both columns
-                    cartsColumnHeader.style.display = 'table-cell';
-                    clayTonsColumnHeader.style.display = 'table-cell';
+                    if (cartsColumnHeader) cartsColumnHeader.style.display = 'table-cell';
+                    if (clayTonsColumnHeader) clayTonsColumnHeader.style.display = 'table-cell';
                 } else if (currentUser.department === 'crushing-prep') {
-                    cartsColumnHeader.style.display = 'none';
-                    clayTonsColumnHeader.style.display = 'table-cell';
+                    if (cartsColumnHeader) cartsColumnHeader.style.display = 'none';
+                    if (clayTonsColumnHeader) clayTonsColumnHeader.style.display = 'table-cell';
                 } else {
-                    cartsColumnHeader.style.display = 'table-cell';
-                    clayTonsColumnHeader.style.display = 'none';
+                    if (cartsColumnHeader) cartsColumnHeader.style.display = 'table-cell';
+                    if (clayTonsColumnHeader) clayTonsColumnHeader.style.display = 'none';
                 }
 
                 // Clear existing rows
                 dailyWorkTotalsBody.innerHTML = '';
 
-                // Filter employees based on user role AND selected departments
-                // EXCLUDE electrical and mechanical employees from this section
+                // Filter employees
                 let employeesToShow = employees.filter(emp =>
                     emp.department !== 'electrical-ac' && emp.department !== 'mechanical'
                 );
@@ -4951,7 +5045,6 @@
                 if (currentUser.role !== 'admin') {
                     employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
                 } else {
-                    // For admin, apply department filter if any departments are selected
                     if (selectedDepartments.length > 0) {
                         employeesToShow = employeesToShow.filter(emp => selectedDepartments.includes(emp.department));
                     }
@@ -5043,40 +5136,20 @@
                     }
                 });
 
-                // Add rows to the table
-                sortedTotals.forEach(employee => {
+                // Add rows
+                employeeTotals.forEach(employee => {
                     const row = document.createElement('tr');
-
+                    // Logic to determine row content...
                     if (currentUser.role === 'admin') {
-                        // Admin sees both columns
-                        row.innerHTML = `
-                    <td>${employee.name}</td>
-                    <td>${employee.id}</td>
-                    <td>${getDepartmentDisplayName(employee.department)}</td>
-                    <td><span>${employee.carts}</span></td>
-                    <td><span>${employee.clayTons}</span></td>
-                    <td><span>${employee.workCount}</span></td>
-                `;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.carts}</span></td><td><span>${employee.clayTons}</span></td><td><span>${employee.workCount}</span></td>`;
                     } else if (currentUser.department === 'crushing-prep') {
-                        row.innerHTML = `
-                    <td>${employee.name}</td>
-                    <td>${employee.id}</td>
-                    <td>${getDepartmentDisplayName(employee.department)}</td>
-                    <td><span>${employee.clayTons}</span></td>
-                    <td><span>${employee.workCount}</span></td>
-                `;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.clayTons}</span></td><td><span>${employee.workCount}</span></td>`;
                     } else {
-                        row.innerHTML = `
-                    <td>${employee.name}</td>
-                    <td>${employee.id}</td>
-                    <td>${getDepartmentDisplayName(employee.department)}</td>
-                    <td><span>${employee.carts}</span></td>
-                    <td><span>${employee.workCount}</span></td>
-                `;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.carts}</span></td><td><span>${employee.workCount}</span></td>`;
                     }
-
                     dailyWorkTotalsBody.appendChild(row);
                 });
+
             } else {
                 dailyWorkTotalsSection.style.display = 'none';
             }
@@ -7303,6 +7376,120 @@
             // Refresh tables
             renderEmployeeTable();
             updateDailyWorkTotals();
+        }
+
+        // Open Greasing Work Modal (Updated)
+        function openGreasingWorkModal() {
+            document.getElementById('greasingWorkForm').reset();
+            document.getElementById('greasingWorkRatingValue').textContent = '0';
+            document.getElementById('greasingWorkDate').valueAsDate = new Date();
+
+            // 1. Populate Employees (Mechanical Only)
+            const employeesContainer = document.getElementById('greasingWorkEmployeesContainer');
+            employeesContainer.innerHTML = '';
+            const mechEmployees = employees.filter(emp => emp.department === 'mechanical');
+
+            if (mechEmployees.length === 0) {
+                employeesContainer.innerHTML = '<p class="text-muted text-center">هیچ کارمەندێکی میکانیک نییە</p>';
+            } else {
+                mechEmployees.forEach(employee => {
+                    const div = document.createElement('div');
+                    div.className = 'employee-checkbox-label';
+                    div.innerHTML = `
+                <input type="checkbox" class="employee-checkbox" id="grease-emp-${employee.id}" value="${employee.id}">
+                <label for="grease-emp-${employee.id}">${employee.name}</label>
+            `;
+                    employeesContainer.appendChild(div);
+                });
+            }
+
+            // 2. Populate Departments (Multiple Selection)
+            const deptContainer = document.getElementById('greasingWorkDepartmentsContainer');
+            deptContainer.innerHTML = '';
+
+            // List of allowed departments (Excluding Engineering and Management)
+            const departments = [
+                { id: 'crushing-prep', name: 'هاڕین' },
+                { id: 'cutting-setting', name: 'بڕین ' },
+                { id: 'dryer', name: 'بارکردن' },
+                { id: 'klin', name: 'فڕن' },
+                { id: 'unsetting', name: 'داگرتن' },
+                { id: 'mechanical', name: 'ئامادەکردن' },
+                { id: 'electrical-ac', name: 'درایەر' }
+            ];
+
+            departments.forEach(dept => {
+                const div = document.createElement('div');
+                div.className = 'employee-checkbox-label';
+                div.innerHTML = `
+            <input type="checkbox" class="department-checkbox" id="grease-dept-${dept.id}" value="${dept.name}">
+            <label for="grease-dept-${dept.id}">${dept.name}</label>
+        `;
+                deptContainer.appendChild(div);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('greasingWorkModal'));
+            modal.show();
+        }
+
+        // Save Greasing Work (Updated)
+        async function saveGreasingWork() {
+            const date = document.getElementById('greasingWorkDate').value;
+            const rate = document.getElementById('greasingWorkRating').value;
+            const note = document.getElementById('greasingWorkNote').value;
+
+            // Get selected employees
+            const selectedEmpCheckboxes = document.querySelectorAll('#greasingWorkEmployeesContainer .employee-checkbox:checked');
+            const selectedEmployees = Array.from(selectedEmpCheckboxes).map(cb => cb.value);
+
+            // Get selected departments
+            const selectedDeptCheckboxes = document.querySelectorAll('#greasingWorkDepartmentsContainer .department-checkbox:checked');
+            const selectedDepartments = Array.from(selectedDeptCheckboxes).map(cb => cb.value);
+
+            // Validation
+            if (selectedEmployees.length === 0) {
+                showNotification('تکایە کەمێک کارمەند هەڵبژێرە', 'danger');
+                return;
+            }
+
+            if (selectedDepartments.length === 0) {
+                showNotification('تکایە شوێنی کار (بەش) هەڵبژێرە', 'danger');
+                return;
+            }
+
+            // Create a string from selected departments, e.g., "فڕن، داگرتن"
+            const locationString = selectedDepartments.join('، ');
+
+            // Save for each employee
+            for (const employeeId of selectedEmployees) {
+                const employee = employees.find(emp => emp.id === employeeId);
+                if (!employee) continue;
+
+                if (!employee.dailyWork) {
+                    employee.dailyWork = [];
+                }
+
+                const workRecord = {
+                    date: date,
+                    name: `گریسین: ${locationString}`, // Saves as "Greasing: Klin, Unsetting"
+                    rate: rate,
+                    note: note,
+                    createdAt: new Date().toISOString(),
+                    isGreasing: true
+                };
+
+                employee.dailyWork.push(workRecord);
+                await saveEmployeeToFirebase(employee);
+            }
+
+            showNotification(`کاری گریسین بۆ ${selectedEmployees.length} کارمەند لە ${selectedDepartments.length} شوێن تۆمارکرا`, 'success');
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('greasingWorkModal'));
+            modal.hide();
+
+            // Refresh tables
+            renderEmployeeTable();
+            updateElectricalMechanicalTotals();
         }
     </script>
 </body>
