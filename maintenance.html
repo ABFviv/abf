@@ -1305,15 +1305,117 @@
             });
         }
 
+        // --- UPDATED SCHEDULE TABLE RENDERER ---
         function renderScheduleTable(maintLogs, planLogs) {
             const tbody = document.getElementById('scheduleBody');
             tbody.innerHTML = '';
-            // (Simplified logic for brevity - keeping manual plans)
-            const canDelete = currentUser.role === 'admin';
-            planLogs.forEach(log => {
-                const delBtn = canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>` : '';
-                tbody.innerHTML += `<tr><td class="fw-bold">${log.partName}</td><td class="type-manual">Manual</td><td>-</td><td>${log.date}</td><td>-</td><td>${delBtn}</td></tr>`;
+
+            // 1. کۆکردنەوەی هەموو پارچەکان لە کۆنفیگ
+            const allParts = [];
+            if (currentPartsConfig) {
+                Object.values(currentPartsConfig).forEach(cat => {
+                    if (cat.parts) cat.parts.forEach(p => allParts.push(p));
+                });
+            }
+
+            // 2. دروستکردنی داتا بۆ هەر پارچەیەک
+            const partData = {};
+            allParts.forEach(p => {
+                partData[p] = { lastMaint: null, cycle: 365, manualPlan: null };
             });
+
+            // 3. دۆزینەوەی دوایین چاکسازی (Auto Calculation)
+            maintLogs.forEach(log => {
+                const p = log.partName || log.part;
+                if (partData[p]) {
+                    // ئەگەر ئەم داتایە نوێتر بوو لەوەی تۆمارکراوە، نوێی بکەرەوە
+                    if (!partData[p].lastMaint || new Date(log.date) > new Date(partData[p].lastMaint)) {
+                        partData[p].lastMaint = log.date;
+                        // دۆزینەوەی ژمارەی ڕۆژەکان (365 دابەش فرێکوێنس)
+                        partData[p].cycle = parseInt(log.cycleDays) || 365;
+                    }
+                }
+            });
+
+            // 4. دۆزینەوەی پلانی دەستی (Manual Plans)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            planLogs.forEach(log => {
+                const p = log.partName;
+                // ئەگەر پارچەکە لە لیستەکە نەبوو، زیادی بکە
+                if (!partData[p]) partData[p] = { lastMaint: null, cycle: 365, manualPlan: null };
+
+                const planDate = new Date(log.date);
+                if (planDate >= today) {
+                    // ئەگەر پلانی داهاتوو بوو، وەریبگرە
+                    if (!partData[p].manualPlan || planDate < new Date(partData[p].manualPlan.date)) {
+                        partData[p].manualPlan = log;
+                    }
+                }
+            });
+
+            // 5. دروستکردنی ڕیزەکان (Rows)
+            let hasData = false;
+
+            Object.keys(partData).sort().forEach(part => {
+                const data = partData[part];
+                let nextDate = null;
+                let typeHtml = '<span class="text-muted">-</span>';
+                let remainingHtml = '<span class="text-muted">-</span>';
+                let actionBtn = '';
+                let rowClass = '';
+
+                // ئەولەویەت بۆ پلانی دەستییە، ئەگەر نەبوو ئەوا ئۆتۆماتیک
+                if (data.manualPlan) {
+                    nextDate = new Date(data.manualPlan.date);
+                    typeHtml = '<span class="badge bg-primary">Manual</span>';
+                    // دوگمەی سڕینەوە بۆ ئەدمین
+                    if (currentUser.role === 'admin') {
+                        actionBtn = `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${data.manualPlan.id}')" title="Delete Plan"><i class="bi bi-trash"></i></button>`;
+                    }
+                } else if (data.lastMaint) {
+                    const last = new Date(data.lastMaint);
+                    nextDate = new Date(last);
+                    nextDate.setDate(last.getDate() + data.cycle); // زیادکردنی ماوەی خول
+                    typeHtml = '<span class="badge bg-secondary">Auto</span>';
+                }
+
+                // ئەگەر کاتی داهاتوو دیاریکراو بوو، پیشانی بدە
+                if (nextDate) {
+                    hasData = true;
+                    const diffTime = nextDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    // ڕەنگکردن بەپێی کات
+                    if (diffDays < 0) {
+                        rowClass = 'table-danger'; // سور (کات بەسەرچوو)
+                        remainingHtml = `<span class="fw-bold text-danger">${diffDays} ڕۆژی تێپەڕیوە</span>`;
+                    } else if (diffDays < 30) {
+                        rowClass = 'table-warning'; // پرتەقاڵی (نزیکە)
+                        remainingHtml = `<span class="fw-bold text-dark">${diffDays} ڕۆژی ماوە</span>`;
+                    } else {
+                        remainingHtml = `<span class="text-success fw-bold">${diffDays} ڕۆژی ماوە</span>`;
+                    }
+
+                    const formattedNextDate = nextDate.toISOString().split('T')[0];
+
+                    tbody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td class="fw-bold">${part}</td>
+                    <td>${typeHtml}</td>
+                    <td>${data.lastMaint || '-'}</td>
+                    <td class="fw-bold" style="font-size:1.1em">${formattedNextDate}</td>
+                    <td>${remainingHtml}</td>
+                    <td>${actionBtn}</td>
+                </tr>
+            `;
+                }
+            });
+
+            if (!hasData) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">هیچ پلانێک نییە (پێویستە سەرەتا داتای چاکسازی تۆمار بکەیت)</td></tr>';
+            }
         }
 
         // --- BULK IMPORT FUNCTIONS ---
@@ -1535,15 +1637,170 @@
             document.getElementById('kpiDowntime').textContent = dt.toFixed(1);
         }
 
-        // --- MANAGE PARTS (ADMIN/SUPERVISOR) ---
+        // ==========================================
+        //  MANAGE PARTS LOGIC (ADMIN ONLY)
+        // ==========================================
+
         function openManagePartsModal() {
-            const c = document.getElementById('partsConfigList'); c.innerHTML = '';
-            if (currentPartsConfig) {
-                Object.entries(currentPartsConfig).forEach(([k, v]) => {
-                    c.innerHTML += `<div class="part-group-item"><strong>${v.label}</strong><br>${v.parts.join(', ')}</div>`;
-                });
+            // Only render if Admin (Security Check)
+            if (currentUser.role !== 'admin') {
+                alert("Only Admin can manage parts.");
+                return;
             }
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('managePartsModal')).show();
+            renderManagePartsUI();
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('managePartsModal'));
+            modal.show();
+        }
+
+        function renderManagePartsUI() {
+            const container = document.getElementById('partsConfigList');
+            container.innerHTML = '';
+
+            if (!currentPartsConfig) {
+                container.innerHTML = '<p class="text-muted">No configuration loaded.</p>';
+                return;
+            }
+
+            // Loop through Categories
+            for (const [catKey, val] of Object.entries(currentPartsConfig)) {
+
+                // Generate Badges for Parts with Edit/Delete icons
+                const partsBadges = val.parts.map(p => {
+                    return `
+                <div class="d-inline-block bg-white border rounded px-2 py-1 me-2 mb-2">
+                    <span class="fw-bold text-secondary">${p}</span>
+                    <i class="bi bi-pencil-square text-primary ms-2" style="cursor:pointer;" onclick="editPartName('${catKey}', '${p}')" title="Rename Part"></i>
+                    <i class="bi bi-x-circle-fill text-danger ms-1" style="cursor:pointer;" onclick="removePart('${catKey}', '${p}')" title="Delete Part"></i>
+                </div>
+            `;
+                }).join('');
+
+                // HTML for the Category Box
+                const html = `
+            <div class="part-group-item bg-light border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <strong class="text-primary fs-5">${val.label}</strong>
+                        <span class="text-muted small">(${catKey})</span>
+                        <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2" onclick="editCategoryLabel('${catKey}')">
+                            <i class="bi bi-pencil"></i> Rename
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeCategory('${catKey}')">
+                        <i class="bi bi-trash"></i> Delete Category
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="small text-muted fw-bold">Parts List:</h6>
+                    <div class="d-flex flex-wrap">
+                        ${partsBadges}
+                    </div>
+                </div>
+
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="newPartInput-${catKey}" placeholder="New Part Name...">
+                    <button class="btn btn-success" onclick="addNewPart('${catKey}')">
+                        <i class="bi bi-plus-lg"></i> Add Part
+                    </button>
+                </div>
+            </div>
+        `;
+                container.innerHTML += html;
+            }
+        }
+
+        // --- ACTIONS ---
+
+        function addNewCategory() {
+            const key = document.getElementById('newCatInput').value.trim();
+            const label = document.getElementById('newCatLabel').value.trim();
+
+            if (!key || !label) return alert("Please enter both Key (English ID) and Label (Name).");
+            if (currentPartsConfig[key]) return alert("This Category Key already exists!");
+
+            // Create new category
+            currentPartsConfig[key] = { label: label, parts: [] };
+
+            // Clear inputs and re-render
+            document.getElementById('newCatInput').value = "";
+            document.getElementById('newCatLabel').value = "";
+            renderManagePartsUI();
+        }
+
+        function removeCategory(key) {
+            if (confirm(`Delete category "${currentPartsConfig[key].label}" and all its parts?`)) {
+                delete currentPartsConfig[key];
+                renderManagePartsUI();
+            }
+        }
+
+        function editCategoryLabel(key) {
+            const oldLabel = currentPartsConfig[key].label;
+            const newLabel = prompt("Rename Category:", oldLabel);
+            if (newLabel && newLabel !== oldLabel) {
+                currentPartsConfig[key].label = newLabel;
+                renderManagePartsUI();
+            }
+        }
+
+        function addNewPart(catKey) {
+            const input = document.getElementById(`newPartInput-${catKey}`);
+            const val = input.value.trim();
+            if (!val) return alert("Please enter a part name.");
+
+            // Check duplicate
+            if (currentPartsConfig[catKey].parts.includes(val)) return alert("Part already exists in this category.");
+
+            currentPartsConfig[catKey].parts.push(val);
+            renderManagePartsUI();
+        }
+
+        function removePart(catKey, partName) {
+            if (confirm(`Remove part "${partName}"?`)) {
+                const idx = currentPartsConfig[catKey].parts.indexOf(partName);
+                if (idx > -1) {
+                    currentPartsConfig[catKey].parts.splice(idx, 1);
+                    renderManagePartsUI();
+                }
+            }
+        }
+
+        function editPartName(catKey, oldName) {
+            const newName = prompt("Rename Part:", oldName);
+            if (newName && newName !== oldName) {
+                const partsArr = currentPartsConfig[catKey].parts;
+                const idx = partsArr.indexOf(oldName);
+                if (idx > -1) {
+                    partsArr[idx] = newName; // Update name
+                    renderManagePartsUI();
+                }
+            }
+        }
+
+        async function saveMachineParts() {
+            if (!currentMachineId) return;
+            const btn = document.querySelector('#managePartsModal .modal-footer .btn-primary');
+            const originalText = btn.textContent;
+            btn.textContent = "Saving...";
+            btn.disabled = true;
+
+            try {
+                await db.collection('machines').doc(currentMachineId).update({
+                    partsConfig: currentPartsConfig
+                });
+                alert("Configuration Saved Successfully!");
+                bootstrap.Modal.getInstance(document.getElementById('managePartsModal')).hide();
+
+                // Refresh Dropdowns in Main UI
+                updateCategoryDropdown();
+                document.getElementById('partName').innerHTML = ''; // Clear part select
+            } catch (e) {
+                alert("Error saving: " + e.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
