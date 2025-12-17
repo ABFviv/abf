@@ -4297,6 +4297,68 @@
             if (!employee) return;
 
             console.log('Opening modal for employee:', employee.id, employee.name, employee.department, employee.position);
+            // First apply department-based logic
+            if (employee.department === 'klin') {
+                // Define which employees in klin should have carts
+                // CHANGE THESE IDs TO YOUR ACTUAL EMPLOYEE IDs
+                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
+
+                console.log('Klin employee check:', {
+                    employeeId: employee.id,
+                    position: employee.position,
+                    hasCarts: klinCartEmployees.includes(employee.id),
+                    isKarpekker: employee.position === 'کارپێکەر'
+                });
+
+                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                    // These specific employees show carts field with auto rating
+                    console.log('Showing carts field for:', employee.id);
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+
+                    // Set proper validation
+                    document.getElementById('dailyWorkCarts').required = true;
+                    document.getElementById('dailyWorkName').required = false;
+                } else {
+                    // Other employees in klin show "ناوی کار" field and NO carts
+                    console.log('Showing name field for:', employee.id);
+                    document.getElementById('dailyWorkCartsContainer').style.display = 'none';
+                    document.getElementById('dailyWorkNameContainer').style.display = 'block';
+                    document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
+
+                    // Set proper validation
+                    document.getElementById('dailyWorkCarts').required = false;
+                    document.getElementById('dailyWorkName').required = true;
+                }
+            } else if (employee.department === 'engineering' || employee.department === 'management') {
+                document.getElementById('dailyWorkCartsContainer').style.display = 'none';
+                document.getElementById('dailyWorkNameContainer').style.display = 'block';
+                document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
+
+                // Set proper validation
+                document.getElementById('dailyWorkCarts').required = false;
+                document.getElementById('dailyWorkName').required = true;
+            } else if (employee.department === 'crushing-prep') {
+                document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی طەنی خۆڵ';
+
+                // Set proper validation
+                document.getElementById('dailyWorkCarts').required = true;
+                document.getElementById('dailyWorkName').required = false;
+            } else {
+                // Default for other departments (cutting-setting, unsetting, etc.)
+                document.getElementById('dailyWorkCartsContainer').style.display = 'block';
+                document.getElementById('dailyWorkNameContainer').style.display = 'none';
+                document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
+
+                // Set proper validation
+                document.getElementById('dailyWorkCarts').required = true;
+                document.getElementById('dailyWorkName').required = false;
+            }
+
+            // Then apply specific employee overrides
             if (employee.id === '014') {
                 document.getElementById('dailyWorkCartsContainer').style.display = 'none';
                 document.getElementById('dailyWorkNameContainer').style.display = 'block';
@@ -4308,71 +4370,10 @@
                 // Set validation
                 document.getElementById('dailyWorkCarts').required = false;
                 document.getElementById('dailyWorkName').required = true;
-
-                // Special handling for klin department
-                if (employee.department === 'klin') {
-                    // Define which employees in klin should have carts
-                    // CHANGE THESE IDs TO YOUR ACTUAL EMPLOYEE IDs
-                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
-                    console.log('Klin employee check:', {
-                        employeeId: employee.id,
-                        position: employee.position,
-                        hasCarts: klinCartEmployees.includes(employee.id),
-                        isKarpekker: employee.position === 'کارپێکەر'
-                    });
-
-                    if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                        // These specific employees show carts field with auto rating
-                        console.log('Showing carts field for:', employee.id);
-                        document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                        document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                        document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
-
-                        // Set proper validation
-                        document.getElementById('dailyWorkCarts').required = true;
-                        document.getElementById('dailyWorkName').required = false;
-                    } else {
-                        // Other employees in klin show "ناوی کار" field and NO carts
-                        console.log('Showing name field for:', employee.id);
-                        document.getElementById('dailyWorkCartsContainer').style.display = 'none';
-                        document.getElementById('dailyWorkNameContainer').style.display = 'block';
-                        document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
-
-                        // Set proper validation
-                        document.getElementById('dailyWorkCarts').required = false;
-                        document.getElementById('dailyWorkName').required = true;
-                    }
-                } else if (employee.department === 'engineering' || employee.department === 'management') {
-                    document.getElementById('dailyWorkCartsContainer').style.display = 'none';
-                    document.getElementById('dailyWorkNameContainer').style.display = 'block';
-                    document.getElementById('dailyWorkName').placeholder = 'ناوی کار';
-
-                    // Set proper validation
-                    document.getElementById('dailyWorkCarts').required = false;
-                    document.getElementById('dailyWorkName').required = true;
-                } else if (employee.department === 'crushing-prep') {
-                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی طەنی خۆڵ';
-
-                    // Set proper validation
-                    document.getElementById('dailyWorkCarts').required = true;
-                    document.getElementById('dailyWorkName').required = false;
-                } else {
-                    // Default for other departments (cutting-setting, unsetting, etc.)
-                    document.getElementById('dailyWorkCartsContainer').style.display = 'block';
-                    document.getElementById('dailyWorkNameContainer').style.display = 'none';
-                    document.querySelector('#dailyWorkCartsContainer label').textContent = 'ژمارەی عەرەبانەکان';
-
-                    // Set proper validation
-                    document.getElementById('dailyWorkCarts').required = true;
-                    document.getElementById('dailyWorkName').required = false;
-                }
-
-                const modal = new bootstrap.Modal(document.getElementById('addDailyWorkModal'));
-                modal.show();
             }
+
+            const modal = new bootstrap.Modal(document.getElementById('addDailyWorkModal'));
+            modal.show();
         }
 
         // Open add other work modal
@@ -4605,96 +4606,97 @@
             }
 
             // --- NEW VALIDATION LOGIC START ---
-            if (employee.id === '014') {
-                // Validation for Cleaner 014
-                if (!name) {
-                    showNotification('تکایە ناوی کار بنووسە', 'danger');
-                    return;
-                }
+            // --- NEW VALIDATION LOGIC START ---
 
-                // Check what field should be required based on department and employee
-                if (employee.department === 'klin') {
-                    // Define which employees in klin should have carts
-                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
+            // First, standard validation based on department
+            let isValid = false;
+            let errorMessage = '';
 
-                    if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                        // These employees need carts
-                        if (!carts) {
-                            showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
-                            return;
-                        }
-                    } else {
-                        // Other klin employees need name
-                        if (!name) {
-                            showNotification('تکایە ناوی کار بنووسە', 'danger');
-                            return;
-                        }
-                    }
-                } else if (employee.department === 'engineering' || employee.department === 'management') {
-                    // These need name
-                    if (!name) {
-                        showNotification('تکایە ناوی کار بنووسە', 'danger');
-                        return;
-                    }
-                } else if (employee.department === 'crushing-prep') {
-                    // These need clay tons
-                    if (!carts) {
-                        showNotification('تکایە ژمارەی طەنی خۆڵ بنووسە', 'danger');
-                        return;
-                    }
+            if (employee.department === 'klin') {
+                // Define which employees in klin should have carts
+                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
+
+                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                    // These employees need carts
+                    if (carts) isValid = true;
+                    else errorMessage = 'تکایە ژمارەی عەرەبانەکان بنووسە';
                 } else {
-                    // Other departments need carts
-                    if (!carts) {
-                        showNotification('تکایە ژمارەی عەرەبانەکان بنووسە', 'danger');
-                        return;
-                    }
+                    // Other klin employees need name
+                    if (name) isValid = true;
+                    else errorMessage = 'تکایە ناوی کار بنووسە';
                 }
+            } else if (employee.department === 'engineering' || employee.department === 'management') {
+                // These need name
+                if (name) isValid = true;
+                else errorMessage = 'تکایە ناوی کار بنووسە';
+            } else if (employee.department === 'crushing-prep') {
+                // These need clay tons (using carts field)
+                if (carts) isValid = true;
+                else errorMessage = 'تکایە ژمارەی طەنی خۆڵ بنووسە';
+            } else {
+                // Default (cutting-setting, unsetting, etc.) need carts
+                if (carts) isValid = true;
+                else errorMessage = 'تکایە ژمارەی عەرەبانەکان بنووسە';
+            }
 
-                const workRecord = {
-                    date,
-                    rate,
-                    note,
-                    createdAt: new Date().toISOString()
-                };
-
-                // --- NEW SAVING LOGIC START ---
-                if (employee.id === '014') {
-                    workRecord.name = name; // Save as Name
-
-                    // Special handling for klin department
-                    if (employee.department === 'klin') {
-                        const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
-                        if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                            // These employees have carts
-                            workRecord.carts = carts;
-                        } else {
-                            // Other klin employees have name
-                            workRecord.name = name;
-                        }
-                    } else if (employee.department === 'engineering' || employee.department === 'management') {
-                        workRecord.name = name;
-                    } else if (employee.department === 'crushing-prep') {
-                        workRecord.clayTons = carts;
-                    } else {
-                        workRecord.carts = carts;
-                    }
-
-                    employee.dailyWork.push(workRecord);
-
-                    const success = await saveEmployeeToFirebase(employee);
-
-                    if (success) {
-                        loadWorkRecords(employee);
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
-                        modal.show();
-                        showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
-                        updateDailyWorkTotals();
-                        updateElectricalMechanicalTotals();
-                    } else {
-                        showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
-                    }
+            // Override validation for employee 014 if necessary
+            // Employee 014 typically needs name for "Cleaning Work"
+            if (employee.id === '014') {
+                if (name) {
+                    isValid = true;
+                    errorMessage = '';
+                } else {
+                    isValid = false;
+                    errorMessage = 'تکایە ناوی کار بنووسە';
                 }
+            }
+
+            if (!isValid) {
+                showNotification(errorMessage || 'تکایە زانیارییەکان پڕبکەرەوە', 'danger');
+                return;
+            }
+
+            const workRecord = {
+                date,
+                rate,
+                note,
+                createdAt: new Date().toISOString()
+            };
+
+            // --- NEW SAVING LOGIC START ---
+
+            // Determine what to save based on employee/department logic
+            if (employee.id === '014') {
+                workRecord.name = name;
+            } else if (employee.department === 'klin') {
+                const klinCartEmployees = ['020', '021', '022', '023'];
+                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                    workRecord.carts = carts;
+                } else {
+                    workRecord.name = name;
+                }
+            } else if (employee.department === 'engineering' || employee.department === 'management') {
+                workRecord.name = name;
+            } else if (employee.department === 'crushing-prep') {
+                workRecord.clayTons = carts;
+            } else {
+                workRecord.carts = carts;
+            }
+
+            employee.dailyWork.push(workRecord);
+
+            const success = await saveEmployeeToFirebase(employee);
+
+            if (success) {
+                loadWorkRecords(employee);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
+                if (modal) modal.hide();
+                showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
+
+                if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+            } else {
+                showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
             }
         }
 
