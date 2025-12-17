@@ -733,30 +733,35 @@
         </div>
     </div>
 
-    <div class="modal fade" id="addMachineModal" tabindex="-1">
+    <div class="modal fade" id="addMachineModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">زیادکردنی ئامێر</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> زیادکردنی ئامێری نوێ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addMachineForm">
                         <div class="mb-3">
-                            <label class="form-label">ناوی ئامێر</label>
-                            <input type="text" class="form-control" id="newMachineName" required>
+                            <label for="newMachineName" class="form-label">ناوی ئامێر (Machine Name)</label>
+                            <input type="text" class="form-control" id="newMachineName" required
+                                placeholder="Example: Robot Arm A">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">بەش</label>
-                            <select class="form-select" id="newMachineDept" required>
+                            <label for="newMachineDept" class="form-label">بەش (Department)</label>
+                            <select class="form-select" id="newMachineDept">
+                                <option value="Production">Production (بەرهەمهێنان)</option>
+                                <option value="Packaging">Packaging (پاکەتکردن)</option>
+                                <option value="Maintenance">Maintenance (چاکسازی)</option>
+                                <option value="Utilities">Utilities (خزمەتگوزاری)</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">بەرواری کارکردن</label>
-                            <input type="date" class="form-control" id="newMachineDate">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">زیادکردن</button>
                     </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">داخستن</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNewMachine()">زیادکردن</button>
                 </div>
             </div>
         </div>
@@ -1801,6 +1806,95 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
+        }
+
+        // ==========================================
+        //  MISSING SCHEDULE FUNCTIONS
+        // ==========================================
+
+        function openPlanModal() {
+            // 1. Reset the form
+            document.getElementById('planForm').reset();
+
+            // 2. Populate Category Dropdown
+            const catSelect = document.getElementById('planCategory');
+            catSelect.innerHTML = '<option value="">هەڵبژێرە...</option>';
+
+            if (currentPartsConfig) {
+                Object.entries(currentPartsConfig).forEach(([key, val]) => {
+                    catSelect.innerHTML += `<option value="${key}">${val.label}</option>`;
+                });
+            }
+
+            // 3. Reset Part Dropdown
+            document.getElementById('planPart').innerHTML = '<option value="">سەرەتا بەش هەڵبژێرە</option>';
+            document.getElementById('planPart').disabled = true;
+
+            // 4. Open Modal
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('planModal')).show();
+        }
+
+        function updatePlanSubParts() {
+            const catKey = document.getElementById('planCategory').value;
+            const partSelect = document.getElementById('planPart');
+            partSelect.innerHTML = ''; // Clear existing
+
+            if (!catKey || !currentPartsConfig || !currentPartsConfig[catKey]) {
+                partSelect.disabled = true;
+                partSelect.innerHTML = '<option value="">سەرەتا بەش هەڵبژێرە</option>';
+                return;
+            }
+
+            partSelect.disabled = false;
+            currentPartsConfig[catKey].parts.forEach(p => {
+                partSelect.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        }
+
+        function printSchedule() {
+            window.print();
+        }
+
+        // --- MACHINE MANAGEMENT FUNCTIONS ---
+
+        function openAddMachineModal() {
+            // Clear previous input
+            document.getElementById('newMachineName').value = '';
+            document.getElementById('newMachineDept').value = 'Production';
+
+            // Show the modal
+            const myModal = new bootstrap.Modal(document.getElementById('addMachineModal'));
+            myModal.show();
+        }
+
+        function saveNewMachine() {
+            const name = document.getElementById('newMachineName').value;
+            const dept = document.getElementById('newMachineDept').value;
+
+            if (!name.trim()) {
+                alert("تکایە ناوی ئامێر بنووسە!");
+                return;
+            }
+
+            // Add to Firebase
+            db.collection('machines').add({
+                name: name,
+                department: dept,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                partsConfig: {} // Create empty config for parts
+            }).then(() => {
+                // Close Modal
+                const modalEl = document.getElementById('addMachineModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                // Reload list
+                loadMachines();
+                alert("ئامێرەکە بە سەرکەوتوویی زیادکرا!");
+            }).catch(error => {
+                console.error("Error adding machine: ", error);
+                alert("هەڵەیەک ڕوویدا لە کاتی زیادکردن.");
+            });
         }
     </script>
 </body>
