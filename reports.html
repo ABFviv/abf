@@ -399,20 +399,46 @@
                 color: transparent;
             }
 
-            .crushing-container {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-                gap: 5px !important;
-            }
-
-            .crushing-container .col-md-4 {
-                flex: 1 !important;
-                max-width: 33% !important;
+            /* CRUSHING - COMPACT VERTICAL PRINT */
+            .crushing-container .col-12 {
+                width: 100% !important;
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
             }
 
             .crushing-container .shift-box {
-                margin-bottom: 0 !important;
+                margin-bottom: 5px !important;
+                padding: 5px !important;
+                border: 1px solid #999;
+            }
+
+            .crushing-container .shift-header {
+                font-size: 0.8rem;
+                padding: 2px 5px;
+                background-color: #f0f0f0 !important;
+                color: #000;
+                border-bottom: 1px solid #999;
+            }
+
+            .crushing-container .report-table td,
+            .crushing-container .report-table th {
+                padding: 2px 4px !important;
+                font-size: 0.75rem !important;
+            }
+
+            .crushing-container input,
+            .crushing-container select,
+            .crushing-container textarea {
+                font-size: 0.75rem !important;
+                padding: 0 !important;
+                min-height: auto !important;
+                height: auto !important;
+            }
+
+            /* HIDE SCROLLBARS IN PRINT */
+            textarea {
+                overflow: hidden;
+                resize: none;
             }
         }
     </style>
@@ -723,11 +749,11 @@
             const wrapper = document.getElementById('tableWrapper');
 
             if (dept === 'unsetting') renderUnsettingTable(wrapper, preserveState);
-            else if (dept === 'setting') renderSettingTable(wrapper);
+            else if (dept === 'setting') renderSettingTable(wrapper, preserveState);
             else if (dept === 'crushing-prep') renderCrushingTable(wrapper);
             else if (dept === 'preparation') renderPreparationTable(wrapper);
             else if (dept === 'klin') renderKilnTable(wrapper);
-            else if (dept === 'cutting') renderCuttingTable(wrapper);
+            else if (dept === 'cutting') renderCuttingTable(wrapper, preserveState);
         }
 
         // ====================================================================
@@ -759,7 +785,15 @@
             "٢٣ - کارەبا بڕان"
         ];
 
-        function renderCuttingTable(wrapper) {
+        function renderCuttingTable(wrapper, preserveState = false) {
+            let savedData = {};
+            if (preserveState) {
+                const existingInputs = wrapper.querySelectorAll('input, select, textarea');
+                existingInputs.forEach(el => {
+                    if (el.id) savedData[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+                });
+            }
+
             const dateValue = document.getElementById('reportDate').value;
             const shifts = [
                 { id: 's1', name: 'Shift 1 (بەیانیان)', defStart: '08:00' },
@@ -767,9 +801,14 @@
                 { id: 's3', name: 'Shift 3 (شەوان)', defStart: '00:00' }
             ];
 
-            const existingRowsInput = document.getElementById('cut_rows_setting');
-            const totalCarts = existingRowsInput ? parseInt(existingRowsInput.value) || 72 : 72;
-            const halfCarts = Math.ceil(totalCarts / 2);
+            // Get row counts for each shift, or default to 72
+            const getSavedVal = (id, def) => (preserveState && savedData[id]) ? parseInt(savedData[id]) : ((document.getElementById(id) ? parseInt(document.getElementById(id).value) : def));
+
+            let s1Rows = getSavedVal('cut_s1_rows', 72);
+            let s2Rows = getSavedVal('cut_s2_rows', 72);
+            let s3Rows = getSavedVal('cut_s3_rows', 72);
+
+            const shiftRows = { 's1': s1Rows, 's2': s2Rows, 's3': s3Rows };
 
             // Filter Employees from Code Config
             const cuttingEmps = REPORT_CONFIG.cutting || [];
@@ -779,6 +818,9 @@
             let html = '';
 
             shifts.forEach((shift) => {
+                const totalCarts = shiftRows[shift.id];
+                const halfCarts = Math.ceil(totalCarts / 2);
+
                 // --- 1. Tasks Column (Left) ---
                 let tasksHtml = '';
                 cuttingTasks.forEach((task, index) => {
@@ -846,7 +888,7 @@
                         </div>
                         <div class="d-flex align-items-center gap-1 no-print">
                             <span class="small fw-bold">ژ. عەرەبانە:</span>
-                            <input type="number" id="cut_rows_setting" value="${totalCarts}" style="width:50px; height:22px; text-align:center;" onchange="generateReport()">
+                            <input type="number" id="cut_${shift.id}_rows" value="${totalCarts}" style="width:50px; height:22px; text-align:center;" onchange="generateReport(true)">
                         </div>
                     </div>
 
@@ -923,6 +965,18 @@
             });
 
             wrapper.innerHTML = html;
+
+            if (preserveState && Object.keys(savedData).length > 0) {
+                setTimeout(() => {
+                    for (const [key, val] of Object.entries(savedData)) {
+                        const el = document.getElementById(key);
+                        if (el) {
+                            if (el.type === 'checkbox') el.checked = val;
+                            else el.value = val;
+                        }
+                    }
+                }, 0);
+            }
         }
 
         function autoFillCutTimes(shiftId) {
@@ -978,7 +1032,18 @@
         // ====================================================================
         // === SETTING (بارکردن) REPORT =======================================
         // ====================================================================
-        function renderSettingTable(wrapper) {
+        // ====================================================================
+        // === SETTING (بارکردن) REPORT =======================================
+        // ====================================================================
+        function renderSettingTable(wrapper, preserveState = false) {
+            let savedData = {};
+            if (preserveState) {
+                const existingInputs = wrapper.querySelectorAll('input, select, textarea');
+                existingInputs.forEach(el => {
+                    if (el.id) savedData[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+                });
+            }
+
             const settingEmps = REPORT_CONFIG.setting || [];
             let empOptions = `<option value="">Select...</option>`;
             settingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
@@ -990,22 +1055,29 @@
             function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
             function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
 
+            // Read existing inputs or saved data
+            const getSavedVal = (id, def) => (preserveState && savedData[id]) ? parseInt(savedData[id]) : ((document.getElementById(id) ? parseInt(document.getElementById(id).value) : def));
+
+            const s1Count = getSavedVal('set_s1_count_input', 10) || 10;
+            const s2Count = getSavedVal('set_s2_count_input', 10) || 10;
+            const s3Count = getSavedVal('set_s3_count_input', 10) || 10;
+
+            const totalRows = s1Count + s2Count + s3Count;
+
             let currentMins = getMinutes(startTimeStr);
-            const existingRowsInput = document.getElementById('set_rows_setting');
-            const maxRows = existingRowsInput ? parseInt(existingRowsInput.value) || 30 : 30;
             let rowsHtml = '';
 
-            for (let i = 1; i <= maxRows; i++) {
+            for (let i = 1; i <= totalRows; i++) {
                 const timeLabel = formatTime(currentMins);
-                let rowClass = 'row-s3';
-                let dayMins = currentMins % 1440;
-                if (dayMins >= 480 && dayMins < 960) rowClass = 'row-s1';
-                else if (dayMins >= 960) rowClass = 'row-s2';
+                let rowClass = 'row-s3'; // default
+
+                // Determine class based on counts
+                if (i <= s1Count) rowClass = 'row-s1';
+                else if (i <= s1Count + s2Count) rowClass = 'row-s2';
                 else rowClass = 'row-s3';
 
                 const rid = `set_r${i}`;
 
-                // ADDED COLUMN 6 here
                 rowsHtml += `
                 <tr class="${rowClass} compact-rows">
                     <td>${i}</td>
@@ -1022,7 +1094,6 @@
                 currentMins += interval;
             }
 
-            // MODIFIED HEADER COLSPAN to 6 and added header "6"
             const html = `
              <div class="row g-0">
                 <div class="col-8 pe-2">
@@ -1033,8 +1104,7 @@
                             <small>${dateValue}</small>
                         </div>
                         <div class="d-flex align-items-center gap-1 no-print">
-                            <span class="small fw-bold">ڕیز:</span>
-                            <input type="number" id="set_rows_setting" value="${maxRows}" style="width:45px; height:22px; text-align:center;" onchange="generateReport()">
+                            <!-- Removed simple total rows input, now controlled by shifts -->
                         </div>
                     </div>
                     <table class="table table-bordered table-sm set-table border-dark table-hover report-table">
@@ -1054,7 +1124,7 @@
                 </div>
                 <div class="col-4">
                      <div class="shift-box bg-s1">
-                        <div class="shift-header">Shift 1 (08-16)</div>
+                        <div class="shift-header"><span>Shift 1 (08-16)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s1_count_input" value="${s1Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <label>ناوی کارمەند:</label>
                             <select id="set_s1_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
@@ -1072,7 +1142,7 @@
                      </div>
 
                      <div class="shift-box bg-s2">
-                        <div class="shift-header">Shift 2 (16-24)</div>
+                        <div class="shift-header"><span>Shift 2 (16-24)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s2_count_input" value="${s2Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <label>ناوی کارمەند:</label>
                             <select id="set_s2_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
@@ -1090,7 +1160,7 @@
                      </div>
 
                      <div class="shift-box bg-s3">
-                        <div class="shift-header">Shift 3 (24-08)</div>
+                        <div class="shift-header"><span>Shift 3 (24-08)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s3_count_input" value="${s3Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <label>ناوی کارمەند:</label>
                             <select id="set_s3_emp" class="form-select form-select-sm p-0 px-1">${empOptions}</select>
@@ -1130,10 +1200,24 @@
                              <input type="number" id="set_total_kilncars" class="form-control form-control-sm w-50 fw-bold text-end text-danger">
                         </div>
                      </div>
+                     </div>
                 </div>
              </div>
             `;
             wrapper.innerHTML = html;
+
+            if (preserveState && Object.keys(savedData).length > 0) {
+                setTimeout(() => {
+                    for (const [key, val] of Object.entries(savedData)) {
+                        const el = document.getElementById(key);
+                        if (el) {
+                            if (el.type === 'checkbox') el.checked = val;
+                            else el.value = val;
+                        }
+                    }
+                    calcSettingTotals();
+                }, 0);
+            }
         }
 
         function calcSettingTotals() {
@@ -1257,6 +1341,7 @@
         };
 
         // --- PREPARATION ---
+        // --- PREPARATION ---
         function renderPreparationTable(wrapper) {
             const prepEmps = REPORT_CONFIG.preparation || [];
             let empOptions = `<option value="">Select...</option>`;
@@ -1264,6 +1349,7 @@
 
             const dateValue = document.getElementById('reportDate').value;
 
+            // CHANGED: Stacking shifts vertically (col-12) for better printing
             const html = `
                 <div class="report-title-box text-center border border-2 border-dark p-2 mb-3 bg-light">
                     <h5 class="m-0 fw-bold">کارکردنی ڕۆژانەی بەشی ئامادەکردنی خۆڵ</h5>
@@ -1280,6 +1366,8 @@
                                 <tr><td class="fw-bold">تێبینی</td><td colspan="3"><textarea id="p_s1_note" rows="5"></textarea></td></tr>
                             </table>
                         </div>
+                    </div>
+                    <div class="col-12">
                         <div class="shift-box bg-s2">
                             <div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div>
                             <table class="report-table expanded-rows" style="border:none;">
@@ -1289,6 +1377,8 @@
                                 <tr><td class="fw-bold">تێبینی</td><td colspan="3"><textarea id="p_s2_note" rows="5"></textarea></td></tr>
                             </table>
                         </div>
+                    </div>
+                    <div class="col-12">
                         <div class="shift-box bg-s3">
                             <div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div>
                             <table class="report-table expanded-rows" style="border:none;">
@@ -1390,23 +1480,23 @@
                 if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
                 const timeLabel = formatTime(currentMins);
                 const rid = `r${rowCount}`;
-                rowsHtml += `<tr class="${colorClass} compact-rows"><td>${rowCount}</td><td><input type="time" class="fw-bold" value="${timeLabel}"></td><td><input type="time" id="${rid}_end"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
+                rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold" value="${timeLabel}"></td><td><input type="time" id="${rid}_end"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
                 currentMins += interval; rowCount++;
             }
 
             const html = `
                 <div class="d-flex justify-content-between mb-2 p-2 border border-2 border-dark rounded bg-light">
-                    <div class="fw-bold small">بەروار: ${dateValue}</div><div class="fw-bold fs-6">ڕاپۆرتی داگرتن / ڕۆژانە</div><div class="fw-bold small">ژمارە: <input type="text" style="width:60px; border-bottom:1px solid #000;"></div>
+                    <div class="fw-bold small">بەروار: ${dateValue}</div><div class="fw-bold fs-6">ڕاپۆرتی داگرتن / ڕۆژانە</div>
                 </div>
                 <div class="row g-2">
                     <div class="col-6">
-                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s1_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s2_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s3_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s1_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s2_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.6rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:30px;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>کارمەند ١</td><td><select id="s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="s3_e2">${empOptions}</select></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
                         <div class="shift-box bg-white mt-2"><div class="shift-header bg-light">وردەکاری تەکنیکی</div><table class="report-table expanded-rows" style="border:none;"><tr><td>کێشی سەروەرە</td><td><input type="number" id="w_top"></td></tr><tr><td>کێشی ناوەڕاست</td><td><input type="number" id="w_mid"></td></tr><tr><td>کێشی خوارەوە</td><td><input type="number" id="w_bot"></td></tr><tr><td>ژ. کۆڵۆم</td><td><input type="number" id="tech_col"></td></tr><tr><td>سەر زنجیر</td><td><input type="number" id="tech_row"></td></tr></table></div>
                     </div>
                     <div class="col-6">
-                        <table class="report-table"><thead><tr><th style="width:10%">#</th><th style="width:25%">دەستپێک</th><th style="width:25%">تەواوبوون</th><th style="width:20%">ژ. عەرەبانە</th><th style="width:20%">درز</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="3" class="text-end">کۆی گشتی بالێت:</td><td colspan="2"><input type="number" id="total_pallets" readonly></td></tr><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="3" class="text-end">کۆی گشتی عەرەبانە:</td><td colspan="2"><input type="number" id="total_carts" readonly></td></tr></tfoot></table>
+                        <table class="report-table"><thead><tr><th style="width:25%">دەستپێک</th><th style="width:25%">تەواوبوون</th><th style="width:20%">ژ. عەرەبانە</th><th style="width:20%">درز</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="2" class="text-end">کۆی گشتی بالێت:</td><td colspan="2"><input type="number" id="total_pallets" readonly></td></tr><tr style="background-color:#e9ecef; font-weight:bold;"><td colspan="2" class="text-end">کۆی گشتی عەرەبانە:</td><td colspan="2"><input type="number" id="total_carts" readonly></td></tr></tfoot></table>
                     </div>
                 </div>`;
             wrapper.innerHTML = html;
@@ -1459,17 +1549,13 @@
                 </div>
 
                 <div class="row g-2 crushing-container">
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="shift-box bg-s1 h-100">
                             <div class="shift-header">Shift 1 (08-16)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
                                     <td><select id="c_s1_emp">${empOptions}</select></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">کاتی دەوام</td>
-                                    <td><input type="text" id="c_s1_time" placeholder="HH:MM"></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
@@ -1490,17 +1576,13 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="shift-box bg-s2 h-100">
                             <div class="shift-header">Shift 2 (16-24)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
                                     <td><select id="c_s2_emp">${empOptions}</select></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">کاتی دەوام</td>
-                                    <td><input type="text" id="c_s2_time" placeholder="HH:MM"></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
@@ -1521,17 +1603,13 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <div class="shift-box bg-s3 h-100">
                             <div class="shift-header">Shift 3 (24-08)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
                                     <td><select id="c_s3_emp">${empOptions}</select></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">کاتی دەوام</td>
-                                    <td><input type="text" id="c_s3_time" placeholder="HH:MM"></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
