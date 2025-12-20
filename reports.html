@@ -351,10 +351,14 @@
                 display: block !important;
             }
 
-            /* SHOW CUSTOM PRINT HEADER */
-            .print-only-header {
-                display: block;
+            /* SHOW CUSTOM PRINT HEADER & FOOTER */
+            .print-only-header,
+            .print-only-footer {
+                display: block !important;
                 text-align: center;
+            }
+
+            .print-only-header {
                 margin-bottom: 10px;
                 border-bottom: 2px solid #000;
                 padding-bottom: 5px;
@@ -509,11 +513,29 @@
 
                 <div id="tableWrapper"></div>
 
-                <div class="no-print text-center mt-4 pt-3 border-top">
-                    <button class="btn btn-success px-4" onclick="saveReport()"><i class="bi bi-save me-1"></i> Save
-                        Data</button>
+                <div class="no-print text-center mt-4 pt-3 border-top" id="actionButtonsContainer">
+                    <!-- Dynamic Buttons will be rendered here -->
+                    <button class="btn btn-primary px-4" onclick="saveReport('draft')"><i class="bi bi-save me-1"></i>
+                        Save Draft</button>
                     <button class="btn btn-secondary px-4 ms-2" onclick="window.print()"><i
                             class="bi bi-printer me-1"></i> Print A4</button>
+                </div>
+
+                <div class="print-only-footer mt-5 pt-5" id="printFooter" style="display:none;">
+                    <div class="d-flex justify-content-between px-5">
+                        <div class="text-center">
+                            <p class="mb-1 fw-bold">Submitted By</p>
+                            <p id="printSubmittedBy" class="text-muted small">...</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="mb-1 fw-bold">Approved By</p>
+                            <p id="printApprovedBy" class="text-muted small">...</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="mb-1 fw-bold">Manager</p>
+                            <p class="text-muted small">Signature</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -598,9 +620,77 @@
             document.getElementById('historySection').classList.add('active-view');
             loadHistoryData();
         }
+
         function showReportView() {
             document.getElementById('historySection').classList.remove('active-view');
             document.getElementById('reportSection').classList.add('active-view');
+        }
+
+        // --- APPROVAL WORKFLOW HELPERS ---
+        function renderActionButtons(status = 'draft') {
+            const container = document.getElementById('actionButtonsContainer');
+            container.innerHTML = '';
+
+            const role = currentUser.role || 'supervisor'; // default if not set
+            const btnClass = "btn px-4 mx-1 fw-bold";
+
+            // Standard Cancel/Close (Always visible or handled by "Back" button? Back handles it)
+            // Print Button (Always visible)
+            const printBtn = `<button class="btn btn-secondary px-4 ms-2" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print A4</button>`;
+
+            let btns = '';
+
+            if (role === 'admin') {
+                if (status === 'pending_admin') {
+                    btns += `<button class="${btnClass} btn-outline-danger" onclick="saveReport('draft', true)"><i class="bi bi-x-circle"></i> Reject / Return</button>`;
+                    btns += `<button class="${btnClass} btn-success" onclick="saveReport('approved')"><i class="bi bi-check-circle"></i> Approve</button>`;
+                } else if (status === 'approved') {
+                    // Admins can maybe unapprove? Or just Print.
+                    btns += `<span class="badge bg-success p-2">Approved</span>`;
+                } else {
+                    // Admin viewing a draft? Just observing.
+                    btns += `<span class="badge bg-warning text-dark p-2">Draft Mode</span>`;
+                }
+            }
+            else if (role === 'manager') {
+                if (status === 'approved') {
+                    btns += `<span class="badge bg-success p-2">Ready to Print</span>`;
+                } else {
+                    btns += `<span class="badge bg-secondary p-2">Status: ${status}</span>`;
+                }
+            }
+            else {
+                // Supervisor (default)
+                if (status === 'draft' || !status) {
+                    btns += `<button class="${btnClass} btn-primary" onclick="saveReport('draft')"><i class="bi bi-save"></i> Save Draft</button>`;
+                    btns += `<button class="${btnClass} btn-success" onclick="saveReport('pending_admin')"><i class="bi bi-send"></i> Submit to Admin</button>`;
+                } else if (status === 'pending_admin') {
+                    btns += `<span class="badge bg-secondary p-2"><i class="bi bi-lock"></i> Submitted - Pending Approval</span>`;
+                } else if (status === 'approved') {
+                    btns += `<span class="badge bg-success p-2"><i class="bi bi-check-all"></i> Approved</span>`;
+                }
+            }
+
+            container.innerHTML = btns + printBtn;
+        }
+
+        function updateInputsState(status) {
+            const role = currentUser.role || 'supervisor';
+            const disable = (status === 'approved') ||
+                (status === 'pending_admin' && role !== 'admin') ||
+                (role === 'manager'); // Manager mostly views
+
+            // Disable all inputs in the table wrapper
+            const inputs = document.getElementById('tableWrapper').querySelectorAll('input, select, textarea');
+            inputs.forEach(el => el.disabled = disable);
+        }
+
+        function updatePrintFooter(data) {
+            const footer = document.getElementById('printFooter');
+            if (!data) { footer.style.display = 'none'; return; }
+
+            document.getElementById('printSubmittedBy').innerText = data.supervisor || '-';
+            document.getElementById('printApprovedBy').innerText = data.approvedBy || '-';
         }
 
         // --- HISTORY LOGIC ---
@@ -608,26 +698,41 @@
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
             try {
-                const snap = await db.collection('dailyReports').orderBy('createdAt', 'desc').limit(20).get();
+                const snap = await db.collection('dailyReports').orderBy('createdAt', 'desc').limit(50).get();
                 tbody.innerHTML = '';
                 if (snap.empty) {
                     tbody.innerHTML = '<tr><td colspan="4" class="text-center">No reports found.</td></tr>';
                     return;
                 }
+
+                const role = currentUser.role || 'supervisor';
+
                 snap.forEach(doc => {
                     const d = doc.data();
+                    const status = d.status || 'draft';
+
+                    // Manager Filter: Only Approved
+                    if (role === 'manager' && status !== 'approved') return;
+
+                    // Admin Filter: User said "See list where status == pending_admin". 
+                    // But likely needs history too. We will highlight pending ones.
+
+                    let statusBadge = '';
+                    if (status === 'draft') statusBadge = '<span class="badge bg-secondary">Draft</span>';
+                    else if (status === 'pending_admin') statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+                    else if (status === 'approved') statusBadge = '<span class="badge bg-success">Approved</span>';
+
                     const row = `
                         <tr>
                             <td>${d.date}</td>
-                            <td>${formatDept(d.department)}</td>
+                            <td>${formatDept(d.department)}<br>${statusBadge}</td>
                             <td>${d.supervisor || '-'}</td>
                             <td>
                                 <button class="btn btn-sm btn-primary" onclick='loadReportForView(${JSON.stringify(d)}, "${doc.id}")'>
-                                    <i class="bi bi-eye"></i> View/Edit
+                                    <i class="bi bi-eye"></i> View
                                 </button>
-                                <button class="btn btn-sm btn-danger ms-1" onclick="deleteReport('${doc.id}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                ${role === 'admin' || (role === 'supervisor' && status === 'draft') ?
+                            `<button class="btn btn-sm btn-danger ms-1" onclick="deleteReport('${doc.id}')"><i class="bi bi-trash"></i></button>` : ''}
                             </td>
                         </tr>
                     `;
@@ -679,49 +784,78 @@
             showToast('Report Loaded', 'success');
         }
 
+        let currentReportData = null; // Track current report data
+
         function loadReportForView(data, id) {
             currentReportId = id;
+            currentReportData = data; // Store data for status checks
+
             showReportView();
             document.getElementById('departmentSelect').value = data.department;
             document.getElementById('reportDate').value = data.date;
 
+            // 1. Generate HTML (Default Layout)
             generateReport();
 
-            if (data.department === 'klin' && data.tableData && data.tableData['k_rows_setting']) {
-                const savedRows = data.tableData['k_rows_setting'];
-                const input = document.getElementById('k_rows_setting');
-                if (input && input.value !== savedRows.toString()) {
-                    input.value = savedRows;
-                    generateReport();
-                    setTimeout(() => { fillReportData(data); }, 300);
-                    return;
+            // 2. REGENERATE STRUCTURE for dynamic tables (Kiln, Setting, Cutting)
+            // We need to set the specific "row count" inputs and trigger generation 
+            // BEFORE filling the rest of the data, otherwise those rows won't exist.
+
+            let needsRegen = false;
+
+            if (data.tableData) {
+                // Kiln
+                if (data.department === 'klin' && data.tableData['k_rows_setting']) {
+                    const input = document.getElementById('k_rows_setting');
+                    if (input && input.value != data.tableData['k_rows_setting']) {
+                        input.value = data.tableData['k_rows_setting'];
+                        needsRegen = true;
+                    }
+                }
+
+                // Setting
+                if (data.department === 'setting') {
+                    ['set_s1_count_input', 'set_s2_count_input', 'set_s3_count_input'].forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input && data.tableData[id] && input.value != data.tableData[id]) {
+                            input.value = data.tableData[id];
+                            needsRegen = true;
+                        }
+                    });
+                }
+
+                // Cutting
+                if (data.department === 'cutting') {
+                    ['cut_s1_rows', 'cut_s2_rows', 'cut_s3_rows'].forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input && data.tableData[id] && input.value != data.tableData[id]) {
+                            input.value = data.tableData[id];
+                            needsRegen = true;
+                        }
+                    });
                 }
             }
 
-            // For Unsetting Hours specific check
-            if (data.department === 'unsetting') {
-                // We need to set hours first to generate correct rows
-                const s1h = data.tableData['s1_hours_input'];
-                const s2h = data.tableData['s2_hours_input'];
-                const s3h = data.tableData['s3_hours_input'];
-
-                // We will rely on generateReport reading inputs, but first we must fill inputs, then generate?
-                // Actually easier: fillReportData fills inputs, but rows might be missing.
-                // Correct Flow: 1. Generate Default. 2. Fill Data. 3. If Data has different hours, trigger regen?
-                // Better: fillReportData fills inputs. If hours inputs change, we might need manual trigger?
-                // Let's just let fillReportData do its job. 
+            if (needsRegen) {
+                generateReport();
             }
 
+            // 3. Fill Data
             setTimeout(() => {
                 fillReportData(data);
-                // RE-RUN Generation if hours were loaded differently for Unsetting
+
+                // 4. Update Approval UI
+                const status = data.status || 'draft';
+                renderActionButtons(status);
+                updateInputsState(status);
+                updatePrintFooter(data);
+
+                // Unsetting special case: it might need to recalc rows based on hours after fill
                 if (data.department === 'unsetting') {
-                    // Force refresh rows based on loaded hour values
-                    generateReport(true); // true = preserve loaded data
-                    setTimeout(() => { fillReportData(data); }, 100);
+                    // We run it with 'true' to preserve the data we just filled
+                    generateReport(true);
                 }
-                showToast('Report Loaded - You can now Edit', 'info');
-            }, 100);
+            }, 300);
         }
 
         async function deleteReport(id) {
@@ -1655,7 +1789,7 @@
             document.getElementById('c_total_ton').value = t1 + t2 + t3;
         }
 
-        async function saveReport() {
+        async function saveReport(status = 'draft', isReject = false) {
             const date = document.getElementById('reportDate').value;
             const dept = document.getElementById('departmentSelect').value;
             const reportId = `${dept}_${date}_${Date.now()}`;
@@ -1678,17 +1812,36 @@
 
             const finalReportId = currentReportId || reportId;
 
+            // Handle Rejection
+            let finalStatus = status;
+            if (isReject) {
+                if (!confirm("Are you sure you want to rejet this report and send it back to draft?")) return;
+                finalStatus = 'draft';
+            }
+
             const payload = {
                 id: finalReportId,
                 department: dept,
                 date: date,
-                supervisor: currentUser.username,
-                createdAt: currentReportId ? undefined : new Date().toISOString(),
+                supervisor: (currentReportData && currentReportData.supervisor) ? currentReportData.supervisor : currentUser.username,
+                status: finalStatus,
                 updatedAt: new Date().toISOString(),
                 tableData: tableData
             };
 
-            if (currentReportId) delete payload.createdAt;
+            // First time creation timestamps
+            if (!currentReportId) {
+                payload.createdAt = new Date().toISOString();
+            }
+
+            // Workflow timestamps/users
+            if (finalStatus === 'pending_admin' && (!currentReportData || currentReportData.status === 'draft')) {
+                payload.submittedAt = new Date().toISOString();
+            }
+            if (finalStatus === 'approved') {
+                payload.approvedBy = currentUser.username;
+                payload.approvedAt = new Date().toISOString();
+            }
 
             try {
                 if (currentReportId) {
@@ -1699,6 +1852,13 @@
                     currentReportId = finalReportId;
                     showToast('Report Saved Successfully', 'success');
                 }
+
+                // Update Local State
+                currentReportData = { ...currentReportData, ...payload };
+                renderActionButtons(finalStatus);
+                updateInputsState(finalStatus);
+                updatePrintFooter(currentReportData);
+
             } catch (e) {
                 console.error(e);
                 showToast('Error saving report', 'danger');
@@ -1712,8 +1872,14 @@
 
         function startNewReport() {
             currentReportId = null;
+            currentReportData = null; // Clear data
             generateReport();
             document.getElementById('reportContainer').style.display = 'block';
+
+            // Reset UI for new draft
+            renderActionButtons('draft');
+            updateInputsState('draft');
+            updatePrintFooter(null);
         }
         function showToast(msg, type) {
             const container = document.querySelector('.toast-container');
