@@ -590,6 +590,32 @@
             cutting: ["پێشەوا", "دیاری"]
         };
 
+        const cuttingTasks = [
+            "1- چێکی سەرجەم خشتەکان بە ڤێرنە",
+            "2- چێکی سەرجەم سیمەکان",
+            "3- کاتی گۆڕینی سیمەکان",
+            "4- چێکی ڤاکیۆم ئاو بەتاڵکردن+ پلەی گەرمی",
+            "5- چێکی ئێسکاڤیدەر و بۆکسفیدەر + چەورکردن",
+            "٦- چێکی ئێکسترودەر و ڕۆتەیتەر",
+            "٧- چێکی گریپەر فريمەکان و ستاکەر",
+            "٨ - چێکی موبەریدە و سپلێتی بۆردی کارەبایی",
+            "٩- پاکردنەوەی هۆپەری میکسەر",
+            "١٠ - پاکردنەوەی ژووری ڤاکیۆم + گۆڕینی فلتەر",
+            "١١- ئێکستروژن",
+            "١٢- چێکی ترانسێرکاری دخوول تەنها شەفتی ڕۆژ",
+            "١٣ - چێکی ترانسێرکاری خروج تەنها شەفتی ڕۆژ",
+            "١٤ - فلتەری ڕۆنی ڤاکیۆم",
+            "١٥- چێکی ئێلیڤەیتەر + گەراجی فرەیمەکان",
+            "١٦- چێکی گەراجی عەرەبانەکانی درایەر",
+            "١٧- چەورکردن زنجیرەکان",
+            "١٨ - پاکردنەوەی پولییەکان",
+            "١٩ - پاکردنەوەی بۆکسفیدەر",
+            "٢٠- تێستی قالپ",
+            "٢١- ئاوڕشێن کردنی سایلۆ",
+            "٢٢ - گۆڕینی سکراپەر",
+            "٢٣ - کارەبا بڕان"
+        ];
+
         let currentUser = null;
         let employees = [];
         let currentReportId = null;
@@ -753,6 +779,16 @@
         }
 
         function fillReportData(data) {
+            // IDs that trigger a full re-render/regeneration. We MUST NOT call their onchange() 
+            // during filling, because we handled regeneration manually in loadReportForView.
+            // Calling them here causes a race condition that wipes data.
+            const dangerousInputs = [
+                'k_rows_setting',
+                'set_s1_count_input', 'set_s2_count_input', 'set_s3_count_input',
+                'cut_s1_rows', 'cut_s2_rows', 'cut_s3_rows',
+                's1_hours_input', 's2_hours_input', 's3_hours_input'
+            ];
+
             if (data.tableData) {
                 for (const [key, value] of Object.entries(data.tableData)) {
                     const el = document.getElementById(key);
@@ -777,7 +813,10 @@
                             if (noteRow) noteRow.classList.add('visible');
                         }
 
-                        if (el.onchange) el.onchange();
+                        // Safe Trigger: Only trigger onchange if it's not a layout controller
+                        if (el.onchange && !dangerousInputs.includes(key)) {
+                            el.onchange();
+                        }
                     }
                 }
             }
@@ -871,55 +910,34 @@
         }
 
         // --- REPORT GENERATION ---
-        function generateReport(preserveState = false) {
-            const dept = document.getElementById('departmentSelect').value;
-            const date = document.getElementById('reportDate').value;
+        function generateReport(preserveState = false, overrides = {}) {
+            const departmentSelect = document.getElementById('departmentSelect');
+            if (!departmentSelect) return;
+            const dept = departmentSelect.value;
+            const wrapper = document.getElementById('tableWrapper');
 
             // UPDATE PRINT HEADER
+            const date = document.getElementById('reportDate').value;
             document.getElementById('printHeaderDept').innerText = `Daily Report: ${formatDept(dept).toUpperCase()}`;
             document.getElementById('printHeaderDate').innerText = `Date: ${date}`;
 
             document.getElementById('reportContainer').style.display = 'block';
-            const wrapper = document.getElementById('tableWrapper');
 
+            // Pass overrides down to specific renderers
             if (dept === 'unsetting') renderUnsettingTable(wrapper, preserveState);
-            else if (dept === 'setting') renderSettingTable(wrapper, preserveState);
+            else if (dept === 'setting') renderSettingTable(wrapper, preserveState, overrides);
             else if (dept === 'crushing-prep') renderCrushingTable(wrapper);
             else if (dept === 'preparation') renderPreparationTable(wrapper);
-            else if (dept === 'klin') renderKilnTable(wrapper);
-            else if (dept === 'cutting') renderCuttingTable(wrapper, preserveState);
+            else if (dept === 'klin') renderKilnTable(wrapper, overrides);
+            else if (dept === 'cutting') renderCuttingTable(wrapper, preserveState, overrides);
         }
 
         // ====================================================================
         // === CUTTING (بڕین) REPORT - PAGE BREAK PER SHIFT ===================
         // ====================================================================
-        const cuttingTasks = [
-            "1- چێکی سەرجەم خشتەکان بە ڤێرنە",
-            "2- چێکی سەرجەم سیمەکان",
-            "3- کاتی گۆڕینی سیمەکان",
-            "4- چێکی ڤاکیۆم ئاو بەتاڵکردن+ پلەی گەرمی",
-            "5- چێکی ئێسکاڤیدەر و بۆکسفیدەر + چەورکردن",
-            "٦- چێکی ئێکسترودەر و ڕۆتەیتەر",
-            "٧- چێکی گریپەر فریمەکان و ستاکەر",
-            "٨ - چێکی موبەریدە و سپلێتی بۆردی کارەبایی",
-            "٩- پاکردنەوەی هۆپەری میکسەر",
-            "١٠ - پاکردنەوەی ژووری ڤاکیۆم + گۆڕینی فلتەر",
-            "١١- ئێکستروژن",
-            "١٢- چێکی ترانسێرکاری دخوول تەنها شەفتی ڕۆژ",
-            "١٣ - چێکی ترانسێرکاری خروج تەنها شەفتی ڕۆژ",
-            "١٤ - فلتەری ڕۆنی ڤاکیۆم",
-            "١٥- چێکی ئێلیڤەیتەر + گەراجی فرەیمەکان",
-            "١٦- چێکی گەراجی عەرەبانەکانی درایەر",
-            "١٧- چەورکردن زنجیرەکان",
-            "١٨ - پاکردنەوەی پولییەکان",
-            "١٩ - پاکردنەوەی بۆکسفیدەر",
-            "٢٠- تێستی قالپ",
-            "٢١- ئاوڕشێن کردنی سایلۆ",
-            "٢٢ - گۆڕینی سکراپەر",
-            "٢٣ - کارەبا بڕان"
-        ];
 
-        function renderCuttingTable(wrapper, preserveState = false) {
+
+        function renderCuttingTable(wrapper, preserveState = false, overrides = {}) {
             let savedData = {};
             if (preserveState) {
                 const existingInputs = wrapper.querySelectorAll('input, select, textarea');
@@ -935,12 +953,18 @@
                 { id: 's3', name: 'Shift 3 (شەوان)', defStart: '00:00' }
             ];
 
-            // Get row counts for each shift, or default to 72
-            const getSavedVal = (id, def) => (preserveState && savedData[id]) ? parseInt(savedData[id]) : ((document.getElementById(id) ? parseInt(document.getElementById(id).value) : def));
+            // Priority: 1. Overrides (Loading) 2. SavedData (Preserve) 3. DOM (Live) 4. Default
+            const getVal = (id, def) => {
+                if (overrides[id]) return parseInt(overrides[id]);
+                if (preserveState && savedData[id]) return parseInt(savedData[id]);
+                const el = document.getElementById(id);
+                if (el) return parseInt(el.value);
+                return def;
+            };
 
-            let s1Rows = getSavedVal('cut_s1_rows', 72);
-            let s2Rows = getSavedVal('cut_s2_rows', 72);
-            let s3Rows = getSavedVal('cut_s3_rows', 72);
+            let s1Rows = getVal('cut_s1_rows', 72);
+            let s2Rows = getVal('cut_s2_rows', 72);
+            let s3Rows = getVal('cut_s3_rows', 72);
 
             const shiftRows = { 's1': s1Rows, 's2': s2Rows, 's3': s3Rows };
 
@@ -949,7 +973,12 @@
             let empOptions = `<option value="">Select...</option>`;
             cuttingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
-            let html = '';
+            let html = `
+                <div class="report-title-box text-center border border-2 border-dark p-2 mb-3 bg-light">
+                    <h4 class="m-0 fw-bold">ڕاپۆرتی ڕۆژانەی بەشی بڕین (Cutting)</h4>
+                    <small>${dateValue}</small>
+                </div>
+            `;
 
             shifts.forEach((shift) => {
                 const totalCarts = shiftRows[shift.id];
@@ -1113,63 +1142,10 @@
             }
         }
 
-        function autoFillCutTimes(shiftId) {
-            // Get Start Time and Interval from the specific shift header inputs
-            const startVal = document.getElementById(`cut_${shiftId}_start`).value;
-            const intervalVal = parseInt(document.getElementById(`cut_${shiftId}_int`).value) || 10;
-
-            if (!startVal) {
-                alert("Please set a start time.");
-                return;
-            }
-
-            // Parse Start Time
-            const [h, m] = startVal.split(':').map(Number);
-            let currentMins = h * 60 + m;
-
-            const rowCountInput = document.getElementById('cut_rows_setting');
-            const totalCarts = rowCountInput ? parseInt(rowCountInput.value) || 72 : 72;
-
-            // Loop through carts
-            for (let i = 1; i <= totalCarts; i++) {
-                const inputId = `cut_${shiftId}_c${i}_time`;
-                const el = document.getElementById(inputId);
-
-                if (el) {
-                    // Format minutes back to HH:MM
-                    let hh = Math.floor(currentMins / 60) % 24;
-                    let mm = currentMins % 60;
-                    const timeStr = `${hh.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
-
-                    el.value = timeStr;
-                }
-
-                // Add interval for next cart
-                currentMins += intervalVal;
-            }
-        }
-
-        // --- NEW: Add Note Function ---
-        function addNoteField(shiftId) {
-            // Find the first hidden note row for this shift
-            for (let i = 1; i <= 6; i++) {
-                const row = document.getElementById(`cut_${shiftId}_note_row_${i}`);
-                if (row && !row.classList.contains('visible')) {
-                    row.classList.add('visible');
-                    return; // Stop after showing one
-                }
-            }
-            alert("Max 6 notes allowed.");
-        }
-
-
         // ====================================================================
         // === SETTING (بارکردن) REPORT =======================================
         // ====================================================================
-        // ====================================================================
-        // === SETTING (بارکردن) REPORT =======================================
-        // ====================================================================
-        function renderSettingTable(wrapper, preserveState = false) {
+        function renderSettingTable(wrapper, preserveState = false, overrides = {}) {
             let savedData = {};
             if (preserveState) {
                 const existingInputs = wrapper.querySelectorAll('input, select, textarea');
@@ -1189,12 +1165,18 @@
             function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
             function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
 
-            // Read existing inputs or saved data
-            const getSavedVal = (id, def) => (preserveState && savedData[id]) ? parseInt(savedData[id]) : ((document.getElementById(id) ? parseInt(document.getElementById(id).value) : def));
+            // Priority: 1. Overrides 2. SavedData (Preserve) 3. DOM 4. Default 10
+            const getVal = (id, def) => {
+                if (overrides[id]) return parseInt(overrides[id]);
+                if (preserveState && savedData[id]) return parseInt(savedData[id]);
+                const el = document.getElementById(id);
+                if (el) return parseInt(el.value);
+                return def;
+            };
 
-            const s1Count = getSavedVal('set_s1_count_input', 10) || 10;
-            const s2Count = getSavedVal('set_s2_count_input', 10) || 10;
-            const s3Count = getSavedVal('set_s3_count_input', 10) || 10;
+            const s1Count = getVal('set_s1_count_input', 10);
+            const s2Count = getVal('set_s2_count_input', 10);
+            const s3Count = getVal('set_s3_count_input', 10);
 
             const totalRows = s1Count + s2Count + s3Count;
 
@@ -1371,17 +1353,13 @@
         // ====================================================================
         // === KILN (فڕن) REPORT ==============================================
         // ====================================================================
-        function renderKilnTable(wrapper) {
-            const kilnEmps = REPORT_CONFIG.kiln || [];
-            let empOptions = `<option value="">Select...</option>`;
-            kilnEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
+        function renderKilnTable(wrapper, overrides = {}) {
+            const rowsInput = document.getElementById('k_rows_setting');
 
-            const dateValue = document.getElementById('reportDate').value;
-            const startTimeStr = document.getElementById('startTime').value;
-            const interval = parseInt(document.getElementById('timeInterval').value) || 60;
-
-            const existingRowsInput = document.getElementById('k_rows_setting');
-            const rowCount = existingRowsInput ? parseInt(existingRowsInput.value) || 24 : 24;
+            // Priority: 1. Overrides 2. DOM 3. Default 20
+            let totalRows = 20;
+            if (overrides['k_rows_setting']) totalRows = parseInt(overrides['k_rows_setting']);
+            else if (rowsInput) totalRows = parseInt(rowsInput.value) || 20;
 
             const brickTypes = [
                 { val: "", label: "" }, { val: "Blok 20", label: "Blok 20" }, { val: "Blok 15", label: "Blok 15" },
@@ -1863,11 +1841,6 @@
                 console.error(e);
                 showToast('Error saving report', 'danger');
             }
-        }
-
-        const originalGenerateReport = generateReport;
-        generateReport = function (preserveState = false) {
-            originalGenerateReport(preserveState);
         }
 
         function startNewReport() {
