@@ -727,12 +727,7 @@
                                     <option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 maintenance-field">
-                                <label class="form-label text-success fw-bold">ساڵانە چەند جار پێویستە؟
-                                    (Times/Year)</label>
-                                <input type="number" step="0.1" class="form-control" id="recCycle" value="1" min="0.1"
-                                    placeholder="1">
-                            </div>
+                            <!-- Frequency removed here as it is managed in configuration -->
 
                             <div class="col-md-12 problem-field" style="display:none;">
                                 <label class="form-label">کێشە (Problem)</label>
@@ -870,41 +865,76 @@
     </div>
     </div>
 
-    <!-- Department Totals Modal -->
+    <!-- Overhauled Department Totals Modal -->
     <div class="modal fade" id="deptTotalsModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="bi bi-building me-2"></i>پوختەی بەشەکان (Department Totals)</h5>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white py-3">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="bi bi-building-fill-gear me-3 fs-4 text-info"></i>
+                        <span>پوختەی وردی بەشەکان (Advanced department Analytics)</span>
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="d-flex justify-content-end mb-3">
-                        <select id="deptTotalFilter" class="form-select form-select-sm w-auto"
+                <div class="modal-body bg-light p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="text-secondary small fw-bold"><i class="bi bi-info-circle me-1"></i> Global metrics
+                            across all machines grouped by department.</div>
+                        <select id="deptTotalFilter" class="form-select w-auto shadow-sm border-0 fw-bold text-primary"
                             onchange="loadDepartmentTotals()">
                             <option value="all">All Time (هەموو کات)</option>
                             <option value="this_year" selected>This Year (ئەمساڵ)</option>
                             <option value="last_30">Last 30 Days</option>
                         </select>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered text-center align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Department (بەش)</th>
-                                    <th>Total Machines</th>
-                                    <th>Total Problems</th>
-                                    <th>Total Downtime (Hours)</th>
-                                    <th>Avg MTTR (Hours)</th>
-                                    <th>Most Frequent Issue</th>
-                                </tr>
-                            </thead>
-                            <tbody id="deptTotalsBody">
-                                <tr>
-                                    <td colspan="6" class="text-muted">Loading data...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Global KPIs for Modal -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm text-center p-3"
+                                style="border-right: 5px solid var(--info-color) !important;">
+                                <div class="text-muted small fw-bold">Active Machines</div>
+                                <div id="modalGlobalMachines" class="fs-2 fw-bold text-secondary">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm text-center p-3"
+                                style="border-right: 5px solid var(--danger-color) !important;">
+                                <div class="text-muted small fw-bold">Total Issues</div>
+                                <div id="modalGlobalIssues" class="fs-2 fw-bold text-danger">0</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm text-center p-3"
+                                style="border-right: 5px solid var(--warning-color) !important;">
+                                <div class="text-muted small fw-bold">Total Downtime (h)</div>
+                                <div id="modalGlobalDowntime" class="fs-2 fw-bold text-warning">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="table-responsive rounded">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white text-secondary small text-uppercase fw-bold">
+                                    <tr>
+                                        <th class="ps-4">Department</th>
+                                        <th class="text-center">Machines</th>
+                                        <th class="text-center">Issues</th>
+                                        <th class="text-center">Downtime</th>
+                                        <th class="text-center">MTTR (Avg)</th>
+                                        <th class="text-center">Main Failure Source</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deptTotalsBody" class="border-top-0">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="spinner-border text-primary opacity-50"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -945,12 +975,12 @@
         };
 
         const defaultPartsConfig = {
-            'relay': { label: 'ڕیڵەی (Relays)', parts: ['سکراپەر', 'باڵ', 'سەرپەنجە', 'زەنجیر', 'گێڕ'] },
-            'bearing': { label: 'بەرینە (Bearings)', parts: ['بەرینەی ڕۆڵە', 'بەرینەی سەرەکی', 'بەرینەی ماتۆڕ', 'هاوسینگ'] },
-            'lining': { label: 'بەطانە (Lining)', parts: ['بەطانەی ناوەوە', 'بەطانەی دەرەوە', 'پلێتی بەطانە'] },
-            'knife': { label: 'چەقۆ (Knives)', parts: ['چەقۆی بڕین', 'چەقۆی پاککردنەوە', 'چەقۆی لاوەکی'] },
-            'electrical': { label: 'کارەبایی', parts: ['کۆنتێکتەر', 'فیوز', 'هەستەوەر', 'ماتۆڕ'] },
-            'general': { label: 'گشتی', parts: ['ڕۆن', 'فیلتەر', 'قاییش', 'هیتر'] }
+            'relay': { label: 'ڕیڵەی (Relays)', parts: [{ name: 'سکراپەر', freq: 1 }, { name: 'باڵ', freq: 1 }, { name: 'سەرپەنجە', freq: 1 }, { name: 'زەنجیر', freq: 1 }, { name: 'گێڕ', freq: 1 }] },
+            'bearing': { label: 'بەرینە (Bearings)', parts: [{ name: 'بەرینەی ڕۆڵە', freq: 1 }, { name: 'بەرینەی سەرەکی', freq: 1 }, { name: 'بەرینەی ماتۆڕ', freq: 1 }, { name: 'هاوسینگ', freq: 1 }] },
+            'lining': { label: 'بەطانە (Lining)', parts: [{ name: 'بەطانەی ناوەوە', freq: 1 }, { name: 'بەطانەی دەرەوە', freq: 1 }, { name: 'پلێتی بەطانە', freq: 1 }] },
+            'knife': { label: 'چەقۆ (Knives)', parts: [{ name: 'چەقۆی بڕین', freq: 1 }, { name: 'چەقۆی پاککردنەوە', freq: 1 }, { name: 'چەقۆی لاوەکی', freq: 1 }] },
+            'electrical': { label: 'کارەبایی', parts: [{ name: 'کۆنتێکتەر', freq: 1 }, { name: 'فیوز', freq: 1 }, { name: 'هەستەوەر', freq: 1 }, { name: 'ماتۆڕ', freq: 1 }] },
+            'general': { label: 'گشتی', parts: [{ name: 'ڕۆن', freq: 1 }, { name: 'فیلتەر', freq: 1 }, { name: 'قاییش', freq: 1 }, { name: 'هیتر', freq: 1 }] }
         };
 
         // --- AUTH & RBAC CONFIGURATION ---
@@ -1021,6 +1051,7 @@
                 document.getElementById('btnAddMachine').style.display = 'none';
                 document.getElementById('btnManageMachines').style.display = 'none';
                 document.getElementById('machineControls').style.display = 'none'; // Cant manage parts
+                document.getElementById('btnDeptTotals').style.display = 'none';
             }
         }
 
@@ -1205,10 +1236,16 @@
                 const targetParts = (oldCat && currentPartsConfig[oldCat]) ? currentPartsConfig[oldCat].parts : [];
                 if (!oldCat) {
                     for (const [key, val] of Object.entries(currentPartsConfig)) {
-                        val.parts.forEach(p => partSelect.innerHTML += `<option value="${p}">${p}</option>`);
+                        val.parts.forEach(p => {
+                            const pName = p.name || p;
+                            partSelect.innerHTML += `<option value="${pName}">${pName}</option>`;
+                        });
                     }
                 } else {
-                    targetParts.forEach(p => partSelect.innerHTML += `<option value="${p}">${p}</option>`);
+                    targetParts.forEach(p => {
+                        const pName = p.name || p;
+                        partSelect.innerHTML += `<option value="${pName}">${pName}</option>`;
+                    });
                 }
             }
             catSelect.value = oldCat;
@@ -1408,7 +1445,14 @@
                 const canEdit = currentUser.role !== 'manager';
                 const editBtn = canEdit ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>` : '';
 
-                tbody.innerHTML += `<tr><td>${checkbox}</td><td>${log.date}</td><td>${year}</td><td><span class="badge-category">${log.partCategory}</span></td><td><span class="badge-part">${part}</span></td><td>1</td><td class="small text-muted">${log.note || ''}</td><td>${editBtn}${deleteBtn}</td></tr>`;
+                // Fetch current frequency from config for global synchronization
+                let freqDisplay = '-';
+                if (currentPartsConfig && currentPartsConfig[log.partCategory]) {
+                    const foundPart = currentPartsConfig[log.partCategory].parts.find(p => (p.name || p) === part);
+                    if (foundPart) freqDisplay = foundPart.freq || 1;
+                }
+
+                tbody.innerHTML += `<tr><td>${checkbox}</td><td>${log.date}</td><td>${year}</td><td><span class="badge-category">${log.partCategory}</span></td><td><span class="badge-part">${part}</span></td><td class="fw-bold text-primary">${freqDisplay}</td><td class="small text-muted">${log.note || ''}</td><td>${editBtn}${deleteBtn}</td></tr>`;
             });
         }
 
@@ -1434,14 +1478,26 @@
             const allParts = [];
             if (currentPartsConfig) {
                 Object.values(currentPartsConfig).forEach(cat => {
-                    if (cat.parts) cat.parts.forEach(p => allParts.push(p));
+                    if (cat.parts) cat.parts.forEach(p => allParts.push(p.name || p));
                 });
             }
 
             // 2. دروستکردنی داتا بۆ هەر پارچەیەک
             const partData = {};
-            allParts.forEach(p => {
-                partData[p] = { lastMaint: null, cycle: 365, manualPlan: null };
+            allParts.forEach(pName => {
+                // Find default frequency from config
+                let defaultCycle = 365;
+                if (currentPartsConfig) {
+                    for (const cat of Object.values(currentPartsConfig)) {
+                        const found = cat.parts.find(pp => (pp.name || pp) === pName);
+                        if (found) {
+                            if (found.freq === 'N/A') defaultCycle = null;
+                            else defaultCycle = Math.round(365 / (parseFloat(found.freq) || 1));
+                            break;
+                        }
+                    }
+                }
+                partData[pName] = { lastMaint: null, cycle: defaultCycle, manualPlan: null };
             });
 
             // 3. دۆزینەوەی دوایین چاکسازی (Auto Calculation)
@@ -1451,8 +1507,8 @@
                     // ئەگەر ئەم داتایە نوێتر بوو لەوەی تۆمارکراوە، نوێی بکەرەوە
                     if (!partData[p].lastMaint || new Date(log.date) > new Date(partData[p].lastMaint)) {
                         partData[p].lastMaint = log.date;
-                        // دۆزینەوەی ژمارەی ڕۆژەکان (365 دابەش فرێکوێنس)
-                        partData[p].cycle = parseInt(log.cycleDays) || 365;
+                        // Frequency is now GLOBALLY driven by currentPartsConfig (initialized in partData[p].cycle)
+                        // No override from log.cycleDays to ensure global sync
                     }
                 }
             });
@@ -1494,7 +1550,7 @@
                     if (currentUser.role === 'admin') {
                         actionBtn = `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${data.manualPlan.id}')" title="Delete Plan"><i class="bi bi-trash"></i></button>`;
                     }
-                } else if (data.lastMaint) {
+                } else if (data.lastMaint && data.cycle !== null) {
                     const last = new Date(data.lastMaint);
                     nextDate = new Date(last);
                     nextDate.setDate(last.getDate() + data.cycle); // زیادکردنی ماوەی خول
@@ -1528,6 +1584,19 @@
                     <td class="fw-bold" style="font-size:1.1em">${formattedNextDate}</td>
                     <td>${remainingHtml}</td>
                     <td>${actionBtn}</td>
+                </tr>
+            `;
+                } else if (data.lastMaint && data.cycle === null) {
+                    // Case for N/A frequency
+                    hasData = true;
+                    tbody.innerHTML += `
+                <tr>
+                    <td class="fw-bold">${part}</td>
+                    <td><span class="badge bg-light text-dark">N/A</span></td>
+                    <td>${data.lastMaint}</td>
+                    <td class="text-muted italic">No schedule</td>
+                    <td class="text-muted">-</td>
+                    <td></td>
                 </tr>
             `;
                 }
@@ -1668,7 +1737,14 @@
             if (data.type === 'maintenance') {
                 data.partCategory = document.getElementById('partCategory').value;
                 data.partName = document.getElementById('partName').value;
-                data.cycleDays = Math.round(365 / (parseFloat(document.getElementById('recCycle').value) || 1));
+
+                // Fetch frequency from currentPartsConfig
+                let freq = 1;
+                if (currentPartsConfig && currentPartsConfig[data.partCategory]) {
+                    const part = currentPartsConfig[data.partCategory].parts.find(p => (p.name || p) === data.partName);
+                    if (part && part.freq !== undefined) freq = part.freq === 'N/A' ? 'N/A' : (parseFloat(part.freq) || 1);
+                }
+                data.cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
             } else {
                 data.problem = document.getElementById('recProblem').value;
                 data.downtime = document.getElementById('recDowntime').value;
@@ -1729,7 +1805,7 @@
                 document.getElementById('partCategory').value = log.partCategory;
                 updateSubParts();
                 document.getElementById('partName').value = log.partName;
-                document.getElementById('recCycle').value = Math.round(365 / log.cycleDays);
+                // Frequency is now implied by the configuration of the part
             } else {
                 document.getElementById('recProblem').value = log.problem || '';
                 document.getElementById('recDowntime').value = log.downtime || 0;
@@ -1852,9 +1928,12 @@
                 tbody.innerHTML = '';
                 const sortedDepts = Object.keys(deptStats).sort();
 
+                let globalMach = 0;
+                let globalIssues = 0;
+                let globalDown = 0;
+
                 if (sortedDepts.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-muted">No data found for this period.</td></tr>';
-                    return;
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">هیچ زانیارییەک نییە بۆ ئەم ماوەیە</td></tr>';
                 }
 
                 sortedDepts.forEach(dept => {
@@ -1862,24 +1941,33 @@
                     const machCount = s.machineIds.size;
                     const mttr = s.problemCount > 0 ? (s.totalDowntime / s.problemCount).toFixed(1) : 0;
 
+                    globalMach += machCount;
+                    globalIssues += s.problemCount;
+                    globalDown += s.totalDowntime;
+
                     let topIssue = '-';
                     let maxCount = 0;
                     for (const [p, c] of Object.entries(s.problemMap)) {
                         if (c > maxCount) { maxCount = c; topIssue = p; }
                     }
-                    if (maxCount > 0) topIssue += ` (${maxCount})`;
+
+                    const issueBadge = maxCount > 0 ? `<span class="badge bg-light text-dark border fw-normal">${topIssue} <strong class="text-danger ms-1">${maxCount}</strong></span>` : '-';
 
                     tbody.innerHTML += `
                         <tr>
-                            <td class="fw-bold">${dept}</td>
-                            <td><span class="badge bg-secondary rounded-pill">${machCount}</span></td>
-                            <td><span class="fw-bold text-danger">${s.problemCount}</span></td>
-                            <td>${s.totalDowntime.toFixed(1)} h</td>
-                            <td>${mttr} h</td>
-                            <td class="small text-muted">${topIssue}</td>
+                            <td class="ps-4 fw-bold text-dark">${dept}</td>
+                            <td class="text-center"><span class="badge bg-info-subtle text-info border border-info-subtle px-3 rounded-pill">${machCount}</span></td>
+                            <td class="text-center fw-bold text-danger">${s.problemCount}</td>
+                            <td class="text-center"><span class="fw-bold text-secondary">${s.totalDowntime.toFixed(1)}</span> <small class="text-muted">h</small></td>
+                            <td class="text-center">${mttr} <small class="text-muted">h</small></td>
+                            <td class="text-center">${issueBadge}</td>
                         </tr>
                     `;
                 });
+
+                document.getElementById('modalGlobalMachines').innerText = globalMach;
+                document.getElementById('modalGlobalIssues').innerText = globalIssues;
+                document.getElementById('modalGlobalDowntime').innerText = globalDown.toFixed(1);
 
             } catch (err) {
                 console.error("Dept Totals Error:", err);
@@ -1907,8 +1995,15 @@
         }
         function updateSubParts() {
             const k = document.getElementById('partCategory').value;
-            const s = document.getElementById('partName'); s.innerHTML = ''; s.disabled = !k;
-            if (k && currentPartsConfig[k]) currentPartsConfig[k].parts.forEach(p => s.innerHTML += `<option value="${p}">${p}</option>`);
+            const s = document.getElementById('partName'); s.innerHTML = '<option value="">هەڵبژێرە...</option>'; s.disabled = !k;
+            if (k && currentPartsConfig[k]) {
+                currentPartsConfig[k].parts.forEach(p => {
+                    const pName = p.name || p;
+                    s.innerHTML += `<option value="${pName}">${pName}</option>`;
+                });
+            }
+            // Auto update frequency display if needed (currently removed from modal)
+            s.onchange = () => { };
         }
         function calculateKPIs(pLogs, mLogs) {
             const filterType = document.getElementById('dashboardDateFilter').value;
@@ -1991,13 +2086,25 @@
             // Loop through Categories
             for (const [catKey, val] of Object.entries(currentPartsConfig)) {
 
-                // Generate Badges for Parts with Edit/Delete icons
-                const partsBadges = val.parts.map(p => {
+                // Generate row for each Part
+                const partsHtml = val.parts.map(p => {
+                    const pName = p.name || p;
+                    const pFreq = p.freq || 1;
                     return `
-                <div class="d-inline-block bg-white border rounded px-2 py-1 me-2 mb-2">
-                    <span class="fw-bold text-secondary">${p}</span>
-                    <i class="bi bi-pencil-square text-primary ms-2" style="cursor:pointer;" onclick="editPartName('${catKey}', '${p}')" title="Rename Part"></i>
-                    <i class="bi bi-x-circle-fill text-danger ms-1" style="cursor:pointer;" onclick="removePart('${catKey}', '${p}')" title="Delete Part"></i>
+                <div class="row g-2 align-items-center mb-2 bg-white border rounded p-2 mx-0">
+                    <div class="col-6">
+                        <span class="fw-bold text-secondary">${pName}</span>
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text p-1" style="font-size:0.7rem">Times/Yr</span>
+                            <input type="text" class="form-control px-1" value="${pFreq}" onchange="updatePartFreq('${catKey}', '${pName}', this.value)" placeholder="N/A">
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <i class="bi bi-pencil-square text-primary me-2" style="cursor:pointer;" onclick="editPartName('${catKey}', '${pName}')" title="Rename Part"></i>
+                        <i class="bi bi-x-circle-fill text-danger" style="cursor:pointer;" onclick="removePart('${catKey}', '${pName}')" title="Delete Part"></i>
+                    </div>
                 </div>
             `;
                 }).join('');
@@ -2019,9 +2126,9 @@
                 </div>
                 
                 <div class="mb-3">
-                    <h6 class="small text-muted fw-bold">Parts List:</h6>
-                    <div class="d-flex flex-wrap">
-                        ${partsBadges}
+                    <h6 class="small text-muted fw-bold">Parts & Frequencies:</h6>
+                    <div class="parts-list-container">
+                        ${partsHtml || '<p class="text-muted small">No parts added.</p>'}
                     </div>
                 </div>
 
@@ -2077,15 +2184,16 @@
             if (!val) return alert("Please enter a part name.");
 
             // Check duplicate
-            if (currentPartsConfig[catKey].parts.includes(val)) return alert("Part already exists in this category.");
+            const exists = currentPartsConfig[catKey].parts.find(p => (p.name || p) === val);
+            if (exists) return alert("Part already exists in this category.");
 
-            currentPartsConfig[catKey].parts.push(val);
+            currentPartsConfig[catKey].parts.push({ name: val, freq: 1 });
             renderManagePartsUI();
         }
 
         function removePart(catKey, partName) {
             if (confirm(`Remove part "${partName}"?`)) {
-                const idx = currentPartsConfig[catKey].parts.indexOf(partName);
+                const idx = currentPartsConfig[catKey].parts.findIndex(p => (p.name || p) === partName);
                 if (idx > -1) {
                     currentPartsConfig[catKey].parts.splice(idx, 1);
                     renderManagePartsUI();
@@ -2096,11 +2204,28 @@
         function editPartName(catKey, oldName) {
             const newName = prompt("Rename Part:", oldName);
             if (newName && newName !== oldName) {
-                const partsArr = currentPartsConfig[catKey].parts;
-                const idx = partsArr.indexOf(oldName);
-                if (idx > -1) {
-                    partsArr[idx] = newName; // Update name
+                const part = currentPartsConfig[catKey].parts.find(p => (p.name || p) === oldName);
+                if (part) {
+                    if (typeof part === 'string') {
+                        const idx = currentPartsConfig[catKey].parts.indexOf(oldName);
+                        currentPartsConfig[catKey].parts[idx] = { name: newName, freq: 1 };
+                    } else {
+                        part.name = newName;
+                    }
                     renderManagePartsUI();
+                }
+            }
+        }
+
+        function updatePartFreq(catKey, partName, newFreq) {
+            const partsArr = currentPartsConfig[catKey].parts;
+            const idx = partsArr.findIndex(p => (p.name || p) === partName);
+            if (idx > -1) {
+                const val = newFreq.toUpperCase() === 'N/A' ? 'N/A' : newFreq;
+                if (typeof partsArr[idx] === 'string') {
+                    partsArr[idx] = { name: partName, freq: val };
+                } else {
+                    partsArr[idx].freq = val;
                 }
             }
         }
@@ -2118,6 +2243,9 @@
                 });
                 alert("Configuration Saved Successfully!");
                 bootstrap.Modal.getInstance(document.getElementById('managePartsModal')).hide();
+
+                // Refresh Dashboard & Tables with new frequencies
+                updateDashboard();
 
                 // Refresh Dropdowns in Main UI
                 updateCategoryDropdown();
