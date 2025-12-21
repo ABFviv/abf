@@ -1147,17 +1147,6 @@
             renderProbTable(probLogs);
             renderScheduleTable(maintLogs, planLogs);
             calculateKPIs(probLogs, maintLogs);
-
-            console.log("--- DEBUGGING DASHBOARD ---");
-            // Assuming you have a variable named 'problems' or you are looping through data here
-            // Check the first few items to see their status
-            db.collection('maintenance_problems').get().then(snap => {
-                console.log("Total Problems in Database:", snap.size);
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    console.log(`Problem ID: ${doc.id} | Status: ${data.status} | Downtime: ${data.downtimeDuration}`);
-                });
-            });
         }
 
         function filterLogsByDate(logs, filterType) {
@@ -1341,7 +1330,34 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
+        }
 
+        function renderReliabilityChart(probLogs) {
+            const ctx = document.getElementById('reliabilityChart').getContext('2d');
+            if (reliabilityChartInstance) reliabilityChartInstance.destroy();
+
+            // Simple trend: Monthly failure counts
+            const failuresByMonth = {};
+            probLogs.forEach(l => {
+                const month = l.date.substring(0, 7);
+                failuresByMonth[month] = (failuresByMonth[month] || 0) + 1;
+            });
+
+            const labels = Object.keys(failuresByMonth).sort();
+            reliabilityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Failures',
+                        data: labels.map(m => failuresByMonth[m]),
+                        borderColor: '#2ecc71',
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
         }
 
         function renderRecentActivity(allLogs) {
@@ -1665,15 +1681,67 @@
 
         document.getElementById('addMachineForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const name = document.getElementById('newMachineName').value.trim();
+            const dept = document.getElementById('newMachineDept').value;
+            if (!name) return;
+
             await db.collection('machines').add({
-                name: document.getElementById('newMachineName').value,
-                department: document.getElementById('newMachineDept').value,
-                commissionDate: document.getElementById('newMachineDate').value,
-                partsConfig: defaultPartsConfig
+                name: name,
+                department: dept,
+                commissionDate: document.getElementById('newMachineDate')?.value || new Date().toISOString().split('T')[0],
+                partsConfig: defaultPartsConfig,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             bootstrap.Modal.getInstance(document.getElementById('addMachineModal')).hide();
             loadMachines();
         });
+
+        document.getElementById('planForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                machineId: currentMachineId,
+                type: 'plan',
+                partCategory: document.getElementById('planCategory').value,
+                partName: document.getElementById('planPart').value,
+                date: document.getElementById('planDate').value,
+                note: document.getElementById('planNote').value,
+                createdAt: new Date().toISOString()
+            };
+            await db.collection('machine_logs').add(data);
+            bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+        });
+
+        async function editLog(id) {
+            const log = globalLogsCache.find(l => l.id === id);
+            if (!log) return;
+
+            document.getElementById('editingLogId').value = id;
+            document.getElementById('recordType').value = log.type;
+            document.getElementById('recDate').value = log.date;
+            document.getElementById('recNote').value = log.note || '';
+
+            const isMaint = log.type === 'maintenance';
+            document.querySelectorAll('.maintenance-field').forEach(e => e.style.display = isMaint ? 'block' : 'none');
+            document.querySelectorAll('.problem-field').forEach(e => e.style.display = isMaint ? 'none' : 'block');
+
+            if (isMaint) {
+                updateCategoryDropdown();
+                document.getElementById('partCategory').value = log.partCategory;
+                updateSubParts();
+                document.getElementById('partName').value = log.partName;
+                document.getElementById('recCycle').value = Math.round(365 / log.cycleDays);
+            } else {
+                document.getElementById('recProblem').value = log.problem || '';
+                document.getElementById('recDowntime').value = log.downtime || 0;
+                document.getElementById('recSolution').value = log.solution || '';
+                document.getElementById('recRootCause').value = log.rootCause || '';
+            }
+
+            document.getElementById('recordModalHeader').className = isMaint ? "modal-header bg-primary text-white" : "modal-header bg-danger text-white";
+            document.getElementById('recordModalTitle').textContent = isMaint ? "Edit Maintenance Record" : "Edit Problem Record";
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addRecordModal')).show();
+        }
 
         // --- ADMIN: EDIT MACHINE NAME & DELETE ---
         async function openManageMachinesModal() {
@@ -2122,33 +2190,8 @@
         }
 
         function saveNewMachine() {
-            const name = document.getElementById('newMachineName').value;
-            const dept = document.getElementById('newMachineDept').value;
-
-            if (!name.trim()) {
-                alert("تکایە ناوی ئامێر بنووسە!");
-                return;
-            }
-
-            // Add to Firebase
-            db.collection('machines').add({
-                name: name,
-                department: dept,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                partsConfig: {} // Create empty config for parts
-            }).then(() => {
-                // Close Modal
-                const modalEl = document.getElementById('addMachineModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-
-                // Reload list
-                loadMachines();
-                alert("ئامێرەکە بە سەرکەوتوویی زیادکرا!");
-            }).catch(error => {
-                console.error("Error adding machine: ", error);
-                alert("هەڵەیەک ڕوویدا لە کاتی زیادکردن.");
-            });
+            // Trigger form submission
+            document.getElementById('addMachineForm').requestSubmit();
         }
     </script>
 </body>
