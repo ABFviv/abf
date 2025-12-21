@@ -7,6 +7,9 @@
     <title>ASOBRICK FACTORY - سیستەمی بەڕێوبردنی کارمەند</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -29,47 +32,75 @@
         }
 
         body {
-            background-color: #f5f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            padding: 15px;
         }
 
-        .login-container {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #c62828, #2c3e50);
-        }
-
-        .login-card {
-            width: 400px;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            background-color: white;
-        }
-
-        .login-logo {
-            max-width: 200px;
-            margin-bottom: 20px;
-        }
-
-        .dashboard-container {
-            display: none;
-            padding: 20px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #5c1003, #350909);
-            /* Green gradient from Manuals */
-            color: rgb(255, 255, 255);
-            padding: 15px 30px;
+        /* --- Standards --- */
+        .header-bar {
+            background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);
+            color: white;
+            padding: 15px 25px;
             border-radius: 12px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(198, 40, 40, 0.15);
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-header:hover {
+            background: white !important;
+            color: #c62828 !important;
+            transform: translateY(-2px);
+            border-color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-badge {
+            background: white;
+            color: #c62828;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
         }
 
         /* Add this to ensure the buttons look like the manual page */
@@ -1176,28 +1207,36 @@
 
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardPage">
-        <div class="header">
-            <div class="d-flex align-items-center">
-                <h3 class="m-0 fw-bold">
-                    <i class="bi bi-people-fill me-2"></i> بەڕێوبردنی کارمەند
-                </h3>
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-people-fill fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">بەڕێوبردنی کارمەند</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">EMPLOYEE MANAGEMENT</div>
+                </div>
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <span id="userInfo" class="me-3 d-none d-md-block small opacity-75"></span>
+                <div class="user-badge" id="userInfo">
+                    <i class="bi bi-person-circle fs-5"></i>
+                    <span>User</span>
+                </div>
 
-                <button class="btn btn-outline-light position-relative" id="notificationsBtn"
-                    onclick="showNotificationsPage()" style="display: none;">
+                <button class="btn btn-header position-relative" id="notificationsBtn" onclick="showNotificationsPage()"
+                    style="display: none;">
                     <i class="bi bi-bell"></i>
                     <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
                 </button>
 
-                <button class="btn btn-outline-light" id="refreshBtn">
+                <button class="btn btn-header" id="refreshBtn">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
 
-                <button class="btn btn-outline-light" onclick="window.location.href='dashboard.html'">
-                    <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+                <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
                 </button>
 
                 <button id="logoutBtn" style="display: none;"></button>
@@ -1340,15 +1379,20 @@
 
     <div class="dashboard-container" id="totalsPage" style="display: none;">
 
-        <div class="header">
-            <div class="d-flex align-items-center">
-                <h3 class="m-0 fw-bold">
-                    <i class="bi bi-bar-chart-line me-2"></i> کۆی گشتی کاری ڕۆژانە
-                </h3>
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-bar-chart-line fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">کۆی گشتی کاری ڕۆژانە</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">DAILY WORK TOTALS</div>
+                </div>
             </div>
             <div>
-                <button class="btn btn-outline-light" onclick="backToDashboardFromTotals()">
-                    <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+                <button class="btn btn-header" onclick="backToDashboardFromTotals()">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
                 </button>
             </div>
         </div>
@@ -1471,27 +1515,31 @@
 
     <!-- Work Records Page -->
     <div class="dashboard-container" id="workRecordsPage" style="display: none;">
-        <div class="header">
-            <div class="header-brand">
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-briefcase fs-5"></i>
+                </div>
                 <div>
-                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
-                            class="brand-gray-text">FACTORY</span></h4>
-                    <p class="header-subtitle">تۆماری کارەکان - <span id="currentEmployeeName"></span></p>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">تۆماری کارەکان</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">WORK RECORDS - <span
+                            id="currentEmployeeName"></span></div>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-light btn-sm" id="backToDashboardBtn">
-                    <i class="bi bi-arrow-left"></i> گەڕانەوە بۆ پەڕەی سەرەکی
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-header btn-sm" id="backToDashboardBtn">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
                 </button>
-                <button class="btn btn-info btn-sm ms-2" id="exportRecordsBtn">
-                    <i class="bi bi-file-earmark-excel"></i> بینێرە بۆ ئێکزڵ
+                <button class="btn btn-header btn-sm" id="exportRecordsBtn">
+                    <i class="bi bi-file-earmark-excel"></i>
                 </button>
-                <button class="btn btn-secondary btn-sm ms-2" id="printRecordsBtn">
-                    <i class="bi bi-printer"></i> پرینت
+                <button class="btn btn-header btn-sm" id="printRecordsBtn">
+                    <i class="bi bi-printer"></i>
                 </button>
-                <button class="btn btn-success btn-sm ms-2 electrical-mechanical-only" id="addSpecialRecordBtn"
+                <button class="btn btn-header btn-sm electrical-mechanical-only" id="addSpecialRecordBtn"
                     style="display: none;">
-                    <i class="bi bi-plus-circle"></i> زیادکردنی کاری ڕۆژانەی تایبەت
+                    <i class="bi bi-plus-circle"></i>
                 </button>
             </div>
         </div>
@@ -3104,7 +3152,7 @@
             document.getElementById('totalsPage').style.display = 'none'
 
             // Update user info
-            document.getElementById('userInfo').textContent = `لە ژوورەوەیت وەک: ${currentUser.username} (${currentUser.role})`;
+            document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
             // Show/hide admin-only elements
             const adminElements = document.querySelectorAll('.admin-only');
