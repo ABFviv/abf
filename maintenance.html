@@ -7,6 +7,9 @@
     <title>ASOBRICK - چاکسازی پێشکەوتوو</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -26,23 +29,75 @@
         }
 
         body {
-            background-color: var(--light-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-            padding-bottom: 50px;
+            background-color: #f8fafc;
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            padding: 15px;
         }
 
         /* --- HEADER --- */
-        .header {
-            background: var(--primary-gradient);
+        .header-bar {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
             color: white;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 12px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(25, 118, 210, 0.15);
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-header:hover {
+            background: white !important;
+            color: #1976d2 !important;
+            transform: translateY(-2px);
+            border-color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-badge {
+            background: white;
+            color: #1976d2;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
         }
 
         /* Selectors Box */
@@ -232,15 +287,24 @@
 
 <body>
 
-    <div class="header">
-        <div class="d-flex align-items-center">
-            <h3 class="m-0 fw-bold"><i class="bi bi-gear-wide-connected me-2"></i>ASOBRICK FACTORY</h3>
-            <span class="ms-3 badge bg-white text-primary opacity-75">Maintenance System</span>
+    <div class="header-bar">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="bi bi-gear-wide-connected fs-5"></i>
+            </div>
+            <div>
+                <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">چاکسازی پێشکەوتوو</h5>
+                <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">MAINTENANCE SYSTEM</div>
+            </div>
         </div>
-        <div>
-            <span id="userInfo" class="me-3 small text-white-50"></span>
-            <button class="btn btn-outline-light" onclick="window.location.href='index.html'">
-                <i class="bi bi-box-arrow-left"></i> دەرچوون
+        <div class="d-flex align-items-center gap-3">
+            <div class="user-badge" id="userInfo">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span>User</span>
+            </div>
+            <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-arrow-right-short fs-4"></i>
+                <span>گەڕانەوە</span>
             </button>
         </div>
     </div>
@@ -269,6 +333,10 @@
             </div>
 
             <div class="ms-auto d-flex gap-2">
+                <button class="btn btn-outline-primary btn-sm action-btn" id="btnDeptTotals"
+                    onclick="openDeptTotalsModal()">
+                    <i class="bi bi-building"></i> Department Totals
+                </button>
                 <button class="btn btn-primary btn-sm action-btn" id="btnAddMachine" onclick="openAddMachineModal()">
                     <i class="bi bi-plus-lg"></i> زیادکردن
                 </button>
@@ -800,6 +868,48 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Department Totals Modal -->
+    <div class="modal fade" id="deptTotalsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-building me-2"></i>پوختەی بەشەکان (Department Totals)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <select id="deptTotalFilter" class="form-select form-select-sm w-auto"
+                            onchange="loadDepartmentTotals()">
+                            <option value="all">All Time (هەموو کات)</option>
+                            <option value="this_year" selected>This Year (ئەمساڵ)</option>
+                            <option value="last_30">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Department (بەش)</th>
+                                    <th>Total Machines</th>
+                                    <th>Total Problems</th>
+                                    <th>Total Downtime (Hours)</th>
+                                    <th>Avg MTTR (Hours)</th>
+                                    <th>Most Frequent Issue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deptTotalsBody">
+                                <tr>
+                                    <td colspan="6" class="text-muted">Loading data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="manageMachinesModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -885,7 +995,7 @@
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) window.location.href = 'index.html';
         currentUser = JSON.parse(userStr);
-        document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role})`;
+        document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -1037,6 +1147,17 @@
             renderProbTable(probLogs);
             renderScheduleTable(maintLogs, planLogs);
             calculateKPIs(probLogs, maintLogs);
+
+            console.log("--- DEBUGGING DASHBOARD ---");
+            // Assuming you have a variable named 'problems' or you are looping through data here
+            // Check the first few items to see their status
+            db.collection('maintenance_problems').get().then(snap => {
+                console.log("Total Problems in Database:", snap.size);
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    console.log(`Problem ID: ${doc.id} | Status: ${data.status} | Downtime: ${data.downtimeDuration}`);
+                });
+            });
         }
 
         function filterLogsByDate(logs, filterType) {
@@ -1200,30 +1321,7 @@
             });
         }
 
-        function renderReliabilityChart(probLogs) {
-            const ctx = document.getElementById('reliabilityChart').getContext('2d');
-            if (reliabilityChartInstance) reliabilityChartInstance.destroy();
-            const statsByMonth = {};
-            probLogs.forEach(l => {
-                const month = l.date.substring(0, 7);
-                if (!statsByMonth[month]) statsByMonth[month] = { downtime: 0, failures: 0 };
-                statsByMonth[month].downtime += parseFloat(l.downtime || 0);
-                statsByMonth[month].failures += 1;
-            });
-            const labels = Object.keys(statsByMonth).sort();
-            const mtbfData = labels.map(m => {
-                const d = statsByMonth[m];
-                return d.failures > 0 ? ((720 / 24) / d.failures).toFixed(1) : 30;
-            });
-            reliabilityChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{ label: 'MTBF (Days)', data: mtbfData, borderColor: '#2ecc71', fill: true, backgroundColor: 'rgba(46, 204, 113, 0.2)' }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+
 
         function renderProblemParetoChart(probLogs) {
             const ctx = document.getElementById('problemParetoChart').getContext('2d');
@@ -1243,6 +1341,7 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
+
         }
 
         function renderRecentActivity(allLogs) {
@@ -1613,6 +1712,113 @@
         async function deleteMachine(id) { if (confirm("Delete this machine and all its logs?")) { await db.collection('machines').doc(id).delete(); openManageMachinesModal(); loadMachines(); } }
         async function deleteLog(id) { if (confirm("Delete record?")) await db.collection('machine_logs').doc(id).delete(); }
 
+        // --- NEW: DEPARTMENT TOTALS LOGIC ---
+        function openDeptTotalsModal() {
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('deptTotalsModal'));
+            modal.show();
+            loadDepartmentTotals();
+        }
+
+        async function loadDepartmentTotals() {
+            const tbody = document.getElementById('deptTotalsBody');
+            tbody.innerHTML = '<tr><td colspan="6"><div class="spinner-border text-primary" role="status"></div> Loading...</td></tr>';
+
+            const filterType = document.getElementById('deptTotalFilter').value;
+
+            try {
+                // 1. Get All Machines
+                const machineSnap = await db.collection('machines').get();
+                const machineDeptMap = {};
+                const deptStats = {};
+
+                machineSnap.forEach(doc => {
+                    const m = doc.data();
+                    const dept = m.department || 'Unknown';
+                    machineDeptMap[doc.id] = dept;
+
+                    if (!deptStats[dept]) {
+                        deptStats[dept] = {
+                            machineIds: new Set(),
+                            problemCount: 0,
+                            totalDowntime: 0,
+                            problemMap: {}
+                        };
+                    }
+                    deptStats[dept].machineIds.add(doc.id);
+                });
+
+                // 2. Get All Problem Logs
+                const logQuery = db.collection('machine_logs').where('type', '==', 'problem');
+                const logSnap = await logQuery.get();
+
+                const now = new Date();
+                const currentYear = now.getFullYear();
+
+                logSnap.forEach(doc => {
+                    const log = doc.data();
+                    const d = log.date ? new Date(log.date) : null;
+                    if (!d) return;
+
+                    let include = false;
+                    if (filterType === 'all') include = true;
+                    else if (filterType === 'this_year' && d.getFullYear() === currentYear) include = true;
+                    else if (filterType === 'last_30') {
+                        const diff = (now - d) / (1000 * 60 * 60 * 24);
+                        if (diff <= 30) include = true;
+                    }
+
+                    if (include) {
+                        const dept = machineDeptMap[log.machineId] || 'Unknown';
+                        if (deptStats[dept]) {
+                            deptStats[dept].problemCount++;
+                            deptStats[dept].totalDowntime += parseFloat(log.downtime || 0);
+
+                            const pName = log.problem || 'Unknown';
+                            if (!deptStats[dept].problemMap[pName]) deptStats[dept].problemMap[pName] = 0;
+                            deptStats[dept].problemMap[pName]++;
+                        }
+                    }
+                });
+
+                // 3. Render
+                tbody.innerHTML = '';
+                const sortedDepts = Object.keys(deptStats).sort();
+
+                if (sortedDepts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-muted">No data found for this period.</td></tr>';
+                    return;
+                }
+
+                sortedDepts.forEach(dept => {
+                    const s = deptStats[dept];
+                    const machCount = s.machineIds.size;
+                    const mttr = s.problemCount > 0 ? (s.totalDowntime / s.problemCount).toFixed(1) : 0;
+
+                    let topIssue = '-';
+                    let maxCount = 0;
+                    for (const [p, c] of Object.entries(s.problemMap)) {
+                        if (c > maxCount) { maxCount = c; topIssue = p; }
+                    }
+                    if (maxCount > 0) topIssue += ` (${maxCount})`;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${dept}</td>
+                            <td><span class="badge bg-secondary rounded-pill">${machCount}</span></td>
+                            <td><span class="fw-bold text-danger">${s.problemCount}</span></td>
+                            <td>${s.totalDowntime.toFixed(1)} h</td>
+                            <td>${mttr} h</td>
+                            <td class="small text-muted">${topIssue}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Dept Totals Error:", err);
+                tbody.innerHTML = `<tr><td colspan="6" class="text-danger">Error loading data: ${err.message}</td></tr>`;
+            }
+        }
+
         // --- HELPERS ---
         function openAddRecordModal(type) {
             document.getElementById('recordForm').reset();
@@ -1637,9 +1843,57 @@
             if (k && currentPartsConfig[k]) currentPartsConfig[k].parts.forEach(p => s.innerHTML += `<option value="${p}">${p}</option>`);
         }
         function calculateKPIs(pLogs, mLogs) {
-            // (Simplified standard KPI calc)
-            const dt = pLogs.reduce((a, b) => a + (parseFloat(b.downtime) || 0), 0);
-            document.getElementById('kpiDowntime').textContent = dt.toFixed(1);
+            const filterType = document.getElementById('dashboardDateFilter').value;
+            const failures = pLogs.length;
+            const totalDowntimeHours = pLogs.reduce((a, b) => a + (parseFloat(b.downtime) || 0), 0);
+
+            // Calculate Time Span (Days)
+            let daysSpan = 1;
+            const now = new Date();
+
+            if (filterType === 'last_30') {
+                daysSpan = 30;
+            } else if (filterType === 'this_month') {
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                daysSpan = Math.max(1, (now - startOfMonth) / (1000 * 60 * 60 * 24));
+            } else if (filterType === 'this_year') {
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                daysSpan = Math.max(1, (now - startOfYear) / (1000 * 60 * 60 * 24));
+            } else {
+                // All time: find earliest log date from pLogs AND mLogs
+                let earliest = now.getTime();
+                const all = [...pLogs, ...mLogs];
+                if (all.length > 0) {
+                    all.forEach(l => {
+                        const d = new Date(l.date).getTime();
+                        if (d < earliest) earliest = d;
+                    });
+                    daysSpan = Math.max(1, (now - earliest) / (1000 * 60 * 60 * 24));
+                } else {
+                    daysSpan = 1;
+                }
+            }
+
+            // Calculations
+            // MTTR (Mean Time To Repair) = Total Downtime / Failures
+            const mttr = failures > 0 ? (totalDowntimeHours / failures) : 0;
+
+            // Uptime (Days)
+            const downtimeDays = totalDowntimeHours / 24;
+            const uptimeDays = Math.max(0, daysSpan - downtimeDays);
+
+            // MTTF (Mean Time To Failure) = Uptime / Failures
+            // If no failures, it is effectively the entire uptime so far
+            const mttf = failures > 0 ? (uptimeDays / failures) : uptimeDays;
+
+            // MTBF (Mean Time Between Failures) = Total Time / Failures
+            const mtbf = failures > 0 ? (daysSpan / failures) : daysSpan;
+
+            // Update DOM
+            document.getElementById('kpiMTTR').textContent = mttr.toFixed(1);
+            document.getElementById('kpiMTBF').textContent = mtbf.toFixed(1);
+            document.getElementById('kpiMTTF').textContent = mttf.toFixed(1);
+            document.getElementById('kpiDowntime').textContent = totalDowntimeHours.toFixed(1);
         }
 
         // ==========================================
