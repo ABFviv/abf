@@ -7,6 +7,9 @@
     <title>ASOBRICK - تێبینییەکان</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -18,21 +21,74 @@
         }
 
         body {
-            background-color: var(--light-bg);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            background-color: #f8fafc;
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            padding: 15px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #ebcb47, #6a7504);
+        .header-bar {
+            background: linear-gradient(135deg, #f57c00 0%, #ef6c00 100%);
             color: white;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 12px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(245, 124, 0, 0.15);
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-header:hover {
+            background: white !important;
+            color: #f57c00 !important;
+            transform: translateY(-2px);
+            border-color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-badge {
+            background: white;
+            color: #f57c00;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: rgba(255, 255, 255, 0.2);
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
         }
 
         /* Note Card */
@@ -164,13 +220,26 @@
     <div class="toast-container position-fixed top-0 start-0 p-3"></div>
 
     <div class="container pb-5">
-        <div class="header">
-            <div class="d-flex align-items-center">
-                <h3 class="m-0 fw-bold"><i class="bi bi-journal-text me-2"></i>تێبینییەکان</h3>
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-journal-text fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">تێبینییەکان</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">NOTES & FEEDBACK</div>
+                </div>
             </div>
-            <button class="btn btn-outline-light" onclick="window.location.href='dashboard.html'">
-                <i class="bi bi-arrow-right"></i> گەڕانەوە
-            </button>
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-badge" id="userInfo">
+                    <i class="bi bi-person-circle fs-5"></i>
+                    <span>User</span>
+                </div>
+                <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
+                </button>
+            </div>
         </div>
 
         <div class="row mb-4">
@@ -249,8 +318,8 @@
         // --- 2. AUTH & INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             const stored = JSON.parse(localStorage.getItem('currentUser'));
-            if (!stored) window.location.href = 'index.html';
             currentUser = stored;
+            document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
             loadNotes();
         });
