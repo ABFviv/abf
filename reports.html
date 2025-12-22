@@ -806,40 +806,31 @@
                             <i class="bi bi-file-earmark-plus-fill me-2"></i> Generate Report
                         </button>
                     </div>
-                    <div class="col-md-2 unsetting-ctrl">
-                        <button class="btn btn-outline-info w-100 h-100 py-3" onclick="triggerSmartScan()"
-                            id="smartScanBtn">
-                            <i class="bi bi-camera-fill me-2"></i> Smart Scan
-                        </button>
-                        <input type="file" id="imageInput" accept="image/*" style="display:none;"
-                            onchange="handleImageUpload(event)">
-                    </div>
-                    <div class="col-md-1 unsetting-ctrl">
-                        <button class="btn btn-outline-secondary w-100 h-100" onclick="showScanSettings()">
-                            <i class="bi bi-gear-fill"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="report-paper" id="reportContainer" style="display:none;">
-                <div class="print-only-header">
-                    <h4 class="fw-bold m-0">ASO BRICK FACTORY</h4>
-                    <h5 class="m-0" id="printHeaderDept">Daily Report</h5>
-                    <small class="text-muted" id="printHeaderDate"></small>
+                    <input type="file" id="imageInput" accept="image/*" style="display:none;"
+                        onchange="handleImageUpload(event)">
                 </div>
 
-                <div id="tableWrapper"></div>
-
-                <div class="no-print text-center mt-4 pt-3 border-top" id="actionButtonsContainer">
-                    <!-- Dynamic Buttons will be rendered here -->
-                    <button class="btn btn-primary px-4" onclick="saveReport('draft')"><i class="bi bi-save me-1"></i>
-                        Save Draft</button>
-                    <button class="btn btn-secondary px-4 ms-2" onclick="window.print()"><i
-                            class="bi bi-printer me-1"></i> Print A4</button>
-                </div>
             </div>
         </div>
+
+        <div class="report-paper" id="reportContainer" style="display:none;">
+            <div class="print-only-header">
+                <h4 class="fw-bold m-0">ASO BRICK FACTORY</h4>
+                <h5 class="m-0" id="printHeaderDept">Daily Report</h5>
+                <small class="text-muted" id="printHeaderDate"></small>
+            </div>
+
+            <div id="tableWrapper"></div>
+
+            <div class="no-print text-center mt-4 pt-3 border-top" id="actionButtonsContainer">
+                <!-- Dynamic Buttons will be rendered here -->
+                <button class="btn btn-primary px-4" onclick="saveReport('draft')"><i class="bi bi-save me-1"></i>
+                    Save Draft</button>
+                <button class="btn btn-secondary px-4 ms-2" onclick="window.print()"><i class="bi bi-printer me-1"></i>
+                    Print A4</button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <div id="historySection" class="view-section">
@@ -881,39 +872,7 @@
         </div>
     </div>
 
-    <!-- AI Scan Settings Modal -->
-    <div class="modal fade" id="scanSettingsModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">AI Scan Settings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="small text-muted mb-3">To use the Smart Scan feature, you need a Gemini API Key. You can
-                        get one from the <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI
-                            Studio</a>.</p>
-                    <div class="mb-3">
-                        <label class="form-label">Gemini API Key</label>
-                        <input type="password" id="geminiApiKey" class="form-control"
-                            placeholder="Enter your API Key here...">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="saveScanSettings()">Save Key</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Scanning Overlay -->
-    <div id="scanOverlay"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; flex-direction:column; align-items:center; justify-content:center; color:white;">
-        <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-        <h4 id="scanStatus">Scanning Report...</h4>
-        <p class="text-light opacity-75">This might take a few seconds</p>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -2472,159 +2431,6 @@
             }
         }
 
-        // --- SMART SCAN LOGIC ---
-        function triggerSmartScan() {
-            const apiKey = localStorage.getItem('gemini_api_key');
-            if (!apiKey) {
-                showScanSettings();
-                showToast('Please enter your Gemini API Key first', 'warning');
-                return;
-            }
-            document.getElementById('imageInput').click();
-        }
-
-        function showScanSettings() {
-            const apiKey = localStorage.getItem('gemini_api_key');
-            if (apiKey) document.getElementById('geminiApiKey').value = apiKey;
-            new bootstrap.Modal(document.getElementById('scanSettingsModal')).show();
-        }
-
-        function saveScanSettings() {
-            const key = document.getElementById('geminiApiKey').value.trim();
-            if (key) {
-                localStorage.setItem('gemini_api_key', key);
-                bootstrap.Modal.getInstance(document.getElementById('scanSettingsModal')).hide();
-                showToast('API Key saved successfully', 'success');
-            }
-        }
-
-        async function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64Image = e.target.result.split(',')[1];
-                await processImageWithAI(base64Image);
-            };
-            reader.readAsDataURL(file);
-            event.target.value = ''; // Reset for next time
-        }
-
-        async function processImageWithAI(base64Image) {
-            const apiKey = localStorage.getItem('gemini_api_key');
-            const dept = document.getElementById('departmentSelect').value;
-
-            if (!dept) {
-                showToast('Please select a department first', 'warning');
-                return;
-            }
-
-            document.getElementById('scanOverlay').style.display = 'flex';
-            document.getElementById('scanStatus').innerText = 'Analyzing Image...';
-
-            try {
-                // Determine Department Prompt
-                let deptInstructions = "";
-                if (dept === 'cutting') {
-                    deptInstructions = `
-                        This is a "Cutting" department report. 
-                        It contains lists of times and cart numbers for 3 shifts (Shift 1, Shift 2, Shift 3).
-                        Extract the data into JSON format:
-                        {
-                            "cut_s1_c[N]_time": "HH:MM",
-                            "cut_s1_c[N]_no": "number",
-                            "cut_s2_c[N]_time": "HH:MM",
-                            "cut_s2_c[N]_no": "number",
-                            "cut_s3_c[N]_time": "HH:MM",
-                            "cut_s3_c[N]_no": "number",
-                            "cut_s1_silo": "number",
-                            "cut_s1_total_brick": "number",
-                            "cut_s1_w1": "number",
-                            "cut_s1_scrap": "number",
-                            "cut_s2_silo": "number",
-                            "cut_s2_total_brick": "number",
-                            "cut_s2_w1": "number",
-                            "cut_s2_scrap": "number",
-                            "cut_s3_silo": "number",
-                            "cut_s3_total_brick": "number",
-                            "cut_s3_w1": "number",
-                            "cut_s3_scrap": "number"
-                        }
-                        Where [N] is the row number (1-72). Only include fields that have data.
-                    `;
-                } else if (dept === 'setting') {
-                    deptInstructions = `
-                        This is a "Setting" department report.
-                        Extract kilncar numbers (set_r[N]_kilncar) and dryer carts (set_r[N]_d1 to d6).
-                        Format: 
-                        {
-                            "set_r[N]_kilncar": "number",
-                            "set_r[N]_d1": "number",
-                            ...
-                        }
-                    `;
-                } else {
-                    deptInstructions = `Extract table data for department: ${dept}`;
-                }
-
-                const prompt = `
-                    You are an OCR expert for a brick factory report system. 
-                    I will provide an image of a handwritten report.
-                    Please extract ALL numerical and time data clearly.
-                    ${deptInstructions}
-                    Return ONLY raw JSON, no markdown formatting, no explanation.
-                `;
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: prompt },
-                                { inline_data: { mime_type: "image/jpeg", data: base64Image } }
-                            ]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorDetails = await response.json();
-                    throw new Error(errorDetails.error?.message || `API Error: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                const rawText = result.candidates[0].content.parts[0].text;
-                const jsonData = JSON.parse(rawText.replace(/```json|```/g, '').trim());
-
-                document.getElementById('scanStatus').innerText = 'Updating Form...';
-
-                // 1. First start the report structure
-                startNewReport();
-
-                // 2. Map data
-                setTimeout(() => {
-                    for (const [key, val] of Object.entries(jsonData)) {
-                        const el = document.getElementById(key);
-                        if (el) {
-                            if (el.type === 'checkbox') el.checked = (val === true || val === 'true' || val === '✓');
-                            else el.value = val;
-
-                            if (el.onchange) el.onchange();
-                        }
-                    }
-                    showToast('Scan completed successfully!', 'success');
-                }, 500);
-
-            } catch (err) {
-                console.error(err);
-                showToast('Scan failed: ' + err.message, 'danger');
-            } finally {
-                document.getElementById('scanOverlay').style.display = 'none';
-            }
-        }
 
         function startNewReport() {
             currentReportId = null;
