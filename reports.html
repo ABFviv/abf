@@ -998,7 +998,7 @@
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
             // Access Control: Only admin and HR can access reports
-            const allowedRoles = ['admin', 'hr'];
+            const allowedRoles = ['admin', 'hr', 'supervisor'];
             if (!allowedRoles.includes(currentUser.role)) {
                 document.querySelector('.container-fluid').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center;">
