@@ -1051,7 +1051,8 @@
                 return; // Stop further execution for unauthorized users
             }
 
-            document.getElementById('reportDate').valueAsDate = new Date();
+            // Date must be selected manually now
+            // document.getElementById('reportDate').valueAsDate = new Date();
 
             // Show dashboard on initial load
             showDashboard();
@@ -1153,8 +1154,8 @@
                     btns += `<button class="${btnClass} btn-outline-danger" onclick="saveReport('draft', true)"><i class="bi bi-x-circle"></i> Reject / Return</button>`;
                     btns += `<button class="${btnClass} btn-success" onclick="saveReport('approved')"><i class="bi bi-check-circle"></i> Approve</button>`;
                 } else if (status === 'approved') {
-                    // Admins can maybe unapprove? Or just Print.
                     btns += `<span class="badge bg-success p-2">Approved</span>`;
+                    btns += `<button class="${btnClass} btn-primary" onclick="saveReport('approved')"><i class="bi bi-pencil-square"></i> Update</button>`;
                 } else {
                     // Admin viewing a draft? Just observing.
                     btns += `<span class="badge bg-warning text-dark p-2">Draft Mode</span>`;
@@ -1197,24 +1198,72 @@
             inputs.forEach(el => el.disabled = disable);
         }
 
-        // Report Header Template with Logos
+        // Report Header Template with Logos (Refined: Big & Bold)
         const REPORT_HEADER_TEMPLATE = (deptName) => `
-        <div class="report-header-with-logos mb-3">
+        <div class="report-header-refined mb-3 pb-2 border-bottom" style="border-color: #000 !important; border-width: 2px !important;">
             <div class="d-flex align-items-center justify-content-between">
-                <div class="logo-left" style="width: 220px; display: flex; align-items: center; justify-content: center;">
-                    <img src="halabja-logo.png" alt="Halabja Group" style="max-width: 100%; height: auto; max-height: 190px;" onerror="this.src='logo.png'; this.style.maxHeight='190px';">
+                <!-- Left Logo: Medium-Large -->
+                <div class="logo-md">
+                    <img src="halabja-logo.png" style="height: 110px; width: auto;" onerror="this.src='logo.png'; this.style.height='110px';">
                 </div>
-                <div class="header-center text-center" style="flex: 1; padding: 0 20px;">
-                    <h4 class="m-0 fw-bold" style="font-size: 1.5rem; color: #2c3e50; margin-bottom: 5px;">ڕاپۆڕتی ڕۆژانە</h4>
-                    <div class="dept-name-badge mt-1" style="display: inline-block; background: #7b1fa2; color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.9rem; font-weight: 600;">
-                        ${deptName}
+
+                <!-- Center: Bold & Clear -->
+                <div class="text-center px-4">
+                     <div class="text-uppercase fw-bold" style="font-size: 0.85rem; letter-spacing: 3px; color: #000;">
+                        ASO BRICK FACTORY
                     </div>
+                    <h1 class="m-0 fw-black header-title-main" style="font-family: 'Segoe UI', sans-serif; font-size: 2.5rem; line-height: 1.1; font-weight: 900; color: #000;">
+                        ${deptName}
+                    </h1>
+                     <div class="fw-bold" style="font-size: 1.1rem; color: #000;">ڕاپۆڕتی ڕۆژانە</div>
                 </div>
-                <div class="logo-right" style="width: 220px; display: flex; align-items: center; justify-content: center;">
-                    <img src="aso-brick-logo.png" alt="ASO BRICK" style="max-width: 100%; height: auto; max-height: 190px;" onerror="this.src='logo.png'; this.style.maxHeight='190px';">
+
+                <!-- Right Logo: Medium-Large -->
+                <div class="logo-md">
+                    <img src="aso-brick-logo.png" style="height: 110px; width: auto;" onerror="this.src='logo.png'; this.style.height='110px';">
                 </div>
             </div>
         </div>
+        <style>
+            @media print {
+                img {
+                    height: 90px !important; /* Good size for print */
+                }
+                .header-title-main {
+                    font-size: 2.2rem !important;
+                }
+                .report-header-refined {
+                    border-bottom: 2px solid #000 !important;
+                    margin-bottom: 15px !important;
+                }
+                
+                /* --- GLOBAL PRINT IMPROVEMENTS --- */
+                body {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                /* Make all data VERY visible */
+                input, select, textarea, .form-control {
+                    font-weight: 800 !important;
+                    color: #000 !important;
+                    text-shadow: none !important;
+                     border: 1px solid #777 !important; /* Ensure box visibility */
+                }
+                /* Make table text sharper */
+                .report-table th, .report-table td {
+                    border: 1px solid #000 !important;
+                    color: #000 !important;
+                }
+                .report-table th {
+                     font-weight: 900 !important;
+                     background-color: #eee !important; /* Light gray definition */
+                }
+                /* Specific inputs that need extra pop */
+                input[type="number"], input[type="time"], input[type="text"] {
+                    font-size: 1.1em !important; /* Slightly larger data */
+                }
+            }
+        </style>
         `;
 
         const SIGNATURE_TEMPLATE = `
@@ -2781,6 +2830,13 @@
 
 
         function startNewReport() {
+            const dateInput = document.getElementById('reportDate');
+            if (!dateInput.value) {
+                alert("Please select a date first / تکایە سەرەتا بەروار دیاری بکە");
+                dateInput.focus();
+                return;
+            }
+
             currentReportId = null;
             currentReportData = null; // Clear data
             generateReport();
