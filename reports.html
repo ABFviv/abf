@@ -642,7 +642,7 @@
                 margin-bottom: 10px;
                 padding-bottom: 8px;
             }
-            
+
             .report-header-with-logos img {
                 max-height: 70px !important;
             }
@@ -792,7 +792,7 @@
             }
 
             /* Setting report layout - flexbox for bottom alignment */
-            #tableWrapper > div[style*="flex-direction: column"] {
+            #tableWrapper>div[style*="flex-direction: column"] {
                 min-height: calc(100vh - 200px);
             }
         }
@@ -935,8 +935,8 @@
             <!-- SEARCH -->
             <div class="history-search-container">
                 <i class="bi bi-search search-icon"></i>
-                <input type="text" id="historySearch" class="form-control"
-                    placeholder="گەڕان بەپێی بەش، بەروار..." onkeyup="filterHistoryItems(this.value)">
+                <input type="text" id="historySearch" class="form-control" placeholder="گەڕان بەپێی بەش، بەروار..."
+                    onkeyup="filterHistoryItems(this.value)">
             </div>
 
             <!-- CONTENT AREA -->
@@ -2050,7 +2050,7 @@
                 <tr class="${rowClass} compact-rows">
                     <td>${i}</td>
                     <td><input type="number" id="${rid}_kilncar" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
-                    <td><input type="time" id="${timeId}" value="${timeLabel}"></td>
+                    <td><input type="text" id="${timeId}" value="${timeLabel}" style="text-align:center;"></td>
                     <td><input type="number" id="${rid}_d1"></td>
                     <td><input type="number" id="${rid}_d2"></td>
                     <td><input type="number" id="${rid}_d3"></td>
@@ -2268,7 +2268,7 @@
                 if (preserveState && savedData[timeId]) {
                     timeLabel = savedData[timeId];
                 }
-                
+
                 const rid = `k_r${i}`;
                 rowsHtml += `
                     <tr class="compact-rows">
