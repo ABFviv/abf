@@ -1097,7 +1097,8 @@
             currentUser = stored;
 
             // RESTRICTED USERS
-            if (currentUser.username === 'shalaw' || currentUser.username === 'sarezh') {
+            const username = currentUser.username.toLowerCase();
+            if (username === 'shalaw' || username === 'sarezh') {
                 alert('Access Denied');
                 window.location.href = 'dashboard.html';
                 return;
@@ -1107,12 +1108,21 @@
 
             // HR & Manager Restriction: History View Only
             if (currentUser.role === 'hr' || currentUser.role === 'manager') {
-                // Hide report generation controls
-                document.getElementById('reportSection').style.display = 'none';
-                document.querySelector('.control-panel').style.display = 'none'; // Hide top controls
-                document.getElementById('choiceSection').style.display = 'none'; // Hide big buttons if logical
-                // Force load history
-                showHistory();
+                // LOCK "Create New Report" button visually
+                const createBtn = document.querySelector('button[onclick="showReportView()"]');
+                if (createBtn) {
+                    createBtn.disabled = true;
+                    createBtn.style.opacity = '0.5';
+                    createBtn.style.cursor = 'not-allowed';
+                    createBtn.innerHTML = '<i class="bi bi-lock-fill me-2"></i> دروستکردنی ڕاپۆرتی نوێ (قوفڵدراوە)';
+                    createBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); alert('تەنها بۆ بینینە - View Only'); };
+                }
+
+                // Hide controls inside the generation view just in case they get there
+                const cp = document.querySelector('.control-panel');
+                if (cp) cp.style.display = 'none';
+
+                // We do NOT hide choiceSection now, so they can see the locked button.
             } else {
                 if (document.getElementById('reportDate')) document.getElementById('reportDate').valueAsDate = new Date();
             }
@@ -1683,6 +1693,8 @@
                 if (data.department === 'unsetting') {
                     // We run it with 'true' to preserve the data we just filled
                     generateReport(true);
+                    // Re-apply signatures because generateReport wiped them out
+                    updatePrintFooter(data);
                 }
             }, 300);
         }
@@ -2919,10 +2931,23 @@
                     showToast('Report Saved Successfully', 'success');
                 }
 
-                // Update Local State
+                // Update local state immediately so UI reflects changes
                 currentReportData = { ...currentReportData, ...payload };
+                updatePrintFooter(currentReportData);
                 renderActionButtons(finalStatus);
                 updateInputsState(finalStatus);
+
+                // If it was an approval action, specifically ensure the approvedBy name shows
+                if (finalStatus === 'approved') {
+                    document.querySelectorAll('.print-approved-by').forEach(el => el.innerText = getUserFullName(currentUser.username));
+                }
+
+                // Refresh history if open
+                if (document.getElementById('historySection').classList.contains('active-view')) {
+                    loadHistoryData();
+                }
+
+
                 updatePrintFooter(currentReportData);
 
             } catch (e) {
@@ -2961,8 +2986,8 @@
         function showToast(msg, type) {
             const container = document.querySelector('.toast-container');
             const el = document.createElement('div');
-            el.className = `toast show align - items - center text - white bg - ${type} border - 0 shadow`;
-            el.innerHTML = `< div class="d-flex" ><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div >`;
+            el.className = `toast show align-items-center text-white bg-${type} border-0 shadow`;
+            el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
             container.appendChild(el);
             setTimeout(() => el.remove(), 3000);
         }
