@@ -114,7 +114,8 @@
             }
 
             img {
-                height: 60px !important;
+                height: auto !important;
+                max-height: 110px !important;
             }
 
             .logo-md {
@@ -129,8 +130,8 @@
             }
 
             .cart-list-table td {
-                height: 14px !important;
-                /* Very tight for 36 rows */
+                height: 13px !important;
+                /* Even tighter for 36 rows to fit with big header */
                 font-size: 0.55rem !important;
                 padding: 0 !important;
             }
@@ -758,15 +759,29 @@
                 padding-bottom: 5px;
             }
 
-            /* Force Page Break After Each Shift Container */
+            /* FORCE BOTTOM SIGNATURE LOGIC */
+            .print-full-height {
+                min-height: 100vh;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+            }
+
+            .signature-section {
+                margin-top: auto !important;
+                width: 100%;
+            }
+
+            /* FORCE PAGE BREAK AFTER EACH SHIFT (For Cutting) */
             .page-break-container {
                 page-break-after: always;
                 border: none;
-                /* Remove visual separator in print */
                 margin: 0;
                 padding: 0;
-                height: 100vh;
-                /* occupy full page */
+                height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
             }
 
             .page-break-container:last-child {
@@ -1017,11 +1032,11 @@
         // Edit these lists to change who appears in the dropdowns for each department
         const REPORT_CONFIG = {
             unsetting: ["بەرزان", "هاوبەش", "ئاسۆ عوسمان", "هۆشیار", "کۆسرەت", "محمد موستەفا", "ئاسۆ احمد", "هەوراز", "محمد ئیبراهیم ",],
-            setting: ["ئارا", "مەولود", "اسماعیل", "محمد ستار","ئەژوان", "سامی", "بادینان", "هاڕوون", "ئامانج", "محمد نعمان", "پەیڕەو ", "هۆشیمان", "نەهروان",],
+            setting: ["ئارا", "مەولود", "اسماعیل", "محمد ستار", "ئەژوان", "سامی", "بادینان", "هاڕوون", "ئامانج", "محمد نعمان", "پەیڕەو ", "هۆشیمان", "نەهروان",],
             crushing: ["نادر", "هەرێم", "ئوسامە"],
             preparation: ["شەماڵ", "کاروان"],
-            klin: ["زانا", "جەبار", "دیارکۆ", "شکار", "هاوڕی", "دروست", "لوقمان", "دێرین", "محمد","ئومێد", "سیروان"],
-            cutting: ["ئەژوان", "سامی", "بادینان", "هاڕوون", "ئامانج", "محمد نعمان", "پەیڕەو ", "هۆشیمان", "نەهروان","ئارا", "مەولود", "اسماعیل", "محمد ستار",]
+            klin: ["زانا", "جەبار", "دیارکۆ", "شکار", "هاوڕی", "دروست", "لوقمان", "دێرین", "محمد", "ئومێد", "سیروان"],
+            cutting: ["ئەژوان", "سامی", "بادینان", "هاڕوون", "ئامانج", "محمد نعمان", "پەیڕەو ", "هۆشیمان", "نەهروان", "ئارا", "مەولود", "اسماعیل", "محمد ستار",]
         };
 
         // --- ROLE BASED ACCESS CONTROL ---
@@ -1080,9 +1095,29 @@
             const stored = JSON.parse(localStorage.getItem('currentUser'));
             if (!stored) window.location.href = 'index.html';
             currentUser = stored;
+
+            // RESTRICTED USERS
+            if (currentUser.username === 'shalaw' || currentUser.username === 'sarezh') {
+                alert('Access Denied');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
-            // Access Control: Only admin and HR can access reports
+            // HR & Manager Restriction: History View Only
+            if (currentUser.role === 'hr' || currentUser.role === 'manager') {
+                // Hide report generation controls
+                document.getElementById('reportSection').style.display = 'none';
+                document.querySelector('.control-panel').style.display = 'none'; // Hide top controls
+                document.getElementById('choiceSection').style.display = 'none'; // Hide big buttons if logical
+                // Force load history
+                showHistory();
+            } else {
+                if (document.getElementById('reportDate')) document.getElementById('reportDate').valueAsDate = new Date();
+            }
+
+            // Access Control: Only admin and HR (and supervisors) can access reports
             const allowedRoles = ['admin', 'hr', 'supervisor'];
             if (!allowedRoles.includes(currentUser.role)) {
                 document.querySelector('.container-fluid').innerHTML = `
@@ -1247,7 +1282,7 @@
         }
 
         // Report Header Template with Logos (Refined: Big & Bold)
-        const REPORT_HEADER_TEMPLATE = (deptName) => `
+        const REPORT_HEADER_TEMPLATE = (deptName, dateValue) => `
         <div class="report-header-refined mb-3 pb-2 border-bottom" style="border-color: #000 !important; border-width: 2px !important;">
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Left Logo: Medium-Large -->
@@ -1264,6 +1299,7 @@
                         ${deptName}
                     </h1>
                      <div class="fw-bold" style="font-size: 1.1rem; color: #000;">ڕاپۆڕتی ڕۆژانە</div>
+                     ${dateValue ? `<div class="fw-bold mt-1" style="font-size: 1rem; color: #000;">بەروار: ${dateValue}</div>` : ''}
                 </div>
 
                 <!-- Right Logo: Medium-Large -->
@@ -1276,10 +1312,16 @@
             @media print {
                 /* Inherits global print settings, overrides here are redundant but safe */
                 .header-title-main {
-                    font-size: 1.8rem !important;
+                    font-size: 2.2rem !important; /* Bigger title */
                 }
                 .report-header-refined {
-                    border-bottom: 1px solid #000 !important; /* Thinner border for print */
+                    border-bottom: 2px solid #000 !important;
+                    margin-bottom: 10px !important;
+                }
+                .report-header-refined img {
+                    max-height: 110px !important; /* FORCE BIG LOGO */
+                    height: 110px !important;
+                    width: auto !important;
                 }
                 
                 /* --- GLOBAL PRINT IMPROVEMENTS --- */
@@ -1308,7 +1350,7 @@
         `;
 
         const SIGNATURE_TEMPLATE = `
-        <div class="mt-2 pt-1 border-top border-secondary signature-block">
+        <div class="mt-2 pt-1 border-top border-secondary signature-section">
             <div class="d-flex justify-content-between px-4">
                 <div class="text-center">
                     <p class="mb-0 fw-bold text-secondary" style="letter-spacing:0.5px; font-size:0.6rem;">نێرنرداروە لەلایەن سەرپەرشتیاری بەش</p>
@@ -1367,8 +1409,8 @@
 
                 // RBAC Filtering for History
                 if (currentUser) {
-                    if (currentUser.role === 'manager') {
-                        // Managers only see approved reports
+                    if (currentUser.role === 'manager' || currentUser.role === 'hr') {
+                        // Managers & HR only see approved reports
                         allHistoryReports = allHistoryReports.filter(r => r.status === 'approved');
                     } else if (currentUser.role !== 'admin' && currentUser.username !== 'admin' && USER_PERMISSIONS[currentUser.username]) {
                         // Supervisors/others filtered by department
@@ -1751,7 +1793,7 @@
             let empOptions = `<option value="">Select...</option>`;
             cuttingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
-            let html = REPORT_HEADER_TEMPLATE('بەشی بڕین');
+            let html = REPORT_HEADER_TEMPLATE('بەشی بڕین', dateValue);
 
             shifts.forEach((shift) => {
                 const totalCarts = shiftRows[shift.id];
@@ -1907,7 +1949,7 @@
                                                         <option value="20x40" selected>20x40</option>
                                                         <option value="15x40">15x40</option>
                                                         <option value="10x40">10x40</option>
-                                                        <option value="Blok">Blok</option>
+                                                        <option value="24x40">24x40</option>
                                                     </select>
                                                 </td>
                                             </tr>
@@ -1920,10 +1962,7 @@
                                             <tr class="table-light border-top border-dark">
                                                 <td class="fw-bold small text-end" style="font-size: 0.6rem !important;">کۆی عەرەبانە:</td>
                                                 <td><input type="number" id="cut_${shift.id}_total_filled" readonly class="fw-bold bg-white" style="color:blue;"></td>
-                                                <td rowspan="2" class="align-middle p-0 position-relative">
-                                                     <div class="small fw-bold text-center bg-secondary text-white py-1">کۆی گشتی</div>
-                                                     <input type="number" id="cut_${shift.id}_grand_total" class="fw-bold text-center border-0 bg-transparent w-100 h-100 position-absolute top-0 start-0 pt-4" style="font-size: 1.1rem; color: #198754;" readonly>
-                                                </td>
+                                                <td><!-- Grand Total Removed --></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -2176,8 +2215,8 @@
             }
 
             const html = `
-             <div style="display: flex; flex-direction: column; min-height: 100%;">
-                ${REPORT_HEADER_TEMPLATE('بەشی بارکردن')}
+             <div class="print-full-height" style="display: flex; flex-direction: column; min-height: 100%;">
+                ${REPORT_HEADER_TEMPLATE('بەشی بارکردن', dateValue)}
                 
                 <!-- Main content row -->
                 <div class="row g-0" style="flex: 1;">
@@ -2273,22 +2312,22 @@
                  </div>
                  
                  <!-- Notes and Signature Section - Fixed to Bottom -->
-                 <div style="margin-top: auto; padding-top: 15px;">
+                 <div style="margin-top: auto; padding-top: 5px;">
                     <!-- Notes Section -->
-                    <div class="border border-dark p-2 bg-light mb-2">
-                        <h6 class="fw-bold mb-2 text-center">تێبینیەکان</h6>
+                    <div class="border border-dark p-2 bg-light mb-1">
+                        <h6 class="fw-bold mb-1 text-center" style="font-size:0.8rem;">تێبینیەکان</h6>
                         <div class="row">
                             <div class="col-4">
-                                <small class="fw-bold d-block mb-1">شیفتی یەکەم:</small>
-                                <textarea id="set_s1_note" rows="4" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <small class="fw-bold d-block mb-0">شیفتی یەکەم:</small>
+                                <textarea id="set_s1_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                             <div class="col-4">
-                                <small class="fw-bold d-block mb-1">شیفتی دووەم:</small>
-                                <textarea id="set_s2_note" rows="4" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <small class="fw-bold d-block mb-0">شیفتی دووەم:</small>
+                                <textarea id="set_s2_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                             <div class="col-4">
-                                <small class="fw-bold d-block mb-1">شیفتی سێیەم:</small>
-                                <textarea id="set_s3_note" rows="4" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <small class="fw-bold d-block mb-0">شیفتی سێیەم:</small>
+                                <textarea id="set_s3_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -2363,8 +2402,8 @@
             else if (rowsInput) totalRows = parseInt(rowsInput.value) || 20;
 
             const brickTypes = [
-                { val: "", label: "" }, { val: "Blok 20", label: "Blok 20" }, { val: "Blok 15", label: "Blok 15" },
-                { val: "Blok 10", label: "Blok 10" }, { val: "Hori", label: "Hori" }, { val: "Perkh", label: "Perkh" }, { val: "Jomhur", label: "Jomhur" }
+                { val: "", label: "" }, { val: "20x40", label: "20x40" }, { val: "15x40", label: "15x40" },
+                { val: "24x40", label: "24x40" }, { val: "10x40", label: "10x40" }
             ];
             let brickOptions = "";
             brickTypes.forEach(t => brickOptions += `<option value="${t.val}">${t.label}</option>`);
@@ -2397,10 +2436,11 @@
             }
 
             const html = `
-                ${REPORT_HEADER_TEMPLATE('بەشی فڕن')}
+                <div class="print-full-height"> <!-- Full Height Wrapper -->
+                ${REPORT_HEADER_TEMPLATE('بەشی فڕن', dateValue)}
                 <div class="d-flex justify-content-between mb-2 p-2 border border-2 border-dark rounded bg-light">
-                    <div class="fw-bold small">بەروار: ${dateValue}</div>
-                    <div class="d-flex align-items-center gap-1">
+                    <!-- Date removed from here -->
+                    <div class="d-flex align-items-center gap-1 d-print-none">
                         <span class="fw-bold small">ژمارەی عەرەبانە:</span>
                         <input type="number" id="k_rows_setting" value="${totalRows}" style="width:50px; border:1px solid #999; text-align:center; border-radius:4px;" onchange="generateReport(true)">
                     </div>
@@ -2443,6 +2483,8 @@
                 
                 <!-- Modern Signature -->
                 ${SIGNATURE_TEMPLATE}
+                
+                </div> <!-- End print-full-height -->
             `;
             wrapper.innerHTML = html;
 
@@ -2485,7 +2527,8 @@
 
             // CHANGED: Stacking shifts vertically (col-12) for better printing
             const html = `
-                ${REPORT_HEADER_TEMPLATE('بەشی ئامادەکردنی خۆڵ')}
+                <div class="print-full-height">
+                ${REPORT_HEADER_TEMPLATE('بەشی ئامادەکردنی خۆڵ', dateValue)}
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="shift-box bg-s1">
@@ -2533,6 +2576,7 @@
                 
                 <!-- Modern Signature -->
                 ${SIGNATURE_TEMPLATE}
+                </div> <!-- End print-full-height -->
             `;
             wrapper.innerHTML = html;
         }
@@ -2619,15 +2663,14 @@
             }
 
             const html = `
-                ${REPORT_HEADER_TEMPLATE('بەشی داگرتن')}
-                <div class="d-flex justify-content-between mb-2 p-2 border border-2 border-dark rounded bg-light">
-                    <div class="fw-bold small">بەروار: ${dateValue}</div>
-                </div>
+                <div class="print-full-height">
+                ${REPORT_HEADER_TEMPLATE('بەشی داگرتن', dateValue)}
+                <!-- Date bar removed -->
                 <div class="row g-2">
                     <div class="col-6">
-                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
                         <div class="shift-box bg-white mt-2"><div class="shift-header bg-light">وردەکاری تەکنیکی</div><table class="report-table expanded-rows" style="border:none;"><tr><td>کێشی سەروەرە</td><td><input type="number" id="w_top"></td></tr><tr><td>کێشی ناوەڕاست</td><td><input type="number" id="w_mid"></td></tr><tr><td>کێشی خوارەوە</td><td><input type="number" id="w_bot"></td></tr><tr><td>ژ. کۆڵۆم</td><td><input type="number" id="tech_col"></td></tr><tr><td>سەر زنجیر</td><td><input type="number" id="tech_row"></td></tr></table></div>
                     </div>
                     <div class="col-6">
@@ -2637,6 +2680,7 @@
                 
                 <!-- Modern Signature -->
                 ${SIGNATURE_TEMPLATE}
+                </div>
                 `;
             wrapper.innerHTML = html;
 
@@ -2682,7 +2726,8 @@
 
             // CHANGED: Redesigned to use Shift Boxes (Cards) instead of one big table
             const html = `
-                ${REPORT_HEADER_TEMPLATE('بەشی هاڕین')}
+                <div class="print-full-height">
+                ${REPORT_HEADER_TEMPLATE('بەشی هاڕین', dateValue)}
 
                 <div class="row g-2 crushing-container">
                     <div class="col-12">
@@ -2782,12 +2827,13 @@
                 
                 <!-- Modern Signature -->
                 ${SIGNATURE_TEMPLATE}
-            `;
+                </div>
+             `;
             wrapper.innerHTML = html;
         }
         function calcCrush() {
             const toMins = (t) => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return (h || 0) * 60 + (m || 0); };
-            const toTime = (m) => { const h = Math.floor(m / 60); const mn = m % 60; return `${h}:${mn.toString().padStart(2, '0')}`; };
+            const toTime = (m) => { const h = Math.floor(m / 60); const mn = m % 60; return `${h}:${mn.toString().padStart(2, '0')} `; };
             const d1 = toMins(document.getElementById('c_s1_dur').value); const d2 = toMins(document.getElementById('c_s2_dur').value); const d3 = toMins(document.getElementById('c_s3_dur').value);
             document.getElementById('c_total_dur').value = toTime(d1 + d2 + d3);
             const t1 = parseFloat(document.getElementById('c_s1_ton').value) || 0; const t2 = parseFloat(document.getElementById('c_s2_ton').value) || 0; const t3 = parseFloat(document.getElementById('c_s3_ton').value) || 0;
@@ -2812,7 +2858,7 @@
 
             const date = document.getElementById('reportDate').value;
             const dept = document.getElementById('departmentSelect').value;
-            const reportId = `${dept}_${date}_${Date.now()}`;
+            const reportId = `${dept}_${date}_${Date.now()} `;
             const inputs = document.getElementById('tableWrapper').querySelectorAll('input, select, textarea');
             let tableData = {};
 
@@ -2915,8 +2961,8 @@
         function showToast(msg, type) {
             const container = document.querySelector('.toast-container');
             const el = document.createElement('div');
-            el.className = `toast show align-items-center text-white bg-${type} border-0 shadow`;
-            el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+            el.className = `toast show align - items - center text - white bg - ${type} border - 0 shadow`;
+            el.innerHTML = `< div class="d-flex" ><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div >`;
             container.appendChild(el);
             setTimeout(() => el.remove(), 3000);
         }
@@ -2989,7 +3035,3 @@
 </body>
 
 </html>
-
-
-
-
