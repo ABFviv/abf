@@ -457,8 +457,15 @@
                 const onclick = card.getAttribute('onclick');
                 if (onclick) {
                     const page = onclick.match(/window\.location\.href='(\w+)\.html'/)?.[1];
+                    let isAllowed = allowedPages.includes(page);
 
-                    if (page && !allowedPages.includes(page)) {
+                    // Specific USER restrictions (Shalaw & Sarezh blocked from reports)
+                    const username = currentUser.username.toLowerCase();
+                    if (page === 'reports' && (username === 'shalaw' || username === 'sarezh')) {
+                        isAllowed = false;
+                    }
+
+                    if (page && !isAllowed) {
                         // Disable the card
                         card.style.opacity = '0.5';
                         card.style.cursor = 'not-allowed';
