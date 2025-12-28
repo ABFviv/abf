@@ -893,8 +893,8 @@
                                 <textarea class="form-control" id="recRootCause" rows="2"></textarea>
                             </div>
                             <div class="col-md-6 problem-field" style="display:none;">
-                                <label class="form-label">ماوەی وەستان (کاتژمێر)</label>
-                                <input type="number" step="0.1" class="form-control" id="recDowntime">
+                                <label class="form-label">ماوەی وەستان (کاتژمێر : خولەک)</label>
+                                <input type="time" class="form-control" id="recDowntime">
                             </div>
                             <div class="col-md-6 problem-field" style="display:none;">
                                 <label class="form-label">چارەسەر</label>
@@ -1913,6 +1913,21 @@
             }
         }
 
+        // --- NEW HELPER FUNCTIONS FOR TIME CONVERSION ---
+        function timeToDecimal(timeStr) {
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours + (minutes / 60);
+        }
+
+        function decimalToTime(decimalVal) {
+            if (!decimalVal && decimalVal !== 0) return "00:00";
+            const hours = Math.floor(decimalVal);
+            const minutes = Math.round((decimalVal - hours) * 60);
+            // Ensures format is always HH:mm (e.g., 01:05)
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
         // --- BULK IMPORT FUNCTIONS ---
         function openBulkImportModal() {
             document.getElementById('bulkImportText').value = "";
@@ -2053,7 +2068,7 @@
                 data.cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
             } else {
                 data.problem = document.getElementById('recProblem').value;
-                data.downtime = document.getElementById('recDowntime').value;
+                data.downtime = timeToDecimal(document.getElementById('recDowntime').value);
                 data.solution = document.getElementById('recSolution').value;
             }
             if (id) await db.collection('machine_logs').doc(id).update(data);
@@ -2114,7 +2129,7 @@
                 // Frequency is now implied by the configuration of the part
             } else {
                 document.getElementById('recProblem').value = log.problem || '';
-                document.getElementById('recDowntime').value = log.downtime || 0;
+                document.getElementById('recDowntime').value = decimalToTime(log.downtime);
                 document.getElementById('recSolution').value = log.solution || '';
                 document.getElementById('recRootCause').value = log.rootCause || '';
             }
