@@ -944,7 +944,7 @@
 
                     <div class="col-md-2 unsetting-ctrl">
                         <label class="control-label"><i class="bi bi-clock me-1"></i> کاتی دەستپێک</label>
-                        <input type="time" class="form-control" id="startTime" value="08:00">
+                        <input type="text" class="form-control" id="startTime" value="08:00">
                     </div>
                     <div class="col-md-2 unsetting-ctrl">
                         <label class="control-label"><i class="bi bi-stopwatch me-1"></i> کاتژمێر (Hours/Shift)</label>
@@ -1401,13 +1401,22 @@
             document.getElementById('historyContent').innerHTML = '';
             document.getElementById('historyBreadcrumb').classList.add('d-none');
 
-            // Admin Controls
+            // Admin & HR/Manager Controls
             const adminControls = document.getElementById('adminHistoryControls');
-            if (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin')) {
-                adminControls.innerHTML = `<button class="btn btn-sm btn-danger fw-bold" onclick="deleteAllReports()"><i class="bi bi-trash3-fill me-1"></i> Delete All</button>`;
-            } else {
-                adminControls.innerHTML = '';
+            let controlsHtml = '';
+
+            if (currentUser && (['admin', 'hr', 'manager'].includes(currentUser.role) || currentUser.username === 'admin')) {
+                controlsHtml += `
+                    <button class="btn btn-sm btn-dark fw-bold me-2" onclick="promptBatchPrint()">
+                        <i class="bi bi-printer-fill me-1"></i> چاپکردنی گشتی (بەپێی بەروار)
+                    </button>
+                `;
             }
+
+            if (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin')) {
+                controlsHtml += `<button class="btn btn-sm btn-danger fw-bold" onclick="deleteAllReports()"><i class="bi bi-trash3-fill me-1"></i> Delete All</button>`;
+            }
+            adminControls.innerHTML = controlsHtml;
 
             try {
                 // Fetch all reports (limit 200)
@@ -1743,6 +1752,109 @@
                 showToast("Error deleting all reports", "danger");
             } finally {
                 document.getElementById('historyLoading').style.display = 'none';
+            }
+        }
+
+        // --- BATCH PRINTING BY DATE ---
+        async function promptBatchPrint() {
+            const date = prompt("بەرواری ڕاپۆرتەکان بنووسە (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+            if (!date) return;
+
+            showToast("کۆکردنەوەی ڕاپۆرتەکان...", "info");
+
+            try {
+                // Fetch all approved reports for this date
+                const snap = await db.collection('dailyReports')
+                    .where('date', '==', date)
+                    .where('status', '==', 'approved')
+                    .get();
+
+                if (snap.empty) {
+                    alert("هیچ ڕاپۆرتێکی پەسەندکراو بۆ ئەم بەروارە نەدۆزرایەوە.");
+                    return;
+                }
+
+                const reports = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Sort by department priority
+                const priority = ['cutting', 'setting', 'preparation', 'crushing-prep', 'klin', 'unsetting'];
+                reports.sort((a, b) => {
+                    let idxA = priority.indexOf(a.department);
+                    let idxB = priority.indexOf(b.department);
+                    if (idxA === -1) idxA = 99;
+                    if (idxB === -1) idxB = 99;
+                    return idxA - idxB;
+                });
+
+                // Save current state
+                const oldDept = document.getElementById('departmentSelect').value;
+                const oldDate = document.getElementById('reportDate').value;
+                const oldVisible = document.getElementById('reportContainer').style.display;
+
+                const wrapper = document.getElementById('tableWrapper');
+                let batchHtml = '';
+
+                for (const r of reports) {
+                    showToast(`ئامادەکردنی: ${r.department}`, "info");
+                    document.getElementById('departmentSelect').value = r.department;
+                    document.getElementById('reportDate').value = r.date;
+
+                    if (r.tableData) {
+                        if (r.department === 'klin' && r.tableData['k_rows_setting']) {
+                            const el = document.getElementById('k_rows_setting'); if (el) el.value = r.tableData['k_rows_setting'];
+                        }
+                        if (r.department === 'setting') {
+                            ['set_s1_count_input', 'set_s2_count_input', 'set_s3_count_input'].forEach(id => {
+                                const el = document.getElementById(id); if (el && r.tableData[id]) el.value = r.tableData[id];
+                            });
+                        }
+                        if (r.department === 'cutting') {
+                            ['cut_s1_rows', 'cut_s2_rows', 'cut_s3_rows'].forEach(id => {
+                                const el = document.getElementById(id); if (el && r.tableData[id]) el.value = r.tableData[id];
+                            });
+                        }
+                    }
+
+                    generateReport();
+                    fillReportData(r);
+                    updatePrintFooter(r);
+
+                    if (r.department === 'unsetting') {
+                        generateReport(true);
+                        fillReportData(r);
+                        updatePrintFooter(r);
+                    }
+
+                    // Capture values into HTML
+                    wrapper.querySelectorAll('input, textarea').forEach(el => {
+                        el.setAttribute('value', el.value);
+                    });
+                    wrapper.querySelectorAll('select').forEach(el => {
+                        Array.from(el.options).forEach(opt => {
+                            if (opt.selected) opt.setAttribute('selected', 'selected');
+                            else opt.removeAttribute('selected');
+                        });
+                    });
+
+                    batchHtml += `<div class="page-break-container mt-0 pt-0">${wrapper.innerHTML}</div>`;
+                }
+
+                const originalWrapperHtml = wrapper.innerHTML;
+                wrapper.innerHTML = batchHtml;
+                document.getElementById('reportContainer').style.display = 'block';
+
+                setTimeout(() => {
+                    window.print();
+                    wrapper.innerHTML = originalWrapperHtml;
+                    document.getElementById('departmentSelect').value = oldDept;
+                    document.getElementById('reportDate').value = oldDate;
+                    document.getElementById('reportContainer').style.display = oldVisible;
+                    if (currentReportData) fillReportData(currentReportData); else showDashboard();
+                    showToast("Batch printing complete", "success");
+                }, 1000);
+
+            } catch (e) {
+                console.error(e);
+                showToast("Error in batch print", "danger");
             }
         }
 
@@ -2684,7 +2796,7 @@
                 if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
                 const timeLabel = formatTime(currentMins);
                 const rid = `r${rowCount}`;
-                rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold" value="${timeLabel}" id="${rid}_start"></td><td><input type="time" id="${rid}_end"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
+                rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="text" class="fw-bold" value="${timeLabel}" id="${rid}_start" style="text-align:center;"></td><td><input type="text" id="${rid}_end" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
                 currentMins += interval; rowCount++;
             }
 
