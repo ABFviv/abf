@@ -2751,7 +2751,7 @@
                 if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
                 const timeLabel = formatTime(currentMins);
                 const rid = `r${rowCount}`;
-                rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="text" class="fw-bold" value="${timeLabel}" id="${rid}_start" style="text-align:center;"></td><td><input type="text" id="${rid}_end" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
+                rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold" value="${timeLabel}" id="${rid}_start" style="text-align:center;"></td><td><input type="time" id="${rid}_end" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
                 currentMins += interval; rowCount++;
             }
 
