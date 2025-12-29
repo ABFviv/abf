@@ -32,9 +32,17 @@
         }
 
         body {
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
             padding: 15px;
+        }
+
+        #notificationsPage {
+            background-color: #f8fafc;
+            min-height: 100vh;
+            border-radius: 16px;
+            padding: 20px;
+            margin: -20px;
         }
 
         /* --- Standards --- */
@@ -554,33 +562,6 @@
             font-weight: 600;
         }
 
-        .department-tabs {
-            margin-bottom: 15px;
-        }
-
-        .department-tab {
-            padding: 10px 20px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            cursor: pointer;
-            display: inline-block;
-            margin-left: 5px;
-            border-radius: 5px 5px 0 0;
-        }
-
-        .department-tab.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .department-notifications {
-            display: none;
-        }
-
-        .department-notifications.active {
-            display: block;
-        }
 
         /* New styles for period filter */
         .period-filter {
@@ -804,6 +785,213 @@
                 transform: translateX(-100%);
                 opacity: 0;
             }
+        }
+
+        /* --- Folder Grid (Premium Style) --- */
+        .notification-folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        .explorer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f1f5f9;
+            border-right: 5px solid var(--primary-color);
+        }
+
+        .explorer-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .folder-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .folder-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(0, 0, 0, 0.02) 100%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .folder-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: transparent;
+        }
+
+        .folder-item:hover::before {
+            opacity: 1;
+        }
+
+        .folder-item .folder-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            display: block;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 8px rgba(255, 165, 0, 0.3));
+            transition: transform 0.3s;
+        }
+
+        .folder-item:hover .folder-icon {
+            transform: scale(1.1);
+        }
+
+        /* Specific Department Colors */
+        .folder-item[data-dept="mechanical"] .folder-icon {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+        }
+
+        .folder-item[data-dept="electrical-ac"] .folder-icon {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(6, 182, 212, 0.3));
+        }
+
+        .folder-item[data-dept="crushing-prep"] .folder-icon {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.3));
+        }
+
+        .folder-item[data-dept="cutting-setting"] .folder-icon {
+            background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(244, 63, 94, 0.3));
+        }
+
+        .folder-item[data-dept="klin"] .folder-icon {
+            background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(249, 115, 22, 0.3));
+        }
+
+        .folder-item[data-dept="unsetting"] .folder-icon {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.3));
+        }
+
+        .folder-item .folder-name {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .folder-item .folder-meta {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+            background: #f1f5f9;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+
+        .folder-item .folder-badge-corner {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+            border: 2px solid white;
+            z-index: 10;
+        }
+
+        .notification-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .notification-breadcrumb span {
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .notification-breadcrumb span:hover {
+            color: #c62828;
+            transform: scale(1.05);
+        }
+
+        .notification-breadcrumb .active {
+            color: #1e293b;
+            font-weight: 800;
+            cursor: default;
+        }
+
+        .notification-id-badge {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            font-weight: 600;
+            margin-right: 8px;
         }
 
         /* Work hours input */
@@ -1036,44 +1224,6 @@
         }
 
         /* Minimal Notification Styles */
-        .department-tabs-container {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .department-tab {
-            padding: 8px 16px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            position: relative;
-            transition: all 0.2s ease;
-        }
-
-        .department-tab.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .notification-tab-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
 
         .notification-item-minimal {
             border: 1px solid #e9ecef;
@@ -1660,36 +1810,32 @@
 
     <!-- Notifications Page -->
     <div class="dashboard-container" id="notificationsPage" style="display: none;">
-        <div class="header">
-            <div class="header-brand">
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                </div>
                 <div>
-                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
-                            class="brand-gray-text">FACTORY</span></h4>
-                    <p class="header-subtitle">ئاگادارکردنەوەکان</p>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">ئاگادارکردنەوەکان</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">NOTIFICATIONS CENTER</div>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-light btn-sm" id="backToDashboardFromNotificationsBtn">
-                    <i class="bi bi-arrow-left"></i> گەڕانەوە بۆ پەڕەی سەرەکی
+
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-badge bg-white text-danger px-3 py-2 rounded-pill fw-bold shadow-sm">
+                    <i class="bi bi-cpu-fill me-1"></i>
+                    <span id="totalNotificationCount">0</span> نوێ
+                </div>
+
+                <button class="btn-header" id="backToDashboardFromNotificationsBtn">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
                 </button>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                ئاگادارکردنەوەکان
-                <span class="badge bg-primary ms-2" id="totalNotificationCount">0</span>
-            </div>
-            <div class="card-body">
-                <!-- Department tabs for supervisor -->
-                <div class="department-tabs" id="departmentTabs" style="display: none;">
-                    <!-- Department tabs will be inserted here -->
-                </div>
-
-                <div id="notificationsContainer">
-                    <!-- Notifications will be inserted here -->
-                </div>
-            </div>
+        <div id="notificationsContainer" class="px-2">
+            <!-- Navigation folder explorer will be inserted here -->
         </div>
     </div>
 
@@ -3302,6 +3448,7 @@
             document.getElementById('totalsDepartmentFilter').style.display = 'none';
 
             console.log('📱 Loading notifications page for user:', currentUser);
+            currentNotificationPath = []; // Always start at root
             loadNotifications();
         }
 
@@ -4330,6 +4477,7 @@
                 'line-one': 'هێڵی یەک',
                 'line-two-general': 'گشتی هێڵی دوو',
                 'dryer': 'درایەر'
+
             };
 
             return departmentNames[department] || department;
@@ -6136,285 +6284,83 @@
         }
 
         // Load notifications with department tabs - FIXED VERSION
+        let currentNotificationPath = []; // [deptId, monthName]
+        let allFilteredNotifications = []; // Buffer for current user's available notifications
+
         function loadNotifications() {
             const notificationsContainer = document.getElementById('notificationsContainer');
-            const departmentTabs = document.getElementById('departmentTabs');
-
             notificationsContainer.innerHTML = '';
-            departmentTabs.innerHTML = '';
 
             let notificationsToShow = [];
-            let currentDepartment = 'all';
 
             console.log('🔔 Loading notifications for user:', currentUser);
-            console.log('🔔 Total notifications in system:', notifications.length);
 
-            // Filter notifications based on user role
+            // Filter notifications based on user role and permissions
             if (currentUser.role === 'admin') {
-                // Admin sees all notifications
                 notificationsToShow = notifications;
-                console.log('🔔 Admin sees all notifications:', notificationsToShow.length);
             } else if (currentUser.role === 'supervisor') {
-                // Check if this supervisor should see electrical/mechanical notifications
                 const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
                 const departmentsThatMonitorMaintenance = ['cutting-setting', 'unsetting', 'crushing-prep', 'klin', 'dryer'];
 
                 const shouldSeeElectricalMechanical = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
                     departmentsThatMonitorMaintenance.includes(currentUser.department);
 
-
-
                 if (shouldSeeElectricalMechanical) {
-                    // These supervisors see notifications where electrical/mechanical employees worked in their department
                     notificationsToShow = notifications.filter(n => {
-                        // Notification must be for work done in supervisor's department
-                        if (n.targetDepartment !== currentUser.department) {
-                            return false;
-                        }
-
-                        // Check if any of the employees in the notification are from electrical-ac or mechanical
+                        if (n.targetDepartment !== currentUser.department) return false;
                         if (n.relatedEmployees && n.relatedEmployees.length > 0) {
                             return n.relatedEmployees.some(emp => {
                                 const employee = employees.find(e => e.id === emp.employeeId);
                                 return employee && (employee.department === 'electrical-ac' || employee.department === 'mechanical');
                             });
                         }
-
-                        // Also check createdBy if no relatedEmployees
                         if (n.createdBy) {
                             const creator = employees.find(e => e.id === n.createdBy || e.name === n.createdBy);
-                            if (creator) {
-                                return creator.department === 'electrical-ac' || creator.department === 'mechanical';
-                            }
-                            // Check if createdBy is a username from electrical/mechanical
+                            if (creator) return creator.department === 'electrical-ac' || creator.department === 'mechanical';
                             const creatorUser = users[n.createdBy];
-                            if (creatorUser && (creatorUser.department === 'electrical-ac' || creatorUser.department === 'mechanical')) {
-                                return true;
-                            }
+                            if (creatorUser && (creatorUser.department === 'electrical-ac' || creatorUser.department === 'mechanical')) return true;
                         }
-
                         return false;
                     });
-                    console.log('🔔 Supervisor sees electrical/mechanical notifications in their department:', notificationsToShow.length);
                 } else if (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') {
-                    // Electrical/Mechanical supervisors see notifications for both departments
                     notificationsToShow = notifications.filter(n =>
                         n.targetDepartment === 'electrical-ac' || n.targetDepartment === 'mechanical'
                     );
-                    console.log('🔔 Electrical/Mechanical supervisor sees both departments:', notificationsToShow.length);
                 } else {
-                    // Other supervisors see notifications for their department only
                     notificationsToShow = notifications.filter(n => n.targetDepartment === currentUser.department);
-                    console.log('🔔 Supervisor sees notifications for department', currentUser.department + ':', notificationsToShow.length);
                 }
-            } else if (currentUser.role === 'manager') {
-                // Manager sees no notifications
-                notificationsToShow = [];
-                console.log('🔔 Manager sees no notifications');
-            }
-
-            // Create department tabs based on user role
-            const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
-            const departmentsThatMonitorMaintenance = ['cutting-setting', 'unsetting', 'crushing-prep', 'klin', 'dryer']; // <-- ADD 'dryer' here as well
-
-            const shouldShowElectricalMechanicalTabs =
-                (currentUser.role === 'supervisor' &&
-                    (supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                        departmentsThatMonitorMaintenance.includes(currentUser.department))) ||
-                (currentUser.role === 'supervisor' && (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical'));
-
-            if (shouldShowElectricalMechanicalTabs) {
-                departmentTabs.style.display = 'flex';
-                departmentTabs.className = 'department-tabs-container';
-
-                // Show tabs for Electrical and Mechanical departments
-                const tabs = [
-                    { id: 'electrical-ac', name: 'کارەبا' },
-                    { id: 'mechanical', name: 'میکانیک' }
-                ];
-
-                tabs.forEach(tab => {
-                    const tabElement = document.createElement('div');
-                    tabElement.className = 'department-tab';
-                    tabElement.textContent = tab.name;
-                    tabElement.dataset.department = tab.id;
-
-                    // Count pending notifications for this department
-                    const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
-                    const isElectricalMechanicalSupervisor = currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical';
-                    const isOtherSupervisor = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                        ['cutting-setting', 'unsetting', 'crushing-prep', 'klin'].includes(currentUser.department);
-
-                    const pendingCount = notificationsToShow.filter(n => {
-                        if (n.status !== 'pending') return false;
-
-                        if (isElectricalMechanicalSupervisor) {
-                            // Electrical/Mechanical supervisors: count by targetDepartment
-                            return n.targetDepartment === tab.id;
-                        } else if (isOtherSupervisor) {
-                            // Other supervisors: count by employee department
-                            if (n.relatedEmployees && n.relatedEmployees.length > 0) {
-                                return n.relatedEmployees.some(emp => {
-                                    const employee = employees.find(e => e.id === emp.employeeId);
-                                    return employee && employee.department === tab.id;
-                                });
-                            }
-                            return false;
-                        } else {
-                            return n.targetDepartment === tab.id;
-                        }
-                    }).length;
-
-                    if (pendingCount > 0) {
-                        const badge = document.createElement('span');
-                        badge.className = 'notification-tab-badge';
-                        badge.textContent = pendingCount;
-                        tabElement.appendChild(badge);
-                    }
-
-                    tabElement.addEventListener('click', function () {
-                        // Remove active class from all tabs
-                        document.querySelectorAll('.department-tab').forEach(t => {
-                            t.classList.remove('active');
-                        });
-
-                        // Add active class to clicked tab
-                        this.classList.add('active');
-
-                        const tabDepartment = this.dataset.department;
-                        const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
-                        const isElectricalMechanicalSupervisor = currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical';
-                        const isOtherSupervisor = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                            ['cutting-setting', 'unsetting', 'crushing-prep', 'klin'].includes(currentUser.department);
-
-                        let filteredNotifications;
-
-                        if (isElectricalMechanicalSupervisor) {
-                            // Electrical/Mechanical supervisors: filter by targetDepartment
-                            filteredNotifications = notificationsToShow.filter(n => n.targetDepartment === tabDepartment);
-                        } else if (isOtherSupervisor) {
-                            // Other supervisors: filter by employee department
-                            filteredNotifications = notificationsToShow.filter(n => {
-                                if (n.relatedEmployees && n.relatedEmployees.length > 0) {
-                                    return n.relatedEmployees.some(emp => {
-                                        const employee = employees.find(e => e.id === emp.employeeId);
-                                        return employee && employee.department === tabDepartment;
-                                    });
-                                }
-                                return false;
-                            });
-                        } else {
-                            filteredNotifications = notificationsToShow.filter(n => n.targetDepartment === tabDepartment);
-                        }
-
-                        renderNotifications(filteredNotifications, tabDepartment);
-                    });
-
-                    departmentTabs.appendChild(tabElement);
-                });
-
-                // Set default active tab
-                if (departmentTabs.firstChild) {
-                    departmentTabs.firstChild.classList.add('active');
-                    currentDepartment = 'electrical-ac';
-
-                    const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
-                    const isElectricalMechanicalSupervisor = currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical';
-                    const isOtherSupervisor = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                        ['cutting-setting', 'unsetting', 'crushing-prep', 'klin'].includes(currentUser.department);
-
-
-                }
-
-            } else if (currentUser.role === 'admin') {
-                departmentTabs.style.display = 'flex';
-                departmentTabs.className = 'department-tabs-container';
-
-                // Admin sees all departments
-                const departments = [
-                    'crushing-prep', 'cutting-setting', 'klin', 'unsetting',
-                    'mechanical', 'electrical-ac', 'engineering', 'management'
-                ];
-
-                // All tab
-                const allTab = document.createElement('div');
-                allTab.className = 'department-tab active';
-                allTab.textContent = 'هەموو بەشەکان';
-                allTab.dataset.department = 'all';
-
-                const allPendingCount = notificationsToShow.filter(n => n.status === 'pending').length;
-                if (allPendingCount > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'notification-tab-badge';
-                    badge.textContent = allPendingCount;
-                    allTab.appendChild(badge);
-                }
-
-                allTab.addEventListener('click', function () {
-                    document.querySelectorAll('.department-tab').forEach(t => {
-                        t.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    renderNotifications(notificationsToShow, 'all');
-                });
-
-                departmentTabs.appendChild(allTab);
-
-                // Department tabs
-                departments.forEach(dept => {
-                    const tabElement = document.createElement('div');
-                    tabElement.className = 'department-tab';
-                    tabElement.textContent = getDepartmentDisplayName(dept);
-                    tabElement.dataset.department = dept;
-
-                    const pendingCount = notificationsToShow.filter(n =>
-                        n.status === 'pending' && n.targetDepartment === dept
-                    ).length;
-
-                    if (pendingCount > 0) {
-                        const badge = document.createElement('span');
-                        badge.className = 'notification-tab-badge';
-                        badge.textContent = pendingCount;
-                        tabElement.appendChild(badge);
-                    }
-
-                    tabElement.addEventListener('click', function () {
-                        document.querySelectorAll('.department-tab').forEach(t => {
-                            t.classList.remove('active');
-                        });
-                        this.classList.add('active');
-                        const filteredNotifications = notificationsToShow.filter(n => n.targetDepartment === dept);
-                        renderNotifications(filteredNotifications, dept);
-                    });
-
-                    departmentTabs.appendChild(tabElement);
-                });
-
-                currentDepartment = 'all';
-
-            } else if (currentUser.role === 'supervisor') {
-                // Other supervisors (not electrical/mechanical) see only their department - no tabs needed
-                departmentTabs.style.display = 'none';
-                currentDepartment = currentUser.department;
-                // notificationsToShow is already filtered above
             } else {
-                // Manager or other roles - no notifications
-                departmentTabs.style.display = 'none';
                 notificationsToShow = [];
             }
 
-            // Update total notification count
+            // Update total pending count badge in header
             const totalPending = notificationsToShow.filter(n => n.status === 'pending').length;
-            document.getElementById('totalNotificationCount').textContent = totalPending;
+            const countBadge = document.getElementById('totalNotificationCount');
+            if (countBadge) countBadge.textContent = totalPending;
 
-            console.log('🔔 Final notifications to show:', notificationsToShow.length);
+            console.log('🔔 Final notifications available for user:', notificationsToShow.length);
 
-            // Render notifications
-            if (currentUser.role === 'admin' && currentDepartment === 'all') {
-                renderNotifications(notificationsToShow, 'all');
-            } else {
-                renderNotifications(notificationsToShow, currentDepartment);
+            allFilteredNotifications = notificationsToShow;
+            renderNotifications();
+        }
+
+        // Navigation helpers for folders
+        function openNotificationFolder(level, value) {
+            if (level === 0) {
+                currentNotificationPath = [value];
+            } else if (level === 1) {
+                currentNotificationPath = [currentNotificationPath[0], value];
             }
+            renderNotifications();
+        }
+
+        function resetNotificationPath(index = -1) {
+            if (index === -1) {
+                currentNotificationPath = [];
+            } else {
+                currentNotificationPath = currentNotificationPath.slice(0, index + 1);
+            }
+            renderNotifications();
         }
 
         // Get employee name by ID
@@ -6441,51 +6387,154 @@
             return username;
         }
 
-        // Render notifications with minimalist design - FIXED VERSION
-        function renderNotifications(notificationsToRender, currentDepartment = 'all') {
-            const notificationsContainer = document.getElementById('notificationsContainer');
-            notificationsContainer.innerHTML = '';
+        // Helper to get month name in Kurdish
+        function getKurdishMonthName(monthIndex) {
+            const months = [
+                'کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران',
+                'تەمموز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'
+            ];
+            return months[monthIndex];
+        }
 
-            console.log('🔔 Rendering notifications:', notificationsToRender.length);
+        // Render notifications with folder structure (Navigation Style)
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            container.innerHTML = '';
 
-            if (notificationsToRender.length === 0) {
-                notificationsContainer.innerHTML = `
-            <div class="no-notifications">
-                <i class="bi bi-bell-slash"></i>
-                <p>هیچ ئاگادارکردنەوەیەک نییە</p>
-            </div>
-        `;
+            // 1. Render Breadcrumb
+            const breadcrumb = document.createElement('div');
+            breadcrumb.className = 'notification-breadcrumb';
+            let bcHtml = `<span onclick="resetNotificationPath()"><i class="bi bi-house-door-fill me-1"></i> سەرەتا</span>`;
+
+            currentNotificationPath.forEach((step, index) => {
+                const isLast = index === currentNotificationPath.length - 1;
+                const name = index === 0 ? getDepartmentDisplayName(step) : step;
+                bcHtml += ` <i class="bi bi-chevron-left mx-2 opacity-50"></i> <span class="${isLast ? 'active' : ''}" onclick="resetNotificationPath(${index})">${name}</span>`;
+            });
+            breadcrumb.innerHTML = bcHtml;
+            container.appendChild(breadcrumb);
+
+            // 2. Add Content Header
+            const explorerHeader = document.createElement('div');
+            explorerHeader.className = 'explorer-header';
+
+            let titleText = 'ئاگادارکردنەوەکان';
+            let titleIcon = 'bi-folder2-open';
+
+            if (currentNotificationPath.length === 1) {
+                titleText = getDepartmentDisplayName(currentNotificationPath[0]);
+                titleIcon = 'bi-collection-play-fill';
+            } else if (currentNotificationPath.length === 2) {
+                titleText = currentNotificationPath[1];
+                titleIcon = 'bi-calendar-event-fill';
+            }
+
+            explorerHeader.innerHTML = `
+                <div class="explorer-title">
+                    <i class="bi ${titleIcon} text-primary fs-4"></i>
+                    <span>${titleText}</span>
+                </div>
+                <div class="text-muted small fw-bold">
+                    ${allFilteredNotifications.length} ئاگادارکردنەوە
+                </div>
+            `;
+            container.appendChild(explorerHeader);
+
+            // 3. Navigation Logic
+
+            // --- LEVEL 0: DEPARTMENTS ---
+            if (currentNotificationPath.length === 0) {
+                const groupedByDept = {};
+                allFilteredNotifications.forEach(n => {
+                    const dept = n.targetDepartment || 'other';
+                    if (!groupedByDept[dept]) groupedByDept[dept] = { total: 0, pending: 0 };
+                    groupedByDept[dept].total++;
+                    if (n.status === 'pending') groupedByDept[dept].pending++;
+                });
+
+                const grid = document.createElement('div');
+                grid.className = 'notification-folder-grid';
+
+                Object.keys(groupedByDept).sort().forEach(deptId => {
+                    const data = groupedByDept[deptId];
+                    const folder = document.createElement('div');
+                    folder.className = 'folder-item';
+                    folder.dataset.dept = deptId; // For CSS coloring
+                    folder.onclick = () => openNotificationFolder(0, deptId);
+                    folder.innerHTML = `
+                        ${data.pending > 0 ? `<div class="folder-badge-corner">${data.pending}</div>` : ''}
+                        <div class="folder-icon"><i class="bi bi-folder-fill"></i></div>
+                        <div class="folder-name">${getDepartmentDisplayName(deptId)}</div>
+                        <div class="folder-meta">${data.total} دانە</div>
+                    `;
+                    grid.appendChild(folder);
+                });
+
+                if (Object.keys(groupedByDept).length === 0) {
+                    container.innerHTML += '<p class="text-center py-5 text-muted">هیچ ئاگادارکردنەوەیەک نییە</p>';
+                } else {
+                    container.appendChild(grid);
+                }
                 return;
             }
 
-            // Sort notifications by creation date (newest first)
-            notificationsToRender.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            // --- LEVEL 1: MONTHS ---
+            if (currentNotificationPath.length === 1) {
+                const selectedDept = currentNotificationPath[0];
+                const deptNotifs = allFilteredNotifications.filter(n => (n.targetDepartment || 'other') === selectedDept);
 
-            // Group by date for better organization
-            const notificationsByDate = {};
-            notificationsToRender.forEach(notification => {
-                const date = new Date(notification.createdAt).toLocaleDateString();
-                if (!notificationsByDate[date]) {
-                    notificationsByDate[date] = [];
-                }
-                notificationsByDate[date].push(notification);
-            });
-
-            // Render by date groups
-            Object.keys(notificationsByDate).forEach(date => {
-                const dateHeader = document.createElement('div');
-                dateHeader.className = 'notification-date-header';
-                dateHeader.textContent = date;
-                notificationsContainer.appendChild(dateHeader);
-
-                notificationsByDate[date].forEach(notification => {
-                    const notificationDiv = createNotificationDiv(notification);
-                    notificationsContainer.appendChild(notificationDiv);
+                const months = {};
+                deptNotifs.forEach(n => {
+                    const date = new Date(n.createdAt);
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()}`;
+                    if (!months[mName]) months[mName] = { total: 0, pending: 0 };
+                    months[mName].total++;
+                    if (n.status === 'pending') months[mName].pending++;
                 });
-            });
+
+                const grid = document.createElement('div');
+                grid.className = 'notification-folder-grid';
+
+                Object.keys(months).forEach(mName => {
+                    const data = months[mName];
+                    const folder = document.createElement('div');
+                    folder.className = 'folder-item';
+                    folder.onclick = () => openNotificationFolder(1, mName);
+                    folder.innerHTML = `
+                        ${data.pending > 0 ? `<div class="folder-badge-corner">${data.pending}</div>` : ''}
+                        <div class="folder-icon"><i class="bi bi-calendar-event"></i></div>
+                        <div class="folder-name">${mName}</div>
+                        <div class="folder-meta">${data.total} دانە</div>
+                    `;
+                    grid.appendChild(folder);
+                });
+                container.appendChild(grid);
+                return;
+            }
+
+            // --- LEVEL 2: NOTIFICATIONS LIST ---
+            if (currentNotificationPath.length === 2) {
+                const selectedDept = currentNotificationPath[0];
+                const selectedMonth = currentNotificationPath[1];
+
+                const finalNotifs = allFilteredNotifications.filter(n => {
+                    const dept = n.targetDepartment || 'other';
+                    const date = new Date(n.createdAt);
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()}`;
+                    return dept === selectedDept && mName === selectedMonth;
+                }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                const list = document.createElement('div');
+                list.className = 'notifications-list-container';
+
+                finalNotifs.forEach(notif => {
+                    list.appendChild(createNotificationDiv(notif));
+                });
+                container.appendChild(list);
+            }
         }
 
-        // Create notification div - FIXED VERSION
+        // Create notification div - Enhanced with ID and actions
         function createNotificationDiv(notification) {
             const notificationDiv = document.createElement('div');
 
@@ -6511,25 +6560,39 @@
 
             let actionsHtml = '';
 
-            if (notification.status === 'pending' &&
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
-                actionsHtml = `
-            <div class="notification-actions-minimal">
-                <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
-                    <i class="bi bi-check"></i>
-                </button>
-                <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}" title="ڕەتکردنەوە">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-        `;
+            // Actions for Admin or Supervisor
+            if (notification.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
+                actionsHtml += `
+                    <div class="notification-actions-minimal">
+                        <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
+                            <i class="bi bi-check"></i> پەسەندکردن
+                        </button>
+                        <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}" title="ڕەتکردنەوە">
+                            <i class="bi bi-x"></i> ڕەتکردنەوە
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Admin specific actions (Edit/Delete)
+            if (currentUser.role === 'admin') {
+                actionsHtml += `
+                    <div class="notification-actions mt-2 pt-2 border-top">
+                        <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-notification-btn ms-1" data-id="${notification.id}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
             }
 
             let content = '';
+            const notificationID = notification.id ? notification.id.substring(0, 8) : 'N/A';
 
             // Check if this is a grouped notification (special daily work)
             if (notification.type === 'rating_confirmation' && notification.relatedEmployees && notification.relatedEmployees.length > 0) {
-                // Grouped notification for special daily work
                 const employeeCount = notification.relatedEmployees.length;
                 const workDetails = notification.workDetails || {};
 
@@ -6542,305 +6605,79 @@
                 }
 
                 content = `
-            <div class="notification-content-minimal">
-                <div class="notification-header-minimal">
-                    <i class="bi ${statusIcon}"></i>
-                    <div class="notification-info">
-                        <strong>${workDetails.name || 'کاری ڕۆژانەی تایبەت'}</strong>
-                        <span class="notification-meta">
-                            ${getDepartmentDisplayName(notification.targetDepartment)} • 
-                            ${employeeCount} کارمەند • 
-                            ${workDetails.date || notification.createdAt.split('T')[0]}
-                            ${timeDisplay ? ` • ${timeDisplay}` : ''}
-                        </span>
-                    </div>
-                </div>
-                <div class="notification-message">
-                    ${notification.message || `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری ${workDetails.name}ی ئەنجامداوە`}
-                </div>
-                ${workDetails.note ? `<div class="notification-note">${workDetails.note}</div>` : ''}
-                <div class="notification-employees-list">
-                    <strong>کارمەندەکان:</strong>
-                    ${notification.relatedEmployees.map(emp =>
-                    `${emp.employeeName} (هەڵسەنگاندن: ${emp.rating})`
+                    <div class="notification-content-minimal">
+                        <div class="notification-header-minimal">
+                            <i class="bi ${statusIcon}"></i>
+                            <div class="notification-info">
+                                <strong><span class="notification-id-badge">ID: ${notificationID}</span> ${workDetails.name || 'کاری ڕۆژانەی تایبەت'}</strong>
+                                <span class="notification-meta">
+                                    ${getDepartmentDisplayName(notification.targetDepartment)} • 
+                                    ${employeeCount} کارمەند • 
+                                    ${workDetails.date || notification.createdAt.split('T')[0]}
+                                    ${timeDisplay ? ` • ${timeDisplay}` : ''}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="notification-message">
+                            ${notification.message || `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری ${workDetails.name}ی ئەنجامداوە`}
+                        </div>
+                        ${workDetails.note ? `<div class="notification-note">${workDetails.note}</div>` : ''}
+                        <div class="notification-employees-list small mt-1">
+                            <strong>کارمەندەکان:</strong>
+                            ${notification.relatedEmployees.map(emp =>
+                    `${emp.employeeName} (${emp.rating})`
                 ).join('، ')}
-                </div>
-                ${notification.status !== 'pending' ? `
-                <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
-                    ${notification.status === 'confirmed' ?
+                        </div>
+                        ${notification.status !== 'pending' ? `
+                        <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
+                            ${notification.status === 'confirmed' ?
                             `<span class="text-success"><i class="bi bi-check-all"></i> پەسەندکراوە لەلایەن: ${notification.confirmedBy || notification.resolvedBy || 'ئەدمین'}</span>` :
                             `<span class="text-danger"><i class="bi bi-x-circle"></i> ڕەتکرایەوە لەلایەن: ${notification.rejectedBy || notification.resolvedBy || 'ئەدمین'}</span>`
                         }
-                    <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
-                </div>` : ''}
-            </div>
-        `;
+                            <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
+                        </div>` : ''}
+                    </div>
+                `;
             } else {
                 // Individual notification
                 content = `
-            <div class="notification-content-minimal">
-                <div class="notification-header-minimal">
-                    <i class="bi ${statusIcon}"></i>
-                    <div class="notification-info">
-                        <strong>${notification.title || 'ئاگادارکردنەوە'}</strong>
-                        <span class="notification-meta">
-                            ${getDepartmentDisplayName(notification.targetDepartment)} • 
-                            ${formatDate(notification.createdAt)}
-                        </span>
-                    </div>
-                </div>
-                <div class="notification-message">${notification.message || 'هیچ پەیامێک نییە'}</div>
-                ${notification.note ? `<div class="notification-note">${notification.note}</div>` : ''}
-                ${notification.status !== 'pending' ? `
-                <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
-                    ${notification.status === 'confirmed' ?
+                    <div class="notification-content-minimal">
+                        <div class="notification-header-minimal">
+                            <i class="bi ${statusIcon}"></i>
+                            <div class="notification-info">
+                                <strong><span class="notification-id-badge">ID: ${notificationID}</span> ${notification.title || 'ئاگادارکردنەوە'}</strong>
+                                <span class="notification-meta">
+                                    ${getDepartmentDisplayName(notification.targetDepartment)} • 
+                                    ${formatDate(notification.createdAt)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="notification-message">${notification.message || 'هیچ پەیامێک نییە'}</div>
+                        ${notification.note ? `<div class="notification-note">${notification.note}</div>` : ''}
+                        ${notification.status !== 'pending' ? `
+                        <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
+                            ${notification.status === 'confirmed' ?
                             `<span class="text-success"><i class="bi bi-check-all"></i> پەسەندکراوە لەلایەن: ${notification.confirmedBy || notification.resolvedBy || 'ئەدمین'}</span>` :
                             `<span class="text-danger"><i class="bi bi-x-circle"></i> ڕەتکرایەوە لەلایەن: ${notification.rejectedBy || notification.resolvedBy || 'ئەدمین'}</span>`
                         }
-                    <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
-                </div>` : ''}
-            </div>
-        `;
+                            <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
+                        </div>` : ''}
+                    </div>
+                `;
             }
 
             notificationDiv.innerHTML = content + actionsHtml;
-
-            // Add event listeners to action buttons
             addNotificationEventListeners(notificationDiv, notification);
-
             return notificationDiv;
         }
 
-
-        // Create individual notification div
-        function createNotificationDiv(notification) {
-            const notificationDiv = document.createElement('div');
-            notificationDiv.className = `notification-item ${notification.status}`;
-
-            const isGroupedNotification =
-                notification.type === 'rating_confirmation' &&
-                Array.isArray(notification.relatedEmployees) &&
-                notification.relatedEmployees.length > 0;
-            const workDetails = notification.workDetails || {};
-
-            const actionBlocks = [];
-
-            if (notification.status === 'pending' &&
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
-                actionBlocks.push(`
-            <div class="notification-actions">
-                <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}">
-                    <i class="bi bi-check"></i> پەسەندکردن
-                </button>
-                <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}">
-                    <i class="bi bi-x"></i> ڕەتکردنەوە
-                </button>
-            </div>
-        `);
-            }
-
-            if (currentUser.role === 'admin') {
-                actionBlocks.push(`
-            <div class="notification-actions mt-2">
-                <button class="btn btn-sm btn-warning edit-notification-btn" data-id="${notification.id}">
-                    <i class="bi bi-pencil"></i> چاککردن
-                </button>
-                <button class="btn btn-sm btn-danger delete-notification-btn ms-1" data-id="${notification.id}">
-                    <i class="bi bi-trash"></i> سڕینەوە
-                </button>
-            </div>
-        `);
-            } else if (currentUser.role === 'supervisor' && notification.status === 'pending') {
-                actionBlocks.push(`
-            <div class="notification-actions mt-2">
-                <button class="btn btn-sm btn-danger delete-notification-btn" data-id="${notification.id}">
-                    <i class="bi bi-trash"></i> سڕینەوە
-                </button>
-            </div>
-        `);
-            }
-
-            const actionsHtml = actionBlocks.join('');
-
-            let statusInfo = '';
-            if (notification.status === 'confirmed') {
-                const confirmedByName = notification.confirmedByDisplayName ||
-                    getUserDisplayName(notification.confirmedBy) ||
-                    getUserDisplayName(notification.resolvedBy);
-                statusInfo = `<div class="text-success mt-2"><i class="bi bi-check-circle"></i> پەسەندکراوە - ${confirmedByName}</div>`;
-                if (notification.confirmationNote) {
-                    statusInfo += `<div class="text-muted small">تێبینی: ${notification.confirmationNote}</div>`;
-                }
-            } else if (notification.status === 'rejected') {
-                const rejectedByName = notification.rejectedByDisplayName ||
-                    getUserDisplayName(notification.rejectedBy) ||
-                    getUserDisplayName(notification.resolvedBy);
-                statusInfo = `<div class="text-danger mt-2"><i class="bi bi-x-circle"></i> ڕەتکراوەتەوە - ${rejectedByName}</div>`;
-                if (notification.rejectionNote) {
-                    statusInfo += `<div class="text-muted small">تێبینی: ${notification.rejectionNote}</div>`;
-                }
-            }
-
-            if (notification.resolvedAt && notification.status !== 'pending') {
-                statusInfo += `<div class="text-muted small">کاتی چارەسەرکردن: ${formatDate(notification.resolvedAt)}</div>`;
-            }
-
-            const metaParts = [];
-            if (notification.targetDepartment) {
-                metaParts.push(getDepartmentDisplayName(notification.targetDepartment));
-            }
-            if (notification.createdAt) {
-                metaParts.push(`کات: ${formatDate(notification.createdAt)}`);
-            }
-            if (notification.createdByDisplayName || notification.createdBy) {
-                metaParts.push(`نێردراوە لەلایەن ${notification.createdByDisplayName || getUserDisplayName(notification.createdBy)}`);
-            }
-            const metaHtml = metaParts.length ? `<small class="text-muted d-block">${metaParts.join(' • ')}</small>` : '';
-
-            let detailsHtml = '';
-            if (isGroupedNotification) {
-                const employeeItems = notification.relatedEmployees.map(emp => {
-                    const ratingValue = typeof emp.rating !== 'undefined' ? emp.rating : '-';
-                    return `
-                <div class="notification-employee-item">
-                    <span>${emp.employeeName}</span>
-                    <span>هەڵسەنگاندن: ${ratingValue}</span>
-                </div>
-            `;
-                }).join('');
-
-                const timeInfo = [];
-                if (workDetails.startTime || workDetails.endTime) {
-                    if (workDetails.startTime && workDetails.endTime) {
-                        timeInfo.push(`<p><strong>کات:</strong> ${workDetails.startTime} بۆ ${workDetails.endTime}</p>`);
-                    } else {
-                        timeInfo.push(`<p><strong>کات:</strong> ${workDetails.startTime || workDetails.endTime}</p>`);
-                    }
-                }
-                const hasTotalHours = workDetails.totalHours !== undefined && workDetails.totalHours !== null && workDetails.totalHours !== '';
-                const hasTotalMinutes = workDetails.totalMinutes !== undefined && workDetails.totalMinutes !== null && workDetails.totalMinutes !== '';
-                if (hasTotalHours || hasTotalMinutes) {
-                    timeInfo.push(`<p><strong>کۆی کات:</strong> ${workDetails.totalHours || 0} کاتژمێر و ${workDetails.totalMinutes || 0} خولەک</p>`);
-                }
-
-                detailsHtml = `
-            <div class="notification-details mt-3">
-                <h6>وردەکاری کار</h6>
-                <p><strong>ناوی کار:</strong> ${workDetails.name || 'کاری ڕۆژانەی تایبەت'}</p>
-                <p><strong>بەش:</strong> ${getDepartmentDisplayName(workDetails.workDepartment || notification.targetDepartment)}</p>
-                <p><strong>ڕێکەوت:</strong> ${workDetails.date || (notification.createdAt ? notification.createdAt.split('T')[0] : '')}</p>
-                ${timeInfo.join('')}
-                ${workDetails.note ? `<p><strong>تێبینی:</strong> ${workDetails.note}</p>` : ''}
-                ${notification.note ? `<p><strong>تێبینی زیادە:</strong> ${notification.note}</p>` : ''}
-                <div class="notification-employee-list mt-3">
-                    <h6>کارمەندەکان</h6>
-                    ${employeeItems}
-                </div>
-            </div>
-        `;
-            } else if (notification.note) {
-                detailsHtml = `<div class="notification-note mt-2">${notification.note}</div>`;
-            }
-
-            const message = notification.message || 'هیچ پەیامێک نییە';
-
-            notificationDiv.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start">
-            <div class="flex-grow-1">
-                <h6>${notification.title || 'ئاگادارکردنەوە'}</h6>
-                <p class="mb-1">${message}</p>
-                ${metaHtml}
-                ${statusInfo}
-                ${detailsHtml}
-            </div>
-        </div>
-        ${actionsHtml}
-    `;
-
-            addNotificationEventListeners(notificationDiv, notification);
-
-            return notificationDiv;
-        }
-        // Create grouped notification div
-        function createGroupedNotificationDiv(notification) {
-            const notificationDiv = document.createElement('div');
-            notificationDiv.className = `notification-package ${notification.status}`;
-
-            let actionsHtml = '';
-
-            if (notification.status === 'pending' &&
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
-                actionsHtml = `
-                <div class="notification-package-actions">
-                    <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}">
-                        <i class="bi bi-check"></i> پەسەندکردنی هەموو
-                    </button>
-                    <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}">
-                        <i class="bi bi-x"></i> ڕەتکردنەوەی هەموو
-                    </button>
-                </div>
-            `;
-            }
-
-            // Add delete button for supervisors
-            if (currentUser.role === 'admin') {
-                actionsHtml += `
-                <div class="notification-package-actions mt-2">
-                    <button class="btn btn-sm btn-danger delete-notification-btn" data-id="${notification.id}">
-                        <i class="bi bi-trash"></i> سڕینەوە
-                    </button>
-                </div>
-            `;
-            }
-
-            const employeeList = notification.allEmployees.map(emp =>
-                `<div class="notification-package-item">
-                <span>${emp.employeeName}</span>
-                <span>هەڵسەنگاندن: ${emp.rating}</span>
-            </div>`
-            ).join('');
-
-            notificationDiv.innerHTML = `
-            <div class="notification-package-header">
-                <h6 class="mb-0">${notification.title}</h6>
-            </div>
-            <div class="notification-package-body">
-                <p>${notification.message}</p>
-                <div class="notification-details">
-                    <p><strong>ناوی کار:</strong> ${notification.workDetails.name}</p>
-                    <p><strong>بەش:</strong> ${getDepartmentDisplayName(notification.workDetails.workDepartment)}</p>
-                    ${notification.workDetails.totalHours ? `<p><strong>کۆی کات:</strong> ${notification.workDetails.totalHours} کاتژمێر و ${notification.workDetails.totalMinutes} خولەک</p>` : ''}
-                    ${notification.workDetails.startTime && notification.workDetails.endTime ? `<p><strong>کات:</strong> ${notification.workDetails.startTime} بۆ ${notification.workDetails.endTime}</p>` : ''}
-                    <p><strong>تێبینی:</strong> ${notification.workDetails.note || 'هیچ تێبینیەک نییە'}</p>
-                </div>
-                <div class="notification-employee-list">
-                    <h6>کارمەندەکان:</h6>
-                    ${employeeList}
-                </div>
-                <small class="text-muted">دروستکراوە: ${formatDate(notification.createdAt)}</small>
-                <div><small>دۆخ: ${getNotificationStatusText(notification.status)}</small></div>
-                ${notification.resolvedAt ? `<div><small>چارەسەرکراوە: ${formatDate(notification.resolvedAt)}</small></div>` : ''}
-                ${notification.resolvedBy ? `<div><small>چارەسەرکراوە لەلایەن: ${notification.resolvedBy}</small></div>` : ''}
-                ${notification.confirmationNote ? `<div><small>تێبینی: ${notification.confirmationNote}</small></div>` : ''}
-                ${actionsHtml}
-            </div>
-        `;
-
-            // Add event listeners to buttons
-            addNotificationEventListeners(notificationDiv, notification);
-
-            return notificationDiv;
-        }
-
-        // Add event listeners to notification buttons - FIXED VERSION
+        // Add event listeners to notification buttons
         function addNotificationEventListeners(notificationDiv, notification) {
             // Confirm button
             const confirmBtn = notificationDiv.querySelector('.confirm-notification-btn');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function () {
-                    const notificationId = this.dataset.id;
-                    console.log('Confirming notification:', notificationId);
-                    confirmNotification(notificationId);
+                    confirmNotification(notification.id);
                 });
             }
 
@@ -6848,12 +6685,11 @@
             const rejectBtn = notificationDiv.querySelector('.reject-notification-btn');
             if (rejectBtn) {
                 rejectBtn.addEventListener('click', function () {
-                    const notificationId = this.dataset.id;
-                    console.log('Rejecting notification:', notificationId);
-                    rejectNotification(notificationId);
+                    rejectNotification(notification.id);
                 });
             }
 
+            // Edit button
             const editBtn = notificationDiv.querySelector('.edit-notification-btn');
             if (editBtn) {
                 editBtn.addEventListener('click', function () {
@@ -6861,6 +6697,7 @@
                 });
             }
 
+            // Delete button
             const deleteBtn = notificationDiv.querySelector('.delete-notification-btn');
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', function () {
@@ -6868,6 +6705,8 @@
                 });
             }
         }
+
+
 
 
         // Confirm notification
@@ -7466,7 +7305,8 @@
                 { id: 'unsetting', name: 'داگرتن' },
                 { id: 'mechanical', name: 'ئامادەکردن' },
                 { id: 'electrical-ac', name: 'درایەر' },
-                { id: 'gens', name: 'مۆلیدە و کۆمپرێسەرەکان' }
+                { id: 'gens', name: 'مۆلیدە و کۆمپرێسەرەکان' },
+
             ];
 
             departments.forEach(dept => {
@@ -7546,4 +7386,3 @@
 </body>
 
 </html>
-
