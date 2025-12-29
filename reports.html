@@ -1363,7 +1363,7 @@
         <div class="mt-2 pt-1 signature-section">
             <div class="d-flex justify-content-between px-4">
                 <div class="text-center">
-                    <p class="mb-0 fw-bold text-secondary" style="letter-spacing:0.5px; font-size:0.6rem;">نێرنرداروە لەلایەن سەرپەرشتیاری بەش</p>
+                    <p class="mb-0 fw-bold text-secondary" style="letter-spacing:0.5px; font-size:0.6rem;">نێرنرداروە لەلایەن لێپرسراوی بەش</p>
                     <p class="print-submitted-by fw-bold text-dark" style="font-family:'Segoe UI',sans-serif; min-width:140px; border-bottom:1px solid #ddd; padding-bottom:2px; font-size:0.85rem; margin-bottom: 0;">...</p>
                 </div>
                 <div class="text-center">
@@ -1892,36 +1892,38 @@
 
             const dateValue = document.getElementById('reportDate').value;
             const shifts = [
-                { id: 's1', name: 'Shift 1 (بەیانیان)', defStart: '08:00' },
-                { id: 's2', name: 'Shift 2 (ئێواران)', defStart: '16:00' },
-                { id: 's3', name: 'Shift 3 (شەوان)', defStart: '00:00' }
+                { id: 's1', name: 'شیفتی یەکەم (08:00 - 16:00)', defStart: '08:00' },
+                { id: 's2', name: 'شیفتی دووەم (16:00 - 24:00)', defStart: '16:00' },
+                { id: 's3', name: 'شیفتی سێیەم (24:00 - 08:00)', defStart: '24:00' }
             ];
 
-            // Priority: 1. Overrides (Loading) 2. SavedData (Preserve) 3. DOM (Live) 4. Default
-            const getVal = (id, def) => {
-                if (overrides[id]) return parseInt(overrides[id]);
-                if (preserveState && savedData[id]) return parseInt(savedData[id]);
-                const el = document.getElementById(id);
-                if (el) return parseInt(el.value);
-                return def;
-            };
-
-            let s1Rows = getVal('cut_s1_rows', 72);
-            let s2Rows = getVal('cut_s2_rows', 72);
-            let s3Rows = getVal('cut_s3_rows', 72);
-
-            const shiftRows = { 's1': s1Rows, 's2': s2Rows, 's3': s3Rows };
+            // Row count is fixed at 72 as per user request
+            const shiftRows = { 's1': 72, 's2': 72, 's3': 72 };
 
             // Filter Employees from Code Config
             const cuttingEmps = REPORT_CONFIG.cutting || [];
             let empOptions = `<option value="">Select...</option>`;
             cuttingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
-            let html = REPORT_HEADER_TEMPLATE('بەشی بڕین', dateValue);
+            const shiftHeaderColors = {
+                's1': '#1e88e5', // Blue
+                's2': '#fb8c00', // Orange
+                's3': '#43a047'  // Green
+            };
+
+            const shiftLightColors = {
+                's1': '#f0f7ff', // Light Blue
+                's2': '#fff9f0', // Light Orange
+                's3': '#f1fdf4'  // Light Green
+            };
+
+            let allHtml = '';
 
             shifts.forEach((shift) => {
                 const totalCarts = shiftRows[shift.id];
                 const halfCarts = Math.ceil(totalCarts / 2);
+                const shiftColor = shiftHeaderColors[shift.id];
+                const shiftLightColor = shiftLightColors[shift.id];
 
                 // --- 1. Tasks Column (Left) ---
                 let tasksHtml = '';
@@ -1930,17 +1932,17 @@
                     // Task #3 (index 2): time input only (no checkbox)
                     if (index === 2) {
                         tasksHtml += `
-                        <tr>
-                            <td class="task-text">${task}</td>
+                        <tr style="background: ${index % 2 === 0 ? '#fff' : '#f9f9f9'};">
+                            <td class="task-text" style="background: ${shiftLightColor} !important; font-weight: 600; color: #334155;">${task}</td>
                             <td style="width: 70px; background:#fff3cd;">
-                                <input type="text" id="${rowIdBase}_time" placeholder="کات" style="width:100%; font-size:0.7rem; text-align:center;">
+                                <input type="time" id="${rowIdBase}_time" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
                             </td>
                         </tr>
                         `;
                     } else {
                         tasksHtml += `
-                        <tr>
-                            <td class="task-text">${task}</td>
+                        <tr style="background: ${index % 2 === 0 ? '#fff' : '#f9f9f9'};">
+                            <td class="task-text" style="background: ${shiftLightColor} !important; font-weight: 600; color: #334155;">${task}</td>
                             <td style="width: 30px; background:#fff;"><input type="checkbox" id="${rowIdBase}_check"></td>
                         </tr>
                         `;
@@ -1960,7 +1962,7 @@
                             <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک (سەرەتا)</span>
                         </td>
                         <td style="background:#fff8e1;">
-                            <input type="text" id="cut_${shift.id}_start_check_time" placeholder="Time" style="width:100%; font-size:0.7rem; text-align:center; font-weight:bold; color:#c05621;">
+                            <input type="time" id="cut_${shift.id}_start_check_time" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                         </td>
                     </tr>`;
                 }
@@ -1970,7 +1972,7 @@
                     cartsCol1 += `
                         <tr>
                             <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
-                            <td><input type="text" id="cut_${shift.id}_c${i}_time" placeholder="کات"></td>
+                            <td><input type="time" id="cut_${shift.id}_c${i}_time" style="font-size:0.75rem;"></td>
                             <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
@@ -1984,7 +1986,7 @@
                                 <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                             </td>
                             <td style="background:#fff8e1;">
-                                <input type="text" id="cut_${shift.id}_c${checkGroup}_left_check_time" placeholder="Time" style="width:100%; font-size:0.7rem; text-align:center; font-weight:bold; color:#c05621;">
+                                <input type="time" id="cut_${shift.id}_c${checkGroup}_left_check_time" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                             </td>
                         </tr>`;
                     }
@@ -1995,7 +1997,7 @@
                         cartsCol2 += `
                             <tr>
                                 <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
-                                <td><input type="text" id="cut_${shift.id}_c${j}_time" placeholder="کات"></td>
+                                <td><input type="time" id="cut_${shift.id}_c${j}_time" style="font-size:0.75rem;"></td>
                                 <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
@@ -2009,7 +2011,7 @@
                                     <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                                 </td>
                                 <td style="background:#fff8e1;">
-                                    <input type="text" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" placeholder="Time" style="width:100%; font-size:0.7rem; text-align:center; font-weight:bold; color:#c05621;">
+                                    <input type="time" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                                 </td>
                             </tr>`;
                         }
@@ -2037,32 +2039,23 @@
                 notesHtml += '</div>';
 
                 // --- WRAP EACH SHIFT IN A PAGE-BREAK CONTAINER ---
-                html += `
+                let shiftHtml = REPORT_HEADER_TEMPLATE('بەشی بڕین', dateValue);
+                shiftHtml += `
                 <div class="page-break-container">
                     <div class="text-center mb-1 border-bottom pb-1 d-flex justify-content-between align-items-center">
                         <div style="width:100px;"></div>
                         <div class="d-flex align-items-center gap-1 no-print">
-                            <span class="small fw-bold">ژ. عەرەبانە:</span>
-                            <input type="number" id="cut_${shift.id}_rows" value="${totalCarts}" style="width:50px; height:22px; text-align:center;" onchange="generateReport(true)">
-                            <span class="small text-muted">(دەرکەوت: <span id="cut_${shift.id}_count_display">0</span>)</span>
+                            <span class="small" style="font-weight:700; color:#c62828;">عەرەبانەی دەرکەوتوو: <span id="cut_${shift.id}_count_display">0</span></span>
                         </div>
                     </div>
 
-                    <div class="cut-header">
+                    <div class="cut-header" style="background-color: ${shiftColor} !important;">
                         <span>${shift.name}</span>
                         
-                        <div class="autofill-ctrls">
-                            <span style="font-size:0.6rem;">Start:</span>
-                            <input type="time" id="cut_${shift.id}_start" value="${shift.defStart}" style="width:50px;">
-                            <span style="font-size:0.6rem;">Int:</span>
-                            <input type="number" id="cut_${shift.id}_int" value="10" style="width:30px;">
-                            <button class="btn btn-sm btn-light py-0 px-2" style="font-size:0.7rem; font-weight:bold;" onclick="autoFillCutTimes('${shift.id}')">Fill</button>
-                        </div>
-
                         <div class="emp-selects">
-                            <i class="bi bi-people-fill text-secondary" style="font-size:0.8rem; padding:0 3px;"></i>
-                            <select id="cut_${shift.id}_emp1">${empOptions}</select>
-                            <select id="cut_${shift.id}_emp2">${empOptions}</select>
+                            <i class="bi bi-people-fill text-white" style="font-size:0.8rem; padding:0 3px;"></i>
+                            <select id="cut_${shift.id}_emp1" style="border:none; border-radius:4px;">${empOptions}</select>
+                            <select id="cut_${shift.id}_emp2" style="border:none; border-radius:4px;">${empOptions}</select>
                         </div>
                     </div>
                     
@@ -2070,13 +2063,22 @@
                         <div class="cut-grid-container">
                             
                             <div class="cut-tasks-col">
-                                <table class="report-table" style="background: #fafafa;">
-                                    <thead class="table-light"><tr><th style="text-align: right !important; padding-right: 5px;">کارەکان</th><th>✓</th></tr></thead>
+                                <table class="report-table" style="background: #fafafa; border: 1px solid #aaa;">
+                                    <thead style="background-color: ${shiftColor}; color: white;">
+                                        <tr><th style="background: transparent; color: white; text-align: right !important; padding-right: 5px;">کارەکان</th><th style="background: transparent; color: white;">✓</th></tr>
+                                    </thead>
                                     <tbody>${tasksHtml}</tbody>
                                 </table>
-                                <div class="mt-2 p-1 border rounded bg-light">
+
+                                <div class="mt-2 p-1 border rounded bg-light" style="border: 1px solid #aaa !important;">
                                     <table class="report-table" style="font-size:0.65rem">
-                                        <thead class="table-secondary"><tr><th>ژمارەی سایلۆ</th><th>خشتی سەر یەک عەرەبانە</th><th>جۆری خشت</th></tr></thead>
+                                        <thead class="table-secondary">
+                                            <tr>
+                                                <th style="width: 30%">ژمارەی سایلۆ</th>
+                                                <th style="width: 35%">خشت/عەرەبانە</th>
+                                                <th style="width: 35%">جۆری خشت</th>
+                                            </tr>
+                                        </thead>
                                         <tbody>
                                             <tr>
                                                 <td><input type="number" id="cut_${shift.id}_silo"></td>
@@ -2091,16 +2093,20 @@
                                                     </select>
                                                 </td>
                                             </tr>
-                                            <tr class="table-secondary"><th colspan="2">کێشی کۆڵۆمی ١</th><th>کێشی کۆڵۆمی ٢</th></tr>
+                                            <tr class="table-secondary">
+                                                <th>کێشی ١ (Kg)</th>
+                                                <th>کێشی ٢ (Kg)</th>
+                                                <th style="background-color: #ffebee; color: #c62828;">خشتی بەفیڕۆچوو</th>
+                                            </tr>
                                             <tr>
-                                                <td colspan="2"><input type="number" step="0.01" id="cut_${shift.id}_w1" placeholder="Avg"></td>
-                                                <td><input type="number" id="cut_${shift.id}_scrap" placeholder="Kg"></td>
+                                                <td><input type="number" step="0.1" id="cut_${shift.id}_w1" placeholder="کێشی ١"></td>
+                                                <td><input type="number" step="0.1" id="cut_${shift.id}_scrap" placeholder="کێشی ٢"></td>
+                                                <td><input type="number" id="cut_${shift.id}_waste_brick" style="background-color: #fffde7;" placeholder="ژمارەی خشتی بەفیڕۆچوو"></td>
                                             </tr>
                                             <!-- NEW TOTALS ROW -->
-                                            <tr class="table-light border-top border-dark">
-                                                <td class="fw-bold small text-end" style="font-size: 0.6rem !important;">کۆی عەرەبانە:</td>
-                                                <td><input type="number" id="cut_${shift.id}_total_filled" readonly class="fw-bold bg-white" style="color:blue;"></td>
-                                                <td><!-- Grand Total Removed --></td>
+                                            <tr class="table-info border-top border-dark">
+                                                <td class="fw-bold small text-end" style="font-size: 0.65rem !important;">کۆی عەرەبانە:</td>
+                                                <td colspan="2"><input type="number" id="cut_${shift.id}_total_filled" readonly class="fw-bold" style="color:#1e88e5; text-align: center; background: transparent;"></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -2128,9 +2134,10 @@
                     </div>
                 </div>
                 `;
+                allHtml += shiftHtml;
             });
 
-            wrapper.innerHTML = html;
+            wrapper.innerHTML = allHtml;
 
             if (preserveState && Object.keys(savedData).length > 0) {
                 setTimeout(() => {
@@ -2154,53 +2161,11 @@
             }
         }
 
-        // Auto-fill times for cutting department
-        window.autoFillCutTimes = function (shiftId) {
-            const startInput = document.getElementById(`cut_${shiftId}_start`);
-            const intervalInput = document.getElementById(`cut_${shiftId}_int`);
-            if (!startInput || !intervalInput) return;
-
-            const startTime = startInput.value;
-            const interval = parseInt(intervalInput.value) || 10;
-
-            if (!startTime) {
-                alert('تکایە کاتی دەستپێکردن بنووسە');
-                return;
-            }
-
-            const [startH, startM] = startTime.split(':').map(Number);
-            let currentMins = startH * 60 + startM;
-
-            const rowsInput = document.getElementById(`cut_${shiftId}_rows`);
-            const totalCarts = parseInt(rowsInput?.value) || 72;
-            const halfCarts = Math.ceil(totalCarts / 2);
-
-            // Fill times for both columns
-            for (let i = 1; i <= halfCarts; i++) {
-                const timeStr = `${Math.floor(currentMins / 60).toString().padStart(2, '0')}:${(currentMins % 60).toString().padStart(2, '0')}`;
-                const timeInput1 = document.getElementById(`cut_${shiftId}_c${i}_time`);
-                if (timeInput1) timeInput1.value = timeStr;
-
-                const j = i + halfCarts;
-                if (j <= totalCarts) {
-                    const timeInput2 = document.getElementById(`cut_${shiftId}_c${j}_time`);
-                    if (timeInput2) timeInput2.value = timeStr;
-                }
-
-                currentMins += interval;
-            }
-
-            updateCuttingTotals();
-        };
-
         // Auto-calculate total carts based on filled data
         function updateCuttingTotals() {
             const shifts = ['s1', 's2', 's3'];
             shifts.forEach(shiftId => {
-                const rowsInput = document.getElementById(`cut_${shiftId}_rows`);
-                if (!rowsInput) return;
-
-                const totalCarts = parseInt(rowsInput.value) || 72;
+                const totalCarts = 72;
                 let filledCount = 0;
 
                 // Count how many carts have data (either time or number filled)
@@ -2235,18 +2200,8 @@
         function attachCuttingEventListeners() {
             const shifts = ['s1', 's2', 's3'];
             shifts.forEach(shiftId => {
-                const rowsInput = document.getElementById(`cut_${shiftId}_rows`);
-                if (rowsInput) {
-                    // Remove existing listener to avoid duplicates
-                    const newRowsInput = rowsInput.cloneNode(true);
-                    rowsInput.parentNode.replaceChild(newRowsInput, rowsInput);
-                    newRowsInput.addEventListener('change', function () {
-                        generateReport(true);
-                    });
-                }
-
-                // Attach listeners to all cart inputs for this shift
-                for (let i = 1; i <= 150; i++) { // Support up to 150 carts
+                // Attach listeners to all 72 cart inputs for this shift
+                for (let i = 1; i <= 72; i++) {
                     const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
                     const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
                     if (timeInput) {
@@ -2376,7 +2331,7 @@
                     </div>
                     <div class="col-4">
                      <div class="shift-box bg-s1">
-                        <div class="shift-header"><span>Shift 1 (08-16)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s1_count_input" value="${s1Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span> شیفتی یەکەم (08-16)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s1_count_input" value="${s1Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2395,7 +2350,7 @@
                      </div>
 
                      <div class="shift-box bg-s2">
-                        <div class="shift-header"><span>Shift 2 (16-24)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s2_count_input" value="${s2Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span>شیفتی دووەم (16-24)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s2_count_input" value="${s2Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2414,7 +2369,7 @@
                      </div>
 
                      <div class="shift-box bg-s3">
-                        <div class="shift-header"><span>Shift 3 (24-08)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s3_count_input" value="${s3Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span>شیفتی سێیەم (24-08)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s3_count_input" value="${s3Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2870,7 +2825,7 @@
                 <div class="row g-2 crushing-container">
                     <div class="col-12">
                         <div class="shift-box bg-s1 h-100">
-                            <div class="shift-header">Shift 1 (08-16)</div>
+                            <div class="shift-header">شیفتی یەکەم (08-16)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
@@ -2897,7 +2852,7 @@
 
                     <div class="col-12">
                         <div class="shift-box bg-s2 h-100">
-                            <div class="shift-header">Shift 2 (16-24)</div>
+                            <div class="shift-header">شیفتی دووەم (16-24)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
@@ -2924,7 +2879,7 @@
 
                     <div class="col-12">
                         <div class="shift-box bg-s3 h-100">
-                            <div class="shift-header">Shift 3 (24-08)</div>
+                            <div class="shift-header">شیفتی سێیەم (24-08)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
                                     <td class="fw-bold">کارمەند</td>
