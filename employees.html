@@ -6199,13 +6199,17 @@
                 // Add rows
                 employeeTotals.forEach(employee => {
                     const row = document.createElement('tr');
-                    // Logic to determine row content...
+
+                    // Format numbers to avoid long decimals
+                    const cartsFormatted = Number(employee.carts.toFixed(2));
+                    const clayTonsFormatted = Number(employee.clayTons.toFixed(2));
+
                     if (currentUser.role === 'admin') {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.carts}</span></td><td><span>${employee.clayTons}</span></td><td><span>${employee.workCount}</span></td>`;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                     } else if (currentUser.department === 'crushing-prep') {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.clayTons}</span></td><td><span>${employee.workCount}</span></td>`;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                     } else {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${employee.carts}</span></td><td><span>${employee.workCount}</span></td>`;
+                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                     }
                     dailyWorkTotalsBody.appendChild(row);
                 });
@@ -6381,8 +6385,8 @@
                 });
             }
 
-            document.getElementById('employeeCartsTotal').textContent = cartsTotal;
-            document.getElementById('employeeClayTonsTotal').textContent = clayTonsTotal;
+            document.getElementById('employeeCartsTotal').textContent = Number(cartsTotal.toFixed(2));
+            document.getElementById('employeeClayTonsTotal').textContent = Number(clayTonsTotal.toFixed(2));
         }
 
         // Update electrical/mechanical work totals for individual employee
