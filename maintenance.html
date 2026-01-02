@@ -997,9 +997,8 @@
                         <div class="col-md-4 border-end">
                             <h6 class="fw-bold">زیادکردنی بەش (Category)</h6>
                             <div class="input-group mb-3">
-                                <input type="text" class="form-control" id="newCatInput" placeholder="Key (e.g. motor)">
                                 <input type="text" class="form-control" id="newCatLabel"
-                                    placeholder="Label (e.g. Motor)">
+                                    placeholder="ناوی بەش (e.g. Motor)">
                                 <button class="btn btn-success" onclick="addNewCategory()">+</button>
                             </div>
                         </div>
@@ -1205,7 +1204,8 @@
                 // Hide "Add Machine", "Manage Machine"
                 document.getElementById('btnAddMachine').style.display = 'none';
                 document.getElementById('btnManageMachines').style.display = 'none';
-                document.getElementById('machineControls').style.display = 'none'; // Cant manage parts
+                // Supervisors can now manage parts
+                document.getElementById('machineControls').style.display = 'block';
                 document.getElementById('btnDeptTotals').style.display = 'none';
             }
         }
@@ -1290,8 +1290,11 @@
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('noMachineState').style.display = 'none';
 
-            if (currentUser.role === 'admin') document.getElementById('machineControls').style.display = 'block';
-            else document.getElementById('machineControls').style.display = 'none';
+            if (['admin', 'supervisor'].includes(currentUser.role)) {
+                document.getElementById('machineControls').style.display = 'block';
+            } else {
+                document.getElementById('machineControls').style.display = 'none';
+            }
 
             const doc = await db.collection('machines').doc(id).get();
             const machineData = doc.data();
@@ -2385,9 +2388,9 @@
         // ==========================================
 
         function openManagePartsModal() {
-            // Only render if Admin (Security Check)
-            if (currentUser.role !== 'admin') {
-                alert("Only Admin can manage parts.");
+            // Only render if Admin or Supervisor (Security Check)
+            if (!['admin', 'supervisor'].includes(currentUser.role)) {
+                alert("Only Admin and Supervisors can manage parts.");
                 return;
             }
             renderManagePartsUI();
@@ -2468,17 +2471,15 @@
         // --- ACTIONS ---
 
         function addNewCategory() {
-            const key = document.getElementById('newCatInput').value.trim();
             const label = document.getElementById('newCatLabel').value.trim();
 
-            if (!key || !label) return alert("Please enter both Key (English ID) and Label (Name).");
-            if (currentPartsConfig[key]) return alert("This Category Key already exists!");
+            if (!label) return alert("Please enter Category Name.");
+            if (currentPartsConfig[label]) return alert("This Category already exists!");
 
-            // Create new category
-            currentPartsConfig[key] = { label: label, parts: [] };
+            // Create new category using label as key
+            currentPartsConfig[label] = { label: label, parts: [] };
 
-            // Clear inputs and re-render
-            document.getElementById('newCatInput').value = "";
+            // Clear input and re-render
             document.getElementById('newCatLabel').value = "";
             renderManagePartsUI();
         }
