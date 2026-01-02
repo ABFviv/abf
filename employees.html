@@ -1793,6 +1793,143 @@
             border-top: 1px solid #f1f5f9;
             padding-top: 6px;
         }
+
+        /* Modern Notification Card */
+        .modern-notification-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #cbd5e1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .modern-notification-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Pending Theme */
+        .modern-notification-card.status-pending {
+            border-left-color: #f59e0b;
+            background: linear-gradient(to right, #fffbeb, #ffffff);
+        }
+
+        .modern-notification-card.status-pending .notification-icon {
+            color: #d97706;
+            background: #fef3c7;
+        }
+
+        .modern-notification-card.status-pending .notification-id {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+
+        /* Confirmed Theme */
+        .modern-notification-card.status-confirmed {
+            border-left-color: #10b981;
+            background: linear-gradient(to right, #ecfdf5, #ffffff);
+        }
+
+        .modern-notification-card.status-confirmed .notification-icon {
+            color: #059669;
+            background: #d1fae5;
+        }
+
+        .modern-notification-card.status-confirmed .notification-id {
+            background: #d1fae5;
+            color: #047857;
+            border: 1px solid #6ee7b7;
+        }
+
+        /* Rejected Theme */
+        .modern-notification-card.status-rejected {
+            border-left-color: #ef4444;
+            background: linear-gradient(to right, #fef2f2, #ffffff);
+        }
+
+        .modern-notification-card.status-rejected .notification-icon {
+            color: #dc2626;
+            background: #fee2e2;
+        }
+
+        .modern-notification-card.status-rejected .notification-id {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .notification-title-row {
+            flex-grow: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            color: #1f2937;
+            font-size: 1rem;
+        }
+
+        .notification-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .notification-body {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.5;
+            padding-left: 48px;
+            /* Align with title */
+        }
+
+        .notification-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+            padding-left: 48px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .notification-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 
@@ -4834,6 +4971,8 @@
             workRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (workRecords.length > 0) {
+                const fragment = document.createDocumentFragment();
+
                 workRecords.forEach((work, index) => {
                     const recordDiv = document.createElement('div');
 
@@ -4902,8 +5041,7 @@
                             `;
                         }
                     } else if (currentRecordType === 'daily' && !isSpecial) {
-                        // Standard daily work details can go here if distinct from main title
-                        // Currently main title covers carts/tons
+                        // Standard daily work details
                     }
 
                     recordContent += `</div>`;
@@ -4930,8 +5068,10 @@
                     }
 
                     recordDiv.innerHTML = recordContent;
-                    recordsContainer.appendChild(recordDiv);
+                    fragment.appendChild(recordDiv);
                 });
+
+                recordsContainer.appendChild(fragment);
             } else {
                 recordsContainer.innerHTML = `
                     <div class="text-center py-5">
@@ -5185,7 +5325,9 @@
                 'management': 'لێپرسراوەکان',
                 'line-one': 'هێڵی یەک',
                 'line-two-general': 'گشتی هێڵی دوو',
-                'dryer': 'درایەر'
+                'dryer': 'درایەر',
+                'electrical-work': 'کارەبا',
+                'mechanical-work': 'میکانیک'
 
             };
 
@@ -5727,7 +5869,7 @@
 
                     if (!notificationGroups[workKey]) {
                         notificationGroups[workKey] = {
-                            id: `NOTIF_${Date.now()}_${workKey}`,
+                            id: `NOTIF_${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
                             type: 'rating_confirmation',
                             title: `هەڵسەنگاندنی کار بۆ ${name}`,
                             message: `کارمەندەکان لە بەشی ${getDepartmentDisplayName(workDepartment)} کاری ${name}ی ئەنجامداوە..`,
@@ -7008,36 +7150,15 @@
             if (currentUser.role === 'admin') {
                 notificationsToShow = notifications;
             } else if (currentUser.role === 'supervisor') {
-                const supervisorsWithElectricalMechanicalAccess = ['himat', 'samdar', 'hemn', 'kiln'];
-                const departmentsThatMonitorMaintenance = ['cutting-setting', 'unsetting', 'crushing-prep', 'klin', 'dryer'];
+                notificationsToShow = notifications.filter(n => {
+                    // 1. Basic Rule: Notifications targeted at my department
+                    if (n.targetDepartment === currentUser.department) return true;
 
-                const shouldSeeElectricalMechanical = supervisorsWithElectricalMechanicalAccess.includes(currentUser.username) ||
-                    departmentsThatMonitorMaintenance.includes(currentUser.department);
+                    // 2. Exception: Himat monitors Dryer
+                    if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') return true;
 
-                if (shouldSeeElectricalMechanical) {
-                    notificationsToShow = notifications.filter(n => {
-                        if (n.targetDepartment !== currentUser.department) return false;
-                        if (n.relatedEmployees && n.relatedEmployees.length > 0) {
-                            return n.relatedEmployees.some(emp => {
-                                const employee = employees.find(e => e.id === emp.employeeId);
-                                return employee && (employee.department === 'electrical-ac' || employee.department === 'mechanical');
-                            });
-                        }
-                        if (n.createdBy) {
-                            const creator = employees.find(e => e.id === n.createdBy || e.name === n.createdBy);
-                            if (creator) return creator.department === 'electrical-ac' || creator.department === 'mechanical';
-                            const creatorUser = users[n.createdBy];
-                            if (creatorUser && (creatorUser.department === 'electrical-ac' || creatorUser.department === 'mechanical')) return true;
-                        }
-                        return false;
-                    });
-                } else if (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') {
-                    notificationsToShow = notifications.filter(n =>
-                        n.targetDepartment === 'electrical-ac' || n.targetDepartment === 'mechanical'
-                    );
-                } else {
-                    notificationsToShow = notifications.filter(n => n.targetDepartment === currentUser.department);
-                }
+                    return false;
+                });
             } else {
                 notificationsToShow = [];
             }
@@ -7096,14 +7217,13 @@
             return username;
         }
 
-        // Helper to get month name in Kurdish
+        // Helper to get month name in Kurdish (Simplified)
         function getKurdishMonthName(monthIndex) {
-            const months = [
-                'کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران',
-                'تەمموز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'
-            ];
-            return months[monthIndex];
+            return `مانگی ${monthIndex + 1}`;
         }
+
+
+
 
         // Render notifications with folder structure (Navigation Style)
         function renderNotifications() {
@@ -7151,35 +7271,73 @@
 
             // 3. Navigation Logic
 
-            // --- LEVEL 0: DEPARTMENTS ---
+            // Helper: Determine Category (Electrical, Mechanical, or Department)
+            function getNotificationCategory(n) {
+                // For Admin, always use strict Department grouping
+                if (currentUser.role === 'admin') {
+                    return n.targetDepartment || 'other';
+                }
+
+                if (n.relatedEmployees && n.relatedEmployees.length > 0) {
+                    const empId = n.relatedEmployees[0].employeeId;
+                    const employee = employees.find(e => e.id === empId);
+                    if (employee) {
+                        if (employee.department === 'electrical-ac') return 'electrical-work';
+                        if (employee.department === 'mechanical') return 'mechanical-work';
+                    }
+                }
+                return n.targetDepartment || 'other';
+            }
+
+            // Helper: Get Display Name
+            function getCategoryDisplayName(key) {
+                if (key === 'electrical-work') return 'کارەبا';
+                if (key === 'mechanical-work') return 'میکانیک';
+                return getDepartmentDisplayName(key);
+            }
+
+            // --- LEVEL 0: WORK CATEGORIES ---
             if (currentNotificationPath.length === 0) {
-                const groupedByDept = {};
+                const groupedByCat = {};
+
                 allFilteredNotifications.forEach(n => {
-                    const dept = n.targetDepartment || 'other';
-                    if (!groupedByDept[dept]) groupedByDept[dept] = { total: 0, pending: 0 };
-                    groupedByDept[dept].total++;
-                    if (n.status === 'pending') groupedByDept[dept].pending++;
+                    const categoryKey = getNotificationCategory(n);
+                    let displayIcon = 'bi-folder-fill';
+
+                    if (categoryKey === 'electrical-work') displayIcon = 'bi-lightning-charge-fill';
+                    else if (categoryKey === 'mechanical-work') displayIcon = 'bi-gear-fill';
+
+                    if (!groupedByCat[categoryKey]) {
+                        groupedByCat[categoryKey] = {
+                            total: 0,
+                            pending: 0,
+                            displayName: getCategoryDisplayName(categoryKey),
+                            icon: displayIcon
+                        };
+                    }
+                    groupedByCat[categoryKey].total++;
+                    if (n.status === 'pending') groupedByCat[categoryKey].pending++;
                 });
 
                 const grid = document.createElement('div');
                 grid.className = 'notification-folder-grid';
 
-                Object.keys(groupedByDept).sort().forEach(deptId => {
-                    const data = groupedByDept[deptId];
+                Object.keys(groupedByCat).sort().forEach(catKey => {
+                    const data = groupedByCat[catKey];
                     const folder = document.createElement('div');
                     folder.className = 'folder-item';
-                    folder.dataset.dept = deptId; // For CSS coloring
-                    folder.onclick = () => openNotificationFolder(0, deptId);
+                    folder.dataset.dept = catKey;
+                    folder.onclick = () => openNotificationFolder(0, catKey);
                     folder.innerHTML = `
                         ${data.pending > 0 ? `<div class="folder-badge-corner">${data.pending}</div>` : ''}
-                        <div class="folder-icon"><i class="bi bi-folder-fill"></i></div>
-                        <div class="folder-name">${getDepartmentDisplayName(deptId)}</div>
-                        <div class="folder-meta">${data.total} دانە</div>
+                        <div class="folder-icon"><i class="bi ${data.icon}"></i></div>
+                        <div class="folder-name">${data.displayName}</div>
+                        <div class="folder-meta">${data.total} ئاگادارکردنەوە</div>
                     `;
                     grid.appendChild(folder);
                 });
 
-                if (Object.keys(groupedByDept).length === 0) {
+                if (Object.keys(groupedByCat).length === 0) {
                     container.innerHTML += '<p class="text-center py-5 text-muted">هیچ ئاگادارکردنەوەیەک نییە</p>';
                 } else {
                     container.appendChild(grid);
@@ -7189,8 +7347,8 @@
 
             // --- LEVEL 1: MONTHS ---
             if (currentNotificationPath.length === 1) {
-                const selectedDept = currentNotificationPath[0];
-                const deptNotifs = allFilteredNotifications.filter(n => (n.targetDepartment || 'other') === selectedDept);
+                const selectedCat = currentNotificationPath[0];
+                const deptNotifs = allFilteredNotifications.filter(n => getNotificationCategory(n) === selectedCat);
 
                 const months = {};
                 deptNotifs.forEach(n => {
@@ -7217,67 +7375,76 @@
                     `;
                     grid.appendChild(folder);
                 });
-                container.appendChild(grid);
+
+                if (Object.keys(months).length === 0) {
+                    container.innerHTML += '<p class="text-center py-5 text-muted">هیچ ئاگادارکردنەوەیەک نییە</p>';
+                } else {
+                    container.appendChild(grid);
+                }
                 return;
             }
 
             // --- LEVEL 2: NOTIFICATIONS LIST ---
             if (currentNotificationPath.length === 2) {
-                const selectedDept = currentNotificationPath[0];
+                const selectedCat = currentNotificationPath[0];
                 const selectedMonth = currentNotificationPath[1];
 
                 const finalNotifs = allFilteredNotifications.filter(n => {
-                    const dept = n.targetDepartment || 'other';
+                    const cat = getNotificationCategory(n);
                     const date = new Date(n.createdAt);
                     const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()}`;
-                    return dept === selectedDept && mName === selectedMonth;
+                    return cat === selectedCat && mName === selectedMonth;
                 }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 const list = document.createElement('div');
                 list.className = 'notifications-list-container';
 
-                finalNotifs.forEach(notif => {
-                    list.appendChild(createNotificationDiv(notif));
-                });
-                container.appendChild(list);
+                if (finalNotifs.length > 0) {
+                    finalNotifs.forEach(notif => {
+                        list.appendChild(createNotificationDiv(notif));
+                    });
+                    container.appendChild(list);
+                } else {
+                    container.innerHTML += '<p class="text-center py-5 text-muted">هیچ ئاگادارکردنەوەیەک نییە</p>';
+                }
             }
         }
 
-        // Create notification div - Enhanced with ID and actions
+        // Create notification div - Modern Design
         function createNotificationDiv(notification) {
             const notificationDiv = document.createElement('div');
 
             // Status-based styling
-            let statusClass = '';
-            let statusIcon = '';
+            let statusSuffix = 'pending';
+            let statusIconClass = 'bi-hourglass-split';
 
             switch (notification.status) {
                 case 'confirmed':
-                    statusClass = 'notification-confirmed';
-                    statusIcon = 'bi-check-circle-fill text-success';
+                    statusSuffix = 'confirmed';
+                    statusIconClass = 'bi-check-lg';
                     break;
                 case 'rejected':
-                    statusClass = 'notification-rejected';
-                    statusIcon = 'bi-x-circle-fill text-danger';
+                    statusSuffix = 'rejected';
+                    statusIconClass = 'bi-x-lg';
                     break;
                 default:
-                    statusClass = 'notification-pending';
-                    statusIcon = 'bi-clock-history text-warning';
+                    statusSuffix = 'pending';
+                    statusIconClass = 'bi-hourglass-split';
             }
 
-            notificationDiv.className = `notification-item-minimal ${statusClass}`;
+            notificationDiv.className = `modern-notification-card status-${statusSuffix}`;
 
             let actionsHtml = '';
 
             // Actions for Admin or Supervisor
             if (notification.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
                 actionsHtml += `
-                    <div class="notification-actions-minimal">
+                    <div class="notification-controls">
                         <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
-                            <i class="bi bi-check"></i> پەسەندکردن
+                            <i class="bi bi-check-lg"></i> پەسەندکردن
                         </button>
                         <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}" title="ڕەتکردنەوە">
-                            <i class="bi bi-x"></i> ڕەتکردنەوە
+                            <i class="bi bi-x-lg"></i> ڕەتکردنەوە
                         </button>
                     </div>
                 `;
@@ -7286,24 +7453,40 @@
             // Admin specific actions (Edit/Delete)
             if (currentUser.role === 'admin') {
                 actionsHtml += `
-                    <div class="notification-actions mt-2 pt-2 border-top">
-                        <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger delete-notification-btn ms-1" data-id="${notification.id}">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <div class="notification-controls" style="${notification.status === 'pending' ? 'border-top: none; padding-top: 5px; margin-top: 0;' : ''}">
+                         ${notification.status === 'pending' ? '' : `
+                            <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}" title="دەستکاری">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-notification-btn ms-1" data-id="${notification.id}" title="سڕینەوە">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        `}
+                         ${notification.status === 'pending' ? `
+                            <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}" title="دەستکاری">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-notification-btn ms-1" data-id="${notification.id}" title="سڕینەوە">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                         ` : ''}
                     </div>
                 `;
             }
 
-            let content = '';
-            const notificationID = notification.id ? notification.id.substring(0, 8) : 'N/A';
+            // Create Content
+            const notificationID = notification.id ? notification.id.substring(0, 8).toUpperCase() : 'N/A';
+
+            // Extract details based on type
+            let title = 'ئاگادارکردنەوە';
+            let message = notification.message || '';
+            let note = '';
+            let detailsHtml = '';
 
             // Check if this is a grouped notification (special daily work)
             if (notification.type === 'rating_confirmation' && notification.relatedEmployees && notification.relatedEmployees.length > 0) {
-                const employeeCount = notification.relatedEmployees.length;
                 const workDetails = notification.workDetails || {};
+                title = workDetails.name || 'کاری ڕۆژانەی تایبەت';
 
                 // Format time display
                 let timeDisplay = '';
@@ -7313,70 +7496,96 @@
                     timeDisplay = `${workDetails.startTime} - ${workDetails.endTime}`;
                 }
 
-                content = `
-                    <div class="notification-content-minimal">
-                        <div class="notification-header-minimal">
-                            <i class="bi ${statusIcon}"></i>
-                            <div class="notification-info">
-                                <strong><span class="notification-id-badge">ID: ${notificationID}</span> ${workDetails.name || 'کاری ڕۆژانەی تایبەت'}</strong>
-                                <span class="notification-meta">
-                                    ${getDepartmentDisplayName(notification.targetDepartment)} • 
-                                    ${employeeCount} کارمەند • 
-                                    ${workDetails.date || notification.createdAt.split('T')[0]}
-                                    ${timeDisplay ? ` • ${timeDisplay}` : ''}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="notification-message">
-                            ${notification.message || `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری ${workDetails.name}ی ئەنجامداوە`}
-                        </div>
-                        ${workDetails.note ? `<div class="notification-note">${workDetails.note}</div>` : ''}
-                        <div class="notification-employees-list small mt-1">
-                            <strong>کارمەندەکان:</strong>
-                            ${notification.relatedEmployees.map(emp =>
-                    `${emp.employeeName} (${emp.rating})`
-                ).join('، ')}
-                        </div>
-                        ${notification.status !== 'pending' ? `
-                        <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
-                            ${notification.status === 'confirmed' ?
-                            `<span class="text-success"><i class="bi bi-check-all"></i> پەسەندکراوە لەلایەن: ${notification.confirmedBy || notification.resolvedBy || 'ئەدمین'}</span>` :
-                            `<span class="text-danger"><i class="bi bi-x-circle"></i> ڕەتکرایەوە لەلایەن: ${notification.rejectedBy || notification.resolvedBy || 'ئەدمین'}</span>`
-                        }
-                            <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
-                        </div>` : ''}
+                message = `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری <strong>${title}</strong>ی ئەنجامداوە`;
+                if (workDetails.note) note = workDetails.note;
+
+                detailsHtml = `
+                    <div class="notification-meta mt-1">
+                        <i class="bi bi-people"></i>
+                        <span>${notification.relatedEmployees.map(emp => `${emp.employeeName} (${emp.rating})`).join('، ')}</span>
                     </div>
+                    ${timeDisplay ? `<div class="notification-meta"><i class="bi bi-clock"></i> <span>${timeDisplay}</span></div>` : ''}
                 `;
             } else {
-                // Individual notification
-                content = `
-                    <div class="notification-content-minimal">
-                        <div class="notification-header-minimal">
-                            <i class="bi ${statusIcon}"></i>
-                            <div class="notification-info">
-                                <strong><span class="notification-id-badge">ID: ${notificationID}</span> ${notification.title || 'ئاگادارکردنەوە'}</strong>
-                                <span class="notification-meta">
-                                    ${getDepartmentDisplayName(notification.targetDepartment)} • 
-                                    ${formatDate(notification.createdAt)}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="notification-message">${notification.message || 'هیچ پەیامێک نییە'}</div>
-                        ${notification.note ? `<div class="notification-note">${notification.note}</div>` : ''}
-                        ${notification.status !== 'pending' ? `
-                        <div class="notification-resolution-info small text-muted mt-2 border-top pt-1">
-                            ${notification.status === 'confirmed' ?
-                            `<span class="text-success"><i class="bi bi-check-all"></i> پەسەندکراوە لەلایەن: ${notification.confirmedBy || notification.resolvedBy || 'ئەدمین'}</span>` :
-                            `<span class="text-danger"><i class="bi bi-x-circle"></i> ڕەتکرایەوە لەلایەن: ${notification.rejectedBy || notification.resolvedBy || 'ئەدمین'}</span>`
-                        }
-                            <span class="ms-2">(${formatDate(notification.resolvedAt || new Date().toISOString())})</span>
-                        </div>` : ''}
-                    </div>
-                `;
+                message = notification.message;
             }
 
-            notificationDiv.innerHTML = content + actionsHtml;
-            addNotificationEventListeners(notificationDiv, notification);
+            // Resolution Info
+            let resolutionHtml = '';
+            if (notification.status !== 'pending') {
+                const resolver = notification.confirmedBy || notification.rejectedBy || notification.processedBy || 'سیستەم';
+                const actionText = notification.status === 'confirmed' ? 'پەسەندکراوە' : 'ڕەتکراوەتەوە';
+                const actionColor = notification.status === 'confirmed' ? 'text-success' : 'text-danger';
+                resolutionHtml = `
+                    <div class="notification-meta" style="margin-top: 8px;">
+                        <span class="${actionColor} fw-bold"><i class="bi ${statusIconClass}"></i> ${actionText}</span>
+                        <span>لەلایەن: ${resolver}</span>
+                    </div>
+                 `;
+            }
+
+            notificationDiv.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-icon">
+                        <i class="bi ${statusIconClass}"></i>
+                    </div>
+                    <div class="notification-title-row">
+                        <div class="notification-title">${title}</div>
+                        <div class="notification-id">ID: ${notificationID}</div>
+                    </div>
+                </div>
+                
+                <div class="notification-body">
+                    ${message}
+                    ${note ? `<div class="record-note mt-2">${note}</div>` : ''}
+                </div>
+                
+                ${detailsHtml}
+                
+                <div class="notification-meta">
+                     <i class="bi bi-calendar3"></i>
+                     <span>${notification.createdAt ? new Date(notification.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}</span>
+                     <span class="mx-2">•</span>
+                     <span>${getDepartmentDisplayName(notification.targetDepartment)}</span>
+                </div>
+                
+                ${resolutionHtml}
+                ${actionsHtml}
+            `;
+
+            // Add Event Listeners
+            const confirmBtn = notificationDiv.querySelector('.confirm-notification-btn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    finalConfirmNotification(notification.id);
+                });
+            }
+
+            const rejectBtn = notificationDiv.querySelector('.reject-notification-btn');
+            if (rejectBtn) {
+                rejectBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    finalRejectNotification(notification.id);
+                });
+            }
+
+            const deleteBtn = notificationDiv.querySelector('.delete-notification-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteNotification(notification.id);
+                });
+            }
+
+            const editBtn = notificationDiv.querySelector('.edit-notification-btn');
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // editNotification(notification.id); // Placeholder if needed
+                });
+            }
+
             return notificationDiv;
         }
 
