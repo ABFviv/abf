@@ -1322,9 +1322,476 @@
         /* Guaranteed fix for invisible text and numbers inside the notification page/modal */
         #notificationsPage,
         #notificationsPage * {
-            /* Set color to absolute black and override all nested element styles */
             color: #000000 !important;
-            /* This ensures that numbers and text are visible against a white background */
+        }
+
+        /* --- Modern Time Filter CSS --- */
+        .modern-filter-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 25px;
+        }
+
+        .filter-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .quick-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-select-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 12px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .quick-select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-color: #cbd5e1;
+            color: var(--primary-color);
+        }
+
+        .quick-select-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 10px rgba(198, 40, 40, 0.3);
+        }
+
+        .custom-date-row {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+            margin-top: 15px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modern-input-group {
+            position: relative;
+        }
+
+        .modern-input-group label {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: white;
+            padding: 0 5px;
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        .modern-date-input {
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 0 15px;
+            font-weight: 600;
+            color: #334155;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .modern-date-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
+        }
+
+        .apply-filter-btn {
+            height: 50px;
+            border-radius: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .apply-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+        }
+
+        /* --- Modern Action Buttons --- */
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .action-group {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-group-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .modern-action-btn {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .modern-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            opacity: 0.95;
+            color: white;
+        }
+
+        .btn-filter-action {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        }
+
+        .btn-manage {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .btn-report {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+
+        .btn-work {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .btn-special {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .modern-search-input {
+            padding-left: 40px !important;
+        }
+
+        /* --- Modern Table Styling --- */
+        .modern-table-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            /* Soft, premium shadow */
+            overflow: hidden;
+            /* Ensures corners are rounded */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+        }
+
+        .modern-table-header {
+            background: linear-gradient(to right, #f8fafc, #fff);
+            padding: 20px 25px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-responsive {
+            max-height: 700px;
+            /* Limit height for sticky header utility */
+            overflow-y: auto;
+        }
+
+        .modern-table {
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .modern-table thead th {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 18px 15px;
+            border-bottom: 2px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .modern-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        /* Zebra Striping */
+        .modern-table tbody tr:nth-of-type(odd) {
+            background-color: #f8fafc;
+        }
+
+        .modern-table tbody tr:hover {
+            background-color: #e2e8f0 !important;
+            transform: scale(1.002);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 1;
+            position: relative;
+        }
+
+        .modern-table tbody td {
+            padding: 16px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badge (Example) */
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Rating Badges */
+        .rating-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .rating-excellent {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .rating-good {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .rating-average {
+            background-color: #fef9c3;
+            color: #a16207;
+            border: 1px solid #fde047;
+        }
+
+        /* Premium Records Button */
+        .btn-record-premium {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.3), 0 2px 4px -1px rgba(6, 182, 212, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-record-premium:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.4), 0 4px 6px -2px rgba(6, 182, 212, 0.2);
+            color: white;
+        }
+
+        .rating-poor {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        /* Modern Work Record Card - Compact */
+        .modern-record-card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f1f5f9;
+            border-left: 4px solid #cbd5e1;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modern-record-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .modern-record-card.rating-high {
+            border-left-color: #22c55e;
+        }
+
+        .modern-record-card.rating-medium {
+            border-left-color: #3b82f6;
+        }
+
+        .modern-record-card.rating-average {
+            border-left-color: #eab308;
+        }
+
+        .modern-record-card.rating-low {
+            border-left-color: #ef4444;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e293b;
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .record-date {
+            font-size: 0.75rem;
+            color: #64748b;
+            background: #f8fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .record-rating-badge {
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .record-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            margin-bottom: 1px;
+        }
+
+        .detail-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .record-note {
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.4;
+            background: #fff;
+            padding: 8px;
+            border-left: 2px solid #e2e8f0;
+            font-style: italic;
+        }
+
+        .record-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            margin-top: 4px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 6px;
         }
     </style>
 </head>
@@ -1393,136 +1860,260 @@
             </div>
         </div>
 
-        <!-- Period Filter Section -->
-        <div class="period-filter">
-            <div class="row g-3 align-items-center">
-                <div class="col-md-3">
-                    <label for="periodType" class="form-label text-center w-100">هەڵبژاردنی کات</label>
-                    <select class="form-select text-center" id="periodType">
-                        <option value="all">سەرجەم کاتەکان</option>
-                        <option value="custom">کاتێکی دیاریکراو</option>
-                    </select>
+        <!-- Modern/Premium Time Filter Section (Hidden by default) -->
+        <div class="modern-filter-card" id="timeFilterCard" style="display: none;">
+            <div class="filter-header">
+                <i class="bi bi-calendar-range text-primary fs-4"></i>
+                <span>فیلتەری کات و بەروار</span>
+            </div>
+
+            <!-- Quick Select Buttons -->
+            <div class="quick-select-grid">
+                <button class="quick-select-btn active" onclick="setQuickPeriod('all')">
+                    <i class="bi bi-infinity"></i> هەموو کاتەکان
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('today')">
+                    <i class="bi bi-calendar-check"></i> ئەمڕۆ
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('yesterday')">
+                    <i class="bi bi-clock-history"></i> دوێنێ
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('thisWeek')">
+                    <i class="bi bi-calendar-week"></i> ئەم هەفتەیە
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('thisMonth')">
+                    <i class="bi bi-calendar-month"></i> ئەم مانگە
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('lastMonth')">
+                    <i class="bi bi-calendar-minus"></i> مانگی پێشوو
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('last6Months')">
+                    <i class="bi bi-calendar3-range"></i> ٦ مانگی ڕابردوو
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('thisYear')">
+                    <i class="bi bi-calendar4-week"></i> ئەمساڵ
+                </button>
+                <button class="quick-select-btn" onclick="setQuickPeriod('custom')">
+                    <i class="bi bi-pencil-square"></i> دیاریکراو
+                </button>
+            </div>
+
+            <!-- Custom Date Inputs (Hidden by default) -->
+            <div class="row g-3 custom-date-row" id="customDateRow" style="display: none;">
+                <div class="col-md-5">
+                    <div class="modern-input-group">
+                        <label>لە بەرواری</label>
+                        <input type="date" class="form-control modern-date-input" id="startPeriod">
+                    </div>
                 </div>
-                <div class="col-md-3 custom-period" style="display: none;">
-                    <label for="startPeriod" class="form-label text-center w-100">کاتی دەستپێک</label>
-                    <input type="date" class="form-control text-center" id="startPeriod">
+                <div class="col-md-5">
+                    <div class="modern-input-group">
+                        <label>هەتا بەرواری</label>
+                        <input type="date" class="form-control modern-date-input" id="endPeriod">
+                    </div>
                 </div>
-                <div class="col-md-3 custom-period" style="display: none;">
-                    <label for="endPeriod" class="form-label text-center w-100">کاتی کۆتایی</label>
-                    <input type="date" class="form-control text-center" id="endPeriod">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-center w-100">&nbsp;</label>
-                    <button class="btn btn-primary w-100" id="applyPeriodBtn">
-                        <i class="bi bi-funnel"></i> جێبەجێکردنی کات
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100 apply-filter-btn" id="applyPeriodBtn">
+                        <i class="bi bi-funnel-fill"></i> جێبەجێکردن
                     </button>
                 </div>
             </div>
+
+            <!-- Hidden select for compatibility -->
+            <select id="periodType" style="display: none;">
+                <option value="all">all</option>
+                <option value="custom">custom</option>
+            </select>
         </div>
 
-        <div class="filter-section">
+        <div class="modern-filter-card">
+            <div class="filter-header">
+                <i class="bi bi-people-fill text-primary fs-4"></i>
+                <span>فیلتەرکردنی کارمەندان</span>
+                <div class="ms-auto">
+                    <button class="btn btn-sm btn-outline-secondary" id="timeFilterToggleBtn"
+                        onclick="toggleTimeFilter()">
+                        <i class="bi bi-calendar-range me-1"></i> فیلتەری کات
+                    </button>
+                </div>
+            </div>
+
             <div class="row g-3">
                 <div class="col-md-3">
-                    <input type="text" class="form-control" id="searchName" placeholder="گەڕان بەپێی ناو">
+                    <div class="modern-input-group">
+                        <label>گەڕان بەپێی ناو</label>
+                        <input type="text" class="form-control modern-date-input modern-search-input" id="searchName">
+                        <i class="bi bi-search search-icon"></i>
+                    </div>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control" id="searchId" placeholder="گەڕان بەپێی ژمارەی کارمەند">
+                    <div class="modern-input-group">
+                        <label>گەڕان بەپێی ژمارە</label>
+                        <input type="text" class="form-control modern-date-input modern-search-input" id="searchId">
+                        <i class="bi bi-hash search-icon"></i>
+                    </div>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" id="filterPosition">
-                        <option value="">سەرجەم پیشەکان</option>
-                    </select>
+                    <div class="modern-input-group">
+                        <label>پۆلین بەپێی پیشە</label>
+                        <select class="form-select modern-date-input" id="filterPosition">
+                            <option value="">سەرجەم پیشەکان</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" id="filterDepartment">
-                        <option value="">سەرجەم بەشەکان</option>
-                        <option value="crushing-prep">هاڕین و ئامادەکردن</option>
-                        <option value="cutting-setting">بڕین و بارکردن</option>
-                        <option value="klin">فڕن</option>
-                        <option value="unsetting">داگرتن</option>
-                        <option value="mechanical">میکانیک</option>
-                        <option value="electrical-ac">کارەبا</option>
-                        <option value="engineering" class="admin-only">ئەندازیاریی</option>
-                        <option value="management" class="admin-only">لێپرسراوەکان</option>
-                    </select>
+                    <div class="modern-input-group">
+                        <label>پۆلین بەپێی بەش</label>
+                        <select class="form-select modern-date-input" id="filterDepartment">
+                            <option value="">سەرجەم بەشەکان</option>
+                            <option value="crushing-prep">هاڕین و ئامادەکردن</option>
+                            <option value="cutting-setting">بڕین و بارکردن</option>
+                            <option value="klin">فڕن</option>
+                            <option value="unsetting">داگرتن</option>
+                            <option value="mechanical">میکانیک</option>
+                            <option value="electrical-ac">کارەبا</option>
+                            <option value="engineering" class="admin-only">ئەندازیاریی</option>
+                            <option value="management" class="admin-only">لێپرسراوەکان</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-12">
-                    <button class="btn btn-primary" id="filterBtn">
-                        <i class="bi bi-funnel"></i> دیاریی بکە
-                    </button>
-                    <button class="btn btn-secondary ms-2" id="resetBtn">
-                        <i class="bi bi-arrow-clockwise"></i> گەڕاندنەوە
-                    </button>
-                    <button class="btn btn-success ms-2 admin-only" id="addEmployeeBtn">
-                        <i class="bi bi-person-plus"></i> زیادکردنی کارمەند
-                    </button>
-                    <button class="btn btn-warning ms-2" id="testFirebaseBtn">
-                        <i class="bi bi-database-check"></i> Test Firebase
-                    </button>
-                    <button class="btn btn-success ms-2 admin-only" id="exportBtn">
-                        <i class="bi bi-file-earmark-excel"></i> بینێرە بۆ ئێکزڵ
-                    </button>
-                    <button class="btn btn-info ms-2 admin-and-supervisor-only" id="printBtn">
-                        <i class="bi bi-printer"></i> پرینت
-                    </button>
-                    <button class="btn btn-primary ms-2 admin-and-supervisor-only" id="projectsBtn"
-                        onclick="showProjectsPage()">
-                        <i class="bi bi-briefcase"></i> پڕۆژە
-                    </button>
-                    </button>
-                    <button class="btn btn-success ms-2 electrical-mechanical-only" id="specialDailyWorkBtn"
-                        style="display: none;">
-                        <i class="bi bi-plus-circle"></i> کاری ڕۆژانەی تایبەت
-                    </button>
-                    <button class="btn btn-success ms-2 quick-record-only" id="quickRecordBtn" style="display: none;">
-                        <i class="bi bi-plus-circle"></i> زیادکردنی تۆمار
-                    </button>
-                    <button class="btn btn-info ms-2 cleaning-work-only" id="cleaningWorkBtn" style="display: none;">
-                        <i class="bi bi-stars"></i> کاری پاککردنەوە
-                    </button>
-                    <button class="btn btn-warning ms-2 greasing-work-only" id="greasingWorkBtn" style="display: none;">
-                        <i class="bi bi-gear-wide-connected"></i> کاری گریسین
-                    </button>
-                    <button class="btn btn-primary ms-2" id="viewTotalsBtn" onclick="showTotalsPage()">
-                        <i class="bi bi-bar-chart-line"></i> کۆی گشتی
-                    </button>
+
+            <div class="action-buttons-grid">
+                <!-- Group 1: Filter Operations -->
+                <div class="action-group">
+                    <div class="action-group-title"><i class="bi bi-funnel me-1"></i> گەڕان و فیلتەر</div>
+                    <div class="action-btn-container">
+                        <button class="modern-action-btn btn-filter-action" id="filterBtn">
+                            <i class="bi bi-check2-circle"></i> جێبەجێکردن
+                        </button>
+                        <button class="modern-action-btn btn-outline-secondary" id="resetBtn"
+                            style="border: 1px solid #cbd5e1; color: #64748b; background: white;">
+                            <i class="bi bi-arrow-counterclockwise"></i> گەڕاندنەوە
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 2: Management -->
+                <div class="action-group admin-only">
+                    <div class="action-group-title"><i class="bi bi-gear me-1"></i> بەڕێوبردن</div>
+                    <div class="action-btn-container">
+                        <button class="modern-action-btn btn-manage" id="addEmployeeBtn">
+                            <i class="bi bi-person-plus-fill"></i> زیادکردنی کارمەند
+                        </button>
+                        <button class="modern-action-btn btn-manage admin-and-supervisor-only" id="projectsBtn"
+                            onclick="showProjectsPage()">
+                            <i class="bi bi-briefcase-fill"></i> پڕۆژەکان
+                        </button>
+                        <button class="modern-action-btn btn-warning" id="testFirebaseBtn" style="display: none;">
+                            <i class="bi bi-bug"></i> Test DB
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 3: Reports -->
+                <div class="action-group">
+                    <div class="action-group-title"><i class="bi bi-file-earmark-text me-1"></i> ڕاپۆرتەکان</div>
+                    <div class="action-btn-container">
+                        <button class="modern-action-btn btn-report admin-only" id="exportBtn">
+                            <i class="bi bi-file-earmark-excel-fill"></i> ئێکسڵ
+                        </button>
+                        <button class="modern-action-btn btn-report admin-and-supervisor-only" id="printBtn">
+                            <i class="bi bi-printer-fill"></i> پرینت
+                        </button>
+                        <button class="modern-action-btn btn-report" id="viewTotalsBtn" onclick="showTotalsPage()">
+                            <i class="bi bi-bar-chart-fill"></i> ئاماری گشتی
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 4: Daily Work -->
+                <div class="action-group">
+                    <div class="action-group-title"><i class="bi bi-clipboard-check me-1"></i> تۆماری ڕۆژانە</div>
+                    <div class="action-btn-container">
+                        <button class="modern-action-btn btn-work quick-record-only" id="quickRecordBtn"
+                            style="display: none;">
+                            <i class="bi bi-lightning-charge-fill"></i> تۆماری خێرا
+                        </button>
+                        <button class="modern-action-btn btn-special electrical-mechanical-only"
+                            id="specialDailyWorkBtn" style="display: none;">
+                            <i class="bi bi-tools"></i> کاری تایبەت
+                        </button>
+                        <button class="modern-action-btn btn-work cleaning-work-only" id="cleaningWorkBtn"
+                            style="display: none;">
+                            <i class="bi bi-stars"></i> پاککردنەوە
+                        </button>
+                        <button class="modern-action-btn btn-special greasing-work-only" id="greasingWorkBtn"
+                            style="display: none;">
+                            <i class="bi bi-gear-wide-connected"></i> گریسین
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                لیستی کارمەندەکان
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th onclick="sortTable('id')"><i class="bi bi-arrow-down-up sort-icon"></i> ژمارەی
-                                    کارمەند</th>
-                                <th onclick="sortTable('name')"><i class="bi bi-arrow-down-up sort-icon"></i> ناوی
-                                    کارمەند</th>
-                                <th onclick="sortTable('position')"><i class="bi bi-arrow-down-up sort-icon"></i> پیشە
-                                </th>
-                                <th onclick="sortTable('department')"><i class="bi bi-arrow-down-up sort-icon"></i> بەش
-                                </th>
-                                <th onclick="sortTable('dailyRating')"><i class="bi bi-arrow-down-up sort-icon"></i>
-                                    هەڵسەنگاندنی ڕۆژانە</th>
-                                <th onclick="sortTable('otherRating')"><i class="bi bi-arrow-down-up sort-icon"></i>
-                                    هەڵسەنگاندنی کارەکانی دیکە</th>
-                                <th>کاری ڕۆژانە</th>
-                                <th>کارەکانی دیکە</th>
-                                <th>دانان</th>
-                            </tr>
-                        </thead>
-                        <tbody id="employeeTableBody">
-                            <!-- Employee rows will be inserted here -->
-                        </tbody>
-                    </table>
+        <!-- Modern/Premium Table Section -->
+        <div class="modern-table-card">
+            <div class="modern-table-header">
+                <div>
+                    <h5 class="m-0 fw-bold text-dark"><i class="bi bi-list-ul text-primary me-2"></i> لیستی کارمەندەکان
+                    </h5>
+                    <span class="text-muted small ms-4">سەرجەم کارمەندەکان و وردەکارییەکانیان</span>
                 </div>
+                <div class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i> بۆ بینینی وردەکاری زیاتر کرتە لە کارمەند بکە
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table modern-table table-hover">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('id')" style="cursor: pointer; width: 100px;">
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-hash"></i> ژمارە
+                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th onclick="sortTable('name')" style="cursor: pointer;">
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-person"></i> ناو
+                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th onclick="sortTable('position')" style="cursor: pointer;">
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-briefcase"></i> پیشە
+                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th onclick="sortTable('department')" style="cursor: pointer;">
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-diagram-3"></i> بەش
+                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th onclick="sortTable('dailyRating')" class="text-center" style="cursor: pointer;">
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <i class="bi bi-star"></i> ڕۆژانە
+                                    <i class="bi bi-arrow-down-up opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th onclick="sortTable('otherRating')" class="text-center" style="cursor: pointer;">
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <i class="bi bi-star"></i> دیکە
+                                    <i class="bi bi-arrow-down-up opacity-50 small"></i>
+                                </div>
+                            </th>
+                            <th class="text-center">کاری ڕۆژانە</th>
+                            <th class="text-center">کارەکانی دیکە</th>
+                            <th class="text-center">کردارەکان</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody">
+                        <!-- Employee rows will be inserted here -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -3188,20 +3779,115 @@
             updateDailyWorkTotals();
             showNotification('فیلتەری بەش جێبەجێ کرا', 'success');
         }
-        // Toggle custom period fields
-        function toggleCustomPeriod() {
-            const periodType = document.getElementById('periodType').value;
-            const customPeriodFields = document.querySelectorAll('.custom-period');
 
-            if (periodType === 'custom') {
-                customPeriodFields.forEach(field => {
-                    field.style.display = 'block';
-                });
+        // Toggle Time Filter Visibility
+        function toggleTimeFilter() {
+            const card = document.getElementById('timeFilterCard');
+            const btn = document.getElementById('timeFilterToggleBtn');
+
+            if (card.style.display === 'none') {
+                card.style.display = 'block';
+                btn.classList.add('active'); // Optional: change button style when active
             } else {
-                customPeriodFields.forEach(field => {
-                    field.style.display = 'none';
-                });
+                card.style.display = 'none';
+                btn.classList.remove('active');
             }
+        }
+
+        // Set Quick Period
+        function setQuickPeriod(type) {
+            // Update active button state
+            document.querySelectorAll('.quick-select-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Handle UI visibility
+            const customRow = document.getElementById('customDateRow');
+            const periodSelect = document.getElementById('periodType');
+
+            if (type === 'custom') {
+                customRow.style.display = 'flex';
+                periodSelect.value = 'custom';
+                return; // User manually enters dates
+            } else {
+                customRow.style.display = 'none';
+                periodSelect.value = 'custom'; // Use custom logic for specific dates
+            }
+
+            // Calculate dates
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+
+            switch (type) {
+                case 'all':
+                    periodSelect.value = 'all';
+                    applyPeriodFilter();
+                    return;
+
+                case 'today':
+                    // Start and end are today
+                    break;
+
+                case 'yesterday':
+                    startDate.setDate(today.getDate() - 1);
+                    endDate.setDate(today.getDate() - 1);
+                    break;
+
+                case 'thisWeek':
+                    // Saturday is start of week in many usages locally, but let's stick to standard or Saturday-Thursday
+                    // Assuming Saturday is start of week for Kurdistan
+                    const day = today.getDay(); // 0 (Sun) to 6 (Sat)
+                    // Adjust if Saturday (6) is start
+                    // If today is Friday (5), start was last Saturday
+
+                    // Simple approach: Start from last Saturday (or today if Saturday)
+                    const distToSat = (day + 1) % 7;
+                    startDate.setDate(today.getDate() - distToSat);
+                    break;
+
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+
+                case 'last6Months':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+                    break;
+
+                case 'thisYear':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    break;
+            }
+
+            // Set inputs
+            const formatDate = (date) => {
+                const d = new Date(date);
+                let month = '' + (d.getMonth() + 1);
+                let day = '' + d.getDate();
+                const year = d.getFullYear();
+
+                if (month.length < 2) month = '0' + month;
+                if (day.length < 2) day = '0' + day;
+
+                return [year, month, day].join('-');
+            };
+
+            document.getElementById('startPeriod').value = formatDate(startDate);
+            document.getElementById('endPeriod').value = formatDate(endDate);
+
+            // Auto apply
+            applyPeriodFilter();
+        }
+
+        // Toggle custom period fields (Legacy support, but overridden by new UI)
+        function toggleCustomPeriod() {
+            // Kept for compatibility if called elsewhere, but logic handled in setQuickPeriod
         }
 
         // Apply period filter
@@ -3610,28 +4296,27 @@
                     <td>${employee.name}</td>
                     <td><span class="position-badge">${employee.position}</span></td>
                     <td>${departmentDisplay}</td>
-                    <td><span class="badge rating-badge ${dailyRatingClass}">${dailyRating.toFixed(1)}</span></td>
-                    <td><span class="badge rating-badge ${otherRatingClass}">${otherRating.toFixed(1)}</span></td>
-                    <td>${dailyWorkDisplay}</td>
-                    <td>${otherWorkDisplay}</td>
-                    <td>
-                        <td>
-    <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}">
-        <i class="bi bi-eye"></i> سەیرکردن
-    </button>
-    <button class="btn btn-sm btn-info work-records-btn ms-1" data-id="${employee.id}">
-        <i class="bi bi-clipboard-data"></i> تۆمارەکان
-    </button>
-    ${currentUser.role === 'admin' ? `
-    <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}">
-        <i class="bi bi-pencil"></i> چاککردن
-    </button>
-    <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}">
-        <i class="bi bi-trash"></i> سڕینەوە
-    </button>
-    ` : ''}
-</td>
-`
+                    <td class="text-center"><span class="badge rating-badge ${dailyRatingClass}">${dailyRating.toFixed(1)}</span></td>
+                    <td class="text-center"><span class="badge rating-badge ${otherRatingClass}">${otherRating.toFixed(1)}</span></td>
+                    <td class="text-center">${dailyWorkDisplay}</td>
+                    <td class="text-center">${otherWorkDisplay}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}" title="سەیرکردن">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info btn-record-premium work-records-btn ms-1" data-id="${employee.id}" title="تۆمارەکان" style="border:none;">
+                            <i class="bi bi-clipboard-data-fill"></i>
+                        </button>
+                        ${currentUser.role === 'admin' ? `
+                        <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}" title="چاککردن">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}" title="سڕینەوە">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        ` : ''}
+                    </td>
+                `;
 
                 tbody.appendChild(row);
             });
@@ -4119,7 +4804,7 @@
             }
         }
 
-        // Load work records - Minimalist design with newest first
+        // Load work records - Modern Card Design
         function loadWorkRecords(employee = null) {
             if (!employee) {
                 employee = employees.find(emp => emp.id === currentEmployeeId);
@@ -4151,97 +4836,121 @@
             if (workRecords.length > 0) {
                 workRecords.forEach((work, index) => {
                     const recordDiv = document.createElement('div');
-                    recordDiv.className = 'work-record-minimal';
 
-                    const ratingClass = getWorkRecordClass(parseInt(work.rate));
+                    // Determine card class based on rating
+                    let cardClass = 'rating-average';
+                    const rate = parseInt(work.rate);
+                    if (rate >= 80) cardClass = 'rating-high';
+                    else if (rate >= 50) cardClass = 'rating-medium';
+                    else if (rate >= 0) cardClass = 'rating-average';
+                    else cardClass = 'rating-low';
+
+                    recordDiv.className = `modern-record-card ${cardClass}`;
+
                     const isSpecial = work.isSpecial;
-
                     let recordContent = '';
 
+                    // Determine main title and badge text
+                    let mainTitle = '';
+                    let badgeText = '';
+                    let badgeClass = '';
+
+                    if (rate >= 50) { badgeText = 'باش'; badgeClass = 'text-success bg-opacity-10 bg-success'; }
+                    else if (rate >= 0) { badgeText = 'مامناوەند'; badgeClass = 'text-warning bg-opacity-10 bg-warning'; }
+                    else { badgeText = 'خراپ'; badgeClass = 'text-danger bg-opacity-10 bg-danger'; }
+
                     if (isSpecial) {
-                        // Special work record - compact design
-                        recordContent = `
-                    <div class="record-header-minimal">
-                        <div class="record-main-info">
-                            <strong>${work.name}</strong>
-                            <span class="record-date">${work.date}</span>
-                        </div>
-                        <span class="record-rating-minimal ${ratingClass}">${work.rate}</span>
-                    </div>
-                    <div class="record-details-minimal">
-                        <span class="record-department">${getDepartmentDisplayName(work.workDepartment)}</span>
-                        ${work.totalHours ? `<span class="record-time">${work.totalHours}س ${work.totalMinutes}د</span>` : ''}
-                    </div>
-                `;
+                        mainTitle = work.name;
                     } else if (currentRecordType === 'daily') {
-                        // In the section that creates daily work records:
-                        const detail = work.carts ? `${work.carts} عەرەبانە` :
+                        mainTitle = work.carts ? `${work.carts} عەرەبانە` :
                             (work.clayTons ? `${work.clayTons} طەن` :
-                                (work.name ? `${work.name}` : 'کاری ڕۆژانە')); // Added work.name check
-                        recordContent = `
-                    <div class="record-header-minimal">
-                        <div class="record-main-info">
-                            <strong>${detail}</strong>
-                            <span class="record-date">${work.date}</span>
-                        </div>
-                        <span class="record-rating-minimal ${ratingClass}">${work.rate}</span>
-                    </div>
-                `;
+                                (work.name ? `${work.name}` : 'کاری ڕۆژانە'));
                     } else {
-                        // Other work record - compact design
-                        recordContent = `
-                    <div class="record-header-minimal">
-                        <div class="record-main-info">
-                            <strong>${work.name}</strong>
-                            <span class="record-date">${work.date}</span>
+                        mainTitle = work.name;
+                    }
+
+                    recordContent = `
+                        <div class="record-header">
+                            <div>
+                                <div class="record-title">${mainTitle}</div>
+                                <div class="record-date">
+                                    <i class="bi bi-calendar-event me-1"></i> ${work.date}
+                                </div>
+                            </div>
+                            <div class="record-rating-badge ${badgeClass} border border-opacity-10">
+                                ${work.rate} <span class="fw-light small opacity-75">| ${badgeText}</span>
+                            </div>
                         </div>
-                        <span class="record-rating-minimal ${ratingClass}">${work.rate}</span>
-                    </div>
-                `;
+                    `;
+
+                    // Details Grid
+                    recordContent += `<div class="record-details-grid">`;
+
+                    if (isSpecial) {
+                        recordContent += `
+                            <div class="detail-item">
+                                <span class="detail-label">بەش</span>
+                                <span class="detail-value">${getDepartmentDisplayName(work.workDepartment)}</span>
+                            </div>
+                        `;
+                        if (work.totalHours) {
+                            recordContent += `
+                                <div class="detail-item">
+                                    <span class="detail-label">کات</span>
+                                    <span class="detail-value">${work.totalHours}س ${work.totalMinutes}د</span>
+                                </div>
+                            `;
+                        }
+                    } else if (currentRecordType === 'daily' && !isSpecial) {
+                        // Standard daily work details can go here if distinct from main title
+                        // Currently main title covers carts/tons
                     }
 
-                    // Add note if exists
+                    recordContent += `</div>`;
+
+                    // Note
                     if (work.note) {
-                        recordContent += `<div class="record-note-minimal">${work.note}</div>`;
+                        recordContent += `<div class="record-note">"${work.note}"</div>`;
                     }
 
-                    // Add action buttons for authorized users
+                    // Actions
                     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                         recordContent += `
-                    <div class="record-actions-minimal">
-                        <button class="btn btn-sm btn-outline-warning edit-record-btn" data-index="${index}" data-type="${currentRecordType}">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        ${currentUser.role === 'admin' ? `
-                        <button class="btn btn-sm btn-outline-danger delete-record-btn ms-1" data-index="${index}" data-type="${currentRecordType}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        ` : ''}
-                    </div>
-                `;
+                            <div class="record-actions">
+                                <button class="btn btn-sm btn-outline-warning edit-record-btn" data-index="${index}" data-type="${currentRecordType}" title="دەستکاری">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                ${currentUser.role === 'admin' ? `
+                                <button class="btn btn-sm btn-outline-danger delete-record-btn ms-1" data-index="${index}" data-type="${currentRecordType}" title="سڕینەوە">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                ` : ''}
+                            </div>
+                        `;
                     }
 
                     recordDiv.innerHTML = recordContent;
                     recordsContainer.appendChild(recordDiv);
                 });
             } else {
-                recordsContainer.innerHTML = '<p class="text-muted text-center">هیچ تۆمارێک نییە</p>';
+                recordsContainer.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-clipboard-x text-muted display-4 opacity-25"></i>
+                        <p class="text-muted mt-3">هیچ تۆمارێک نییە</p>
+                    </div>
+                `;
             }
 
-            // Add event listeners to edit and delete buttons
+            // Restore functionality for buttons
             document.querySelectorAll('.edit-record-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
-                    const index = parseInt(this.dataset.index);
-                    const type = this.dataset.type;
-                    editWorkRecord(index, type);
+                    editWorkRecord(parseInt(this.dataset.index), this.dataset.type);
                 });
             });
 
             document.querySelectorAll('.delete-record-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
-                    const index = parseInt(this.dataset.index);
-                    const type = this.dataset.type;
-                    deleteWorkRecord(index, type);
+                    deleteWorkRecord(parseInt(this.dataset.index), this.dataset.type);
                 });
             });
         }
