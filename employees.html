@@ -5983,6 +5983,17 @@
             });
         }
 
+        // Get automatic rating based on department and cart count
+        function getAutomaticRating(employeeId, department, cartCount) {
+            // For unsetting department: (carts / 11) * 100 = rating
+            if (department === 'unsetting') {
+                return Math.round((cartCount / 11) * 100);
+            }
+
+            // For other departments, return null to use manual rating
+            return null;
+        }
+
         // Save quick record
         async function saveQuickRecord() {
             const date = document.getElementById('quickRecordDate').value;
@@ -6015,7 +6026,7 @@
                     // Use the rating provided by the user
                 } else {
                     // Calculate automatic rating for other departments
-                    const inputValue = parseInt(fieldValue);
+                    const inputValue = parseFloat(fieldValue);
                     if (!isNaN(inputValue)) {
                         const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
                         if (automaticRating !== null) {
@@ -7516,11 +7527,16 @@
                 const resolver = notification.confirmedBy || notification.rejectedBy || notification.processedBy || 'سیستەم';
                 const actionText = notification.status === 'confirmed' ? 'پەسەندکراوە' : 'ڕەتکراوەتەوە';
                 const actionColor = notification.status === 'confirmed' ? 'text-success' : 'text-danger';
+                const resolutionNote = notification.confirmationNote || notification.rejectionNote || '';
+
                 resolutionHtml = `
                     <div class="notification-meta" style="margin-top: 8px;">
                         <span class="${actionColor} fw-bold"><i class="bi ${statusIconClass}"></i> ${actionText}</span>
                         <span>لەلایەن: ${resolver}</span>
                     </div>
+                    ${resolutionNote ? `<div class="record-note mt-2" style="background: ${notification.status === 'confirmed' ? 'rgba(25, 135, 84, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-left: 3px solid ${notification.status === 'confirmed' ? '#198754' : '#dc3545'};">
+                        <strong>تێبینی:</strong> ${resolutionNote}
+                    </div>` : ''}
                  `;
             }
 
@@ -7558,7 +7574,7 @@
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    finalConfirmNotification(notification.id);
+                    confirmNotification(notification.id);
                 });
             }
 
@@ -7566,7 +7582,7 @@
             if (rejectBtn) {
                 rejectBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    finalRejectNotification(notification.id);
+                    rejectNotification(notification.id);
                 });
             }
 
@@ -7582,7 +7598,7 @@
             if (editBtn) {
                 editBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    // editNotification(notification.id); // Placeholder if needed
+                    editNotification(notification.id);
                 });
             }
 
