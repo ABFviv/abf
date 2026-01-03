@@ -406,8 +406,9 @@
 
     <div class="header-bar">
         <div class="logo-container">
-            <div class="logo-icon">
-                <i class="bi bi-gear-wide-connected fs-5"></i>
+            <div class="logo-image-container">
+                <img src="logo.png" alt="Logo"
+                    style="height: 40px; border-radius: 8px; background: white; padding: 4px;">
             </div>
             <div>
                 <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">چاکسازی پێشکەوتوو</h5>
@@ -893,8 +894,8 @@
                                 <textarea class="form-control" id="recRootCause" rows="2"></textarea>
                             </div>
                             <div class="col-md-6 problem-field" style="display:none;">
-                                <label class="form-label">ماوەی وەستان (کاتژمێر : خولەک)</label>
-                                <input type="time" class="form-control" id="recDowntime">
+                                <label class="form-label">ماوەی وەستان (کاتی وەستان بە کاتژمێر و خولەک HH:mm)</label>
+                                <input type="text" class="form-control" id="recDowntime" placeholder="e.g. 02:30">
                             </div>
                             <div class="col-md-6 problem-field" style="display:none;">
                                 <label class="form-label">چارەسەر</label>
@@ -1916,9 +1917,13 @@
             }
         }
 
-        // --- NEW HELPER FUNCTIONS FOR TIME CONVERSION ---
+
+        // --- HELPER FUNCTIONS FOR TIME CONVERSION ---
         function timeToDecimal(timeStr) {
-            if (!timeStr) return 0;
+            if (!timeStr || !timeStr.includes(':')) {
+                const val = parseFloat(timeStr) || 0;
+                return val;
+            }
             const [hours, minutes] = timeStr.split(':').map(Number);
             return hours + (minutes / 60);
         }
@@ -1927,11 +1932,9 @@
             if (!decimalVal && decimalVal !== 0) return "00:00";
             const hours = Math.floor(decimalVal);
             const minutes = Math.round((decimalVal - hours) * 60);
-            // Ensures format is always HH:mm (e.g., 01:05)
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
-        // --- BULK IMPORT FUNCTIONS ---
         function openBulkImportModal() {
             document.getElementById('bulkImportText').value = "";
             document.getElementById('previewTableContainer').style.display = "none";
