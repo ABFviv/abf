@@ -1963,8 +1963,9 @@
     <div class="dashboard-container" id="dashboardPage">
         <div class="header-bar">
             <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="bi bi-people-fill fs-5"></i>
+                <div class="logo-image-container">
+                    <img src="logo.png" alt="Logo"
+                        style="height: 40px; border-radius: 8px; background: white; padding: 4px;">
                 </div>
                 <div>
                     <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">بەڕێوبردنی کارمەند</h5>
@@ -3412,39 +3413,38 @@
 
         // Function to get automatic rating based on employee ID and department
         function getAutomaticRating(employeeId, department, inputValue) {
-            // Check if this employee belongs to a specific sub-department with automatic scaling
+            // 1. Check if this employee belongs to a specific sub-department with automatic scaling
             for (const [subDept, config] of Object.entries(departmentScaling)) {
-                if (config.employeeIds.includes(employeeId)) {
+                if (config.employeeIds && config.employeeIds.includes(employeeId)) {
                     return Math.round(config.equation(inputValue) * 100) / 100;
                 }
             }
 
-            // Check department-wide scaling
+            // 2. Department-wide fallbacks
             if (department === 'unsetting' && departmentScaling.unsetting) {
                 return Math.round(departmentScaling.unsetting.equation(inputValue) * 100) / 100;
             }
-            if (department === 'klin') {
-                const employee = employees.find(emp => emp.id === employeeId);
 
-                // Check if employee exists and position is كارپێکەر
-                if (employee && employee.position === 'کارپێکەر') {
-                    // Get the 4 specific employees who should have carts
-                    // You need to update this with the actual employee IDs
-                    const klinCartEmployees = ['020', '021', '022', '023']; // Replace with actual IDs
-
-                    // Check if this employee is one of the 4 that should have cart numbers
-                    if (klinCartEmployees.includes(employeeId)) {
-                        // For these 4 employees, use automatic rating calculation
-                        return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
-                    }
-                }
-                return null; // No automatic rating for other employees in klin
+            if (department === 'crushing-prep') {
+                // Default to crushing (720) if not explicitly in preparation list
+                return Math.round(departmentScaling.crushing.equation(inputValue) * 100) / 100;
             }
 
+            if (department === 'cutting-setting') {
+                // Default to cutting (72) if not explicitly in setting list
+                return Math.round(departmentScaling.cutting.equation(inputValue) * 100) / 100;
+            }
 
+            if (department === 'klin') {
+                const employee = employees.find(emp => emp.id === employeeId);
+                const klinCartEmployees = ['020', '021', '022', '023']; // Specific employees who handle carts
 
-            // No automatic rating for other cases
-            return null;
+                if (employee && employee.position === 'کارپێکەر' && klinCartEmployees.includes(employeeId)) {
+                    return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
+                }
+            }
+
+            return null; // No automatic rating for other cases
         }
 
         // Initialize the app
@@ -3867,29 +3867,13 @@
 
             if (!cartInput || !ratingInput || !cartInput.value) return;
 
-            // CHANGE: Use parseFloat instead of parseInt to handle decimal numbers
             const inputValue = parseFloat(cartInput.value);
             if (isNaN(inputValue)) return;
 
-            // Special handling for klin department
-            if (employee.department === 'klin') {
-                // Only apply automatic rating for كارپێكەر positions in the 4 specified employees
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with actual IDs
-
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
-                    const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
-                    if (automaticRating !== null) {
-                        ratingInput.value = automaticRating;
-                        ratingValue.textContent = automaticRating;
-                    }
-                }
-            } else {
-                // Get automatic rating for other departments
-                const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
-                if (automaticRating !== null) {
-                    ratingInput.value = automaticRating;
-                    ratingValue.textContent = automaticRating;
-                }
+            const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+            if (automaticRating !== null) {
+                ratingInput.value = automaticRating;
+                ratingValue.textContent = automaticRating;
             }
         }
 
@@ -5981,17 +5965,6 @@
 
                 employeesContainer.appendChild(checkboxDiv);
             });
-        }
-
-        // Get automatic rating based on department and cart count
-        function getAutomaticRating(employeeId, department, cartCount) {
-            // For unsetting department: (carts / 11) * 100 = rating
-            if (department === 'unsetting') {
-                return Math.round((cartCount / 11) * 100);
-            }
-
-            // For other departments, return null to use manual rating
-            return null;
         }
 
         // Save quick record
