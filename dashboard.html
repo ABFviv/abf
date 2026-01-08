@@ -390,7 +390,6 @@
             <div class="header-brand">
                 <img src="logo.png" alt="ASOBRICK Logo" class="header-logo">
                 <div>
-                    
                     <h1 class="header-title">ASOBRICK FACTORY</h1>
                     <p class="header-subtitle">سیستەمی سەرەکی</p>
                 </div>
@@ -444,6 +443,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const rolePermissions = {
                 'hr': ['reports'],
+                'employee': ['reports'],
                 'manager': ['employees', 'manuals'],
                 'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports'],
                 'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports']
@@ -493,4 +493,3 @@
 </body>
 
 </html>
-
