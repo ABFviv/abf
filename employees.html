@@ -3459,6 +3459,13 @@
 
             // User is authenticated, parse user data
             currentUser = JSON.parse(userStr);
+
+            // Block 'employee' role from accessing this page
+            if (currentUser.role === 'employee') {
+                window.location.href = 'dashboard .html';
+                return;
+            }
+
             if (currentUser) {
                 const storedUserInfo = users[currentUser.username];
                 if (!currentUser.displayName) {
