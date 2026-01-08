@@ -1044,7 +1044,9 @@
             'himat': ['cutting', 'setting'], // بڕین and بارکردن
             'hemn': ['crushing-prep', 'preparation'], // هاڕین and ئامادەکردن
             'kiln': ['klin'], // فڕن
-            'samdar': ['unsetting'] // داگرتن
+            'samdar': ['unsetting'], // داگرتن
+            'kilnemp': ['klin'],
+            'cutemp': ['cutting', 'setting']
             // Admin/Managers (not listed) get all access
         };
 
@@ -1128,7 +1130,7 @@
             }
 
             // Access Control: Only admin and HR (and supervisors) can access reports
-            const allowedRoles = ['admin', 'hr', 'supervisor'];
+            const allowedRoles = ['admin', 'hr', 'supervisor', 'employee'];
             if (!allowedRoles.includes(currentUser.role)) {
                 document.querySelector('.container-fluid').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center;">
