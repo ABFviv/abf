@@ -1180,6 +1180,12 @@
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) window.location.href = 'index.html';
         currentUser = JSON.parse(userStr);
+
+        // Block 'employee' role from accessing this page
+        if (currentUser.role === 'employee') {
+            window.location.href = 'dashboard .html';
+        }
+
         document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
         // --- INIT ---
