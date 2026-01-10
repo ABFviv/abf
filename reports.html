@@ -953,7 +953,7 @@
                     </div>
 
                     <div class="col-md-3">
-                        <button class="btn btn-generate w-100" onclick="startNewReport()">
+                        <button id="btnGenerateReport" class="btn btn-generate w-100" onclick="startNewReport()">
                             <i class="bi bi-file-earmark-plus-fill me-2"></i> دروستکردنی ڕاپۆڕت
                         </button>
                     </div>
@@ -1214,6 +1214,10 @@
             // Show dashboard button in header
             const dashboardBtn = document.getElementById('dashboardNavBtn');
             if (dashboardBtn) dashboardBtn.style.display = 'flex';
+
+            // Ensure Generate Button is VISIBLE (reset state)
+            const genBtn = document.getElementById('btnGenerateReport');
+            if (genBtn) genBtn.style.display = 'block';
         }
 
         function showDashboard() {
@@ -1641,6 +1645,11 @@
             currentReportData = data; // Store data for status checks
 
             showReportView();
+
+            // Hide Generate Button in History View
+            const genBtn = document.getElementById('btnGenerateReport');
+            if (genBtn) genBtn.style.display = 'none';
+
             document.getElementById('departmentSelect').value = data.department;
             document.getElementById('reportDate').value = data.date;
 
