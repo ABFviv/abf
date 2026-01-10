@@ -1013,6 +1013,39 @@
         </div>
     </div>
 
+    <!-- BATCH PRINT MODAL -->
+    <div class="modal fade" id="batchPrintModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-printer-fill me-2"></i> چاپکردنی گشتی</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <label class="form-label fw-bold mb-3">بەروارێک دیاری بکە بۆ چاپکردن:</label>
+                    <input type="date" id="batchPrintDate" class="form-control form-control-lg text-center mx-auto"
+                        style="max-width: 250px;">
+                    <p class="text-muted small mt-3">سەرجەم ڕاپۆرتە پەسەندکراوەکانی ئەم ڕۆژە ئامادە دەکرێن.</p>
+                </div>
+                <!-- Progress Bar inside Modal -->
+                <div id="batchPrintProgress" class="px-4 pb-3" style="display:none;">
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                            style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2" id="batchStatusText">Processing...</small>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">داخستن</button>
+                    <button type="button" class="btn btn-primary px-4 fw-bold" onclick="executeBatchPrint()">
+                        <i class="bi bi-printer me-2"></i> چاپکردن
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1767,11 +1800,29 @@
         }
 
         // --- BATCH PRINTING BY DATE ---
-        async function promptBatchPrint() {
-            const date = prompt("بەرواری ڕاپۆرتەکان بنووسە (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-            if (!date) return;
+        function promptBatchPrint() {
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('batchPrintModal'));
+            document.getElementById('batchPrintDate').valueAsDate = new Date();
+            document.getElementById('batchPrintProgress').style.display = 'none';
+            modal.show();
+        }
 
-            showToast("کۆکردنەوەی ڕاپۆرتەکان...", "info");
+        async function executeBatchPrint() {
+            const dateInput = document.getElementById('batchPrintDate');
+            if (!dateInput.value) {
+                alert("Please select a date.");
+                return;
+            }
+            const date = dateInput.value;
+
+            // UI Feedback
+            const btn = document.querySelector('#batchPrintModal .btn-primary');
+            const progress = document.getElementById('batchPrintProgress');
+            const statusText = document.getElementById('batchStatusText');
+            btn.disabled = true;
+            progress.style.display = 'block';
+            statusText.innerText = "Fetching reports...";
 
             try {
                 // Fetch all approved reports for this date
@@ -1782,8 +1833,12 @@
 
                 if (snap.empty) {
                     alert("هیچ ڕاپۆرتێکی پەسەندکراو بۆ ئەم بەروارە نەدۆزرایەوە.");
+                    btn.disabled = false;
+                    progress.style.display = 'none';
                     return;
                 }
+
+                statusText.innerText = `Found ${snap.size} reports. Preparing...`;
 
                 const reports = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 // Sort by department priority
@@ -1804,11 +1859,14 @@
                 const wrapper = document.getElementById('tableWrapper');
                 let batchHtml = '';
 
-                for (const r of reports) {
-                    showToast(`ئامادەکردنی: ${r.department}`, "info");
+                for (let i = 0; i < reports.length; i++) {
+                    const r = reports[i];
+                    statusText.innerText = `Preparing: ${formatDept(r.department)} (${i + 1}/${reports.length})...`;
+
                     document.getElementById('departmentSelect').value = r.department;
                     document.getElementById('reportDate').value = r.date;
 
+                    // Restore Layout structure logic
                     if (r.tableData) {
                         if (r.department === 'klin' && r.tableData['k_rows_setting']) {
                             const el = document.getElementById('k_rows_setting'); if (el) el.value = r.tableData['k_rows_setting'];
@@ -1825,6 +1883,7 @@
                         }
                     }
 
+                    // Render & Fill
                     generateReport();
                     fillReportData(r);
                     updatePrintFooter(r);
@@ -1835,37 +1894,66 @@
                         updatePrintFooter(r);
                     }
 
-                    // Capture values into HTML
-                    wrapper.querySelectorAll('input, textarea').forEach(el => {
-                        el.setAttribute('value', el.value);
-                    });
-                    wrapper.querySelectorAll('select').forEach(el => {
-                        Array.from(el.options).forEach(opt => {
-                            if (opt.selected) opt.setAttribute('selected', 'selected');
-                            else opt.removeAttribute('selected');
-                        });
+                    // --- ROBUST HTML CAPTURE ---
+                    // 1. Inputs (Text, Number, Date, Time)
+                    wrapper.querySelectorAll('input, select, textarea').forEach(el => {
+                        if (el.tagName === 'INPUT') {
+                            if (el.type === 'checkbox' || el.type === 'radio') {
+                                if (el.checked) el.setAttribute('checked', 'checked');
+                                else el.removeAttribute('checked');
+                            } else {
+                                el.setAttribute('value', el.value);
+                            }
+                        } else if (el.tagName === 'TEXTAREA') {
+                            el.textContent = el.value; // Store validation in textContent
+                            el.innerHTML = el.value; // Backup
+                        } else if (el.tagName === 'SELECT') {
+                            const val = el.value;
+                            Array.from(el.options).forEach(opt => {
+                                if (opt.value === val) opt.setAttribute('selected', 'selected');
+                                else opt.removeAttribute('selected');
+                            });
+                        }
                     });
 
-                    batchHtml += `<div class="page-break-container mt-0 pt-0">${wrapper.innerHTML}</div>`;
+                    batchHtml += `<div style="display:block; width:100%; page-break-after:always;">${wrapper.innerHTML}</div>`;
+
+                    // Small delay to allow browser to breathe
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
+                statusText.innerText = "Rendering print view...";
+
+                // Hide Modal
+                bootstrap.Modal.getInstance(document.getElementById('batchPrintModal')).hide();
+
+                // Show Content
                 const originalWrapperHtml = wrapper.innerHTML;
                 wrapper.innerHTML = batchHtml;
                 document.getElementById('reportContainer').style.display = 'block';
 
+                // Print
                 setTimeout(() => {
                     window.print();
-                    wrapper.innerHTML = originalWrapperHtml;
-                    document.getElementById('departmentSelect').value = oldDept;
-                    document.getElementById('reportDate').value = oldDate;
-                    document.getElementById('reportContainer').style.display = oldVisible;
-                    if (currentReportData) fillReportData(currentReportData); else showDashboard();
-                    showToast("Batch printing complete", "success");
+
+                    // Restore
+                    setTimeout(() => {
+                        wrapper.innerHTML = originalWrapperHtml;
+                        document.getElementById('departmentSelect').value = oldDept;
+                        document.getElementById('reportDate').value = oldDate;
+                        document.getElementById('reportContainer').style.display = oldVisible;
+                        if (currentReportData) fillReportData(currentReportData); else showDashboard();
+
+                        btn.disabled = false;
+                        showToast("Batch printing complete", "success");
+                    }, 500);
                 }, 1000);
 
             } catch (e) {
                 console.error(e);
                 showToast("Error in batch print", "danger");
+                btn.disabled = false;
+                progress.style.display = 'none';
             }
         }
 
