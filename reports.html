@@ -1304,7 +1304,14 @@
                 // Supervisor (default)
                 if (status === 'draft' || !status) {
                     btns += `<button class="${btnClass} btn-primary" onclick="saveReport('draft')"><i class="bi bi-save"></i> Save Draft</button>`;
-                    btns += `<button class="${btnClass} btn-success" onclick="saveReport('pending_admin')"><i class="bi bi-send"></i> Submit to Admin</button>`;
+
+                    // RESTRICTED: Hide 'Submit to Admin' for specific users
+                    const restrictedUsers = ['cutemp', 'kilnemp'];
+                    const username = currentUser.username ? currentUser.username.toLowerCase() : '';
+
+                    if (!restrictedUsers.includes(username)) {
+                        btns += `<button class="${btnClass} btn-success" onclick="saveReport('pending_admin')"><i class="bi bi-send"></i> Submit to Admin</button>`;
+                    }
                 } else if (status === 'pending_admin') {
                     btns += `<span class="badge bg-secondary p-2"><i class="bi bi-lock"></i> Submitted - Pending Approval</span>`;
                 } else if (status === 'approved') {
@@ -1452,7 +1459,7 @@
                 `;
             }
 
-        
+
             adminControls.innerHTML = controlsHtml;
 
             try {
@@ -2638,9 +2645,9 @@
 
                 <div class="row g-2">
                     <div class="col-5">
-                        <div class="shift-box bg-s1"><div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s1_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s1_note" rows="4"></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s2"><div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s2_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s2_note" rows="4"></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s3"><div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s3_e2">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s3_note" rows="4"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s1"><div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s1_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s1_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s1_note" rows="3"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s2_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s2_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s2_note" rows="3"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s3_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s3_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s3_note" rows="3"></textarea></td></tr></table></div>
                     </div>
                     <div class="col-7">
                         <table class="report-table">
@@ -2664,7 +2671,7 @@
                 </div>
                 <div class="row g-2 mt-1">
                     <div class="col-8">
-                        <table class="report-table"><thead><tr class="bg-light"><th>Oil Balance</th><th>کۆی گشتی عەرەبانە</th><th>ژمارەی  خشت بۆ یەک عەرەبانە</th><th>ژمارەی خشتی</th></tr></thead><tbody><tr><td><input type="number" id="k_oil_bal" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_cars" class="fw-bold fs-6"></td><td><input type="number" id="k_pcs_car" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_unload" class="fw-bold fs-6"></td></tr></tbody></table>
+                        <table class="report-table"><thead><tr class="bg-light"><th>Oil Balance</th><th>کۆی گشتی عەرەبانە</th><th>ژمارەی  خشت بۆ یەک عەرەبانە</th><th>ژمارەی خشتی بەرهەمهێنراو</th></tr></thead><tbody><tr><td><input type="number" id="k_oil_bal" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_cars" class="fw-bold fs-6"></td><td><input type="number" id="k_pcs_car" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_unload" class="fw-bold fs-6"></td></tr></tbody></table>
                     </div>
                     <div class="col-4">
                         <table class="report-table"><tr><td class="bg-light fw-bold" style="font-size:0.7rem">پاککردنەوەی عەرەبانەکان</td><td><select id="k_clean_cart">${empOptions}</select></td></tr><tr><td class="bg-light fw-bold" style="font-size:0.7rem">گسک دانی فڕن و درایەر</td><td><select id="k_sweep_kiln">${empOptions}</select></td></tr></table>
@@ -3046,6 +3053,16 @@
                 }
             }
 
+            // RESTRICTION CHECK: Prevent restricted users from submitting to admin
+            if (status === 'pending_admin') {
+                const restrictedUsers = ['cutemp', 'kilnemp'];
+                const username = currentUser.username ? currentUser.username.toLowerCase() : '';
+                if (restrictedUsers.includes(username)) {
+                    showToast("You are not authorized to submit reports to admin. Please just Save Draft.", "warning");
+                    return;
+                }
+            }
+
             const date = document.getElementById('reportDate').value;
             const dept = document.getElementById('departmentSelect').value;
             const reportId = `${dept}_${date}_${Date.now()} `;
@@ -3238,4 +3255,3 @@
 </body>
 
 </html>
-
