@@ -331,6 +331,11 @@
             color: #764ba2;
         }
 
+        .card-sop .icon-box {
+            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+            color: white;
+        }
+
         .card-title {
             font-family: 'Poppins', sans-serif;
             font-size: 1.5rem;
@@ -426,6 +431,11 @@
                 <div class="card-title">Reports</div>
                 <div class="card-desc">ڕاپۆرتی ڕۆژانە و ئامارەکان</div>
             </div>
+            <div onclick="window.location.href='sop_report.html'" class="nav-card card-sop">
+                <div class="icon-box"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="card-title">SOP Report</div>
+                <div class="card-desc">Standard Operating Procedures</div>
+            </div>
         </div>
 
     </div>
@@ -442,11 +452,11 @@
         // Role-based card access control
         document.addEventListener('DOMContentLoaded', () => {
             const rolePermissions = {
-                'hr': ['reports'],
-                'employee': ['reports'],
-                'manager': ['employees', 'manuals'],
-                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports'],
-                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports']
+                'hr': ['reports', 'sop_report'],
+                'employee': ['reports', 'sop_report'],
+                'manager': ['employees', 'manuals', 'sop_report'],
+                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'],
+                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report']
             };
 
             const allowedPages = rolePermissions[currentUser.role] || [];
