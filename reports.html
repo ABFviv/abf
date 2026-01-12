@@ -474,6 +474,23 @@
             .note-row textarea {
                 font-size: 0.65rem !important;
             }
+
+            /* Make Check Rows Colored but Readable on Print */
+            tr.cut-check-row td {
+                background-color: #ffe082 !important;
+                /* Light Yellow */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border-bottom: 1px solid #999 !important;
+                color: #000 !important;
+            }
+
+            tr.cut-check-row span,
+            tr.cut-check-row input {
+                color: #bf360c !important;
+                /* Contrast Color */
+                font-weight: 800 !important;
+            }
         }
 
         .cut-header {
@@ -1353,12 +1370,13 @@
 
                 let btns = '';
 
-                if (role === 'admin') {
+                if (role === 'admin' || role === 'hr') {
                     if (status === 'pending_admin') {
                         btns += `<button class="${btnClass} btn-outline-danger" onclick="saveReport('draft', true)"><i class="bi bi-x-circle"></i> Reject / Return</button>`;
                         btns += `<button class="${btnClass} btn-success" onclick="saveReport('approved')"><i class="bi bi-check-circle"></i> Approve</button>`;
                     } else if (status === 'approved') {
                         btns += `<span class="badge bg-success p-2">Approved</span>`;
+                        btns += `<button class="${btnClass} btn-outline-danger" onclick="saveReport('draft', true)"><i class="bi bi-x-circle"></i> Reject / Return</button>`;
                         btns += `<button class="${btnClass} btn-primary" onclick="saveReport('approved')"><i class="bi bi-pencil-square"></i> Update</button>`;
                     } else {
                         // Admin viewing a draft? Just observing.
@@ -3124,7 +3142,7 @@
                         return;
                     }
                     // Cannot edit approved reports at all
-                    if (currentStatus === 'approved' && status !== 'approved') {
+                    if (currentStatus === 'approved' && status !== 'approved' && !isReject) {
                         showToast('Cannot edit approved report.', 'warning');
                         return;
                     }
