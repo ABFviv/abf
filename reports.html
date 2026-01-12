@@ -2905,11 +2905,13 @@
             function renderUnsettingTable(wrapper, preserveState = false) {
                 // ... (preserveState logic remains same)
                 let savedData = {};
+                let savedManualState = {};
                 if (preserveState) {
                     const existingInputs = wrapper.querySelectorAll('input, select, textarea');
                     existingInputs.forEach(el => {
                         if (el.id) {
                             savedData[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+                            if (el.dataset.manual === 'true') savedManualState[el.id] = true;
                         }
                     });
                 }
@@ -2960,9 +2962,9 @@
                 <!-- Date bar removed -->
                 <div class="row g-2">
                     <div class="col-6">
-                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
                         <div class="shift-box bg-white mt-2"><div class="shift-header bg-light">وردەکاری تەکنیکی</div><table class="report-table expanded-rows" style="border:none;"><tr><td>کێشی سەروەرە</td><td><input type="number" id="w_top"></td></tr><tr><td>کێشی ناوەڕاست</td><td><input type="number" id="w_mid"></td></tr><tr><td>کێشی خوارەوە</td><td><input type="number" id="w_bot"></td></tr><tr><td>ژ. کۆڵۆم</td><td><input type="number" id="tech_col"></td></tr><tr><td>سەر زنجیر</td><td><input type="number" id="tech_row"></td></tr></table></div>
                     </div>
                     <div class="col-6">
@@ -2986,8 +2988,23 @@
                             if (el) {
                                 if (el.type === 'checkbox') el.checked = val;
                                 else el.value = val;
+                                if (savedManualState[key]) el.dataset.manual = 'true';
                             }
                         }
+
+                        // Detect manual overrides from DB load (mismatch hack)
+                        ['s1', 's2', 's3'].forEach(s => {
+                            const cartInput = document.getElementById(`${s}_carts`);
+                            if (cartInput && cartInput.value) {
+                                let c = 0;
+                                document.querySelectorAll(`tr.row-${s} input[id$="_cart"]`).forEach(inp => { if (inp.value.trim() !== '') c++ });
+                                const currentVal = parseInt(cartInput.value);
+                                if (!isNaN(currentVal) && currentVal !== c) {
+                                    cartInput.dataset.manual = 'true';
+                                }
+                            }
+                        });
+
                         updateUnsettingTotals(); // Recalculate totals
                     }, 0);
                 } else {
@@ -3003,8 +3020,17 @@
                 document.querySelectorAll('tr.row-s1 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s1c++; });
                 document.querySelectorAll('tr.row-s2 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s2c++; });
                 document.querySelectorAll('tr.row-s3 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s3c++; });
-                document.getElementById('s1_carts').value = s1c; document.getElementById('s2_carts').value = s2c; document.getElementById('s3_carts').value = s3c;
-                document.getElementById('total_carts').value = s1c + s2c + s3c;
+
+                const s1Input = document.getElementById('s1_carts');
+                const s2Input = document.getElementById('s2_carts');
+                const s3Input = document.getElementById('s3_carts');
+
+                if (s1Input && !s1Input.dataset.manual) s1Input.value = s1c;
+                if (s2Input && !s2Input.dataset.manual) s2Input.value = s2c;
+                if (s3Input && !s3Input.dataset.manual) s3Input.value = s3c;
+
+                const total = (parseInt(s1Input.value) || 0) + (parseInt(s2Input.value) || 0) + (parseInt(s3Input.value) || 0);
+                document.getElementById('total_carts').value = total;
             }
 
             // --- CRUSHING (هاڕین) - UPDATED COLORFUL LAYOUT ---
