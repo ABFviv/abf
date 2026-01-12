@@ -333,7 +333,7 @@
         }
 
         function deleteLink(deptId) {
-            if (confirm('دڵنیای لە سڕینەوەی ئەم بەستەرە؟\nAre you sure you want to delete this link?')) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم بەستەرە؟')) {
                 delete sopLinks[deptId];
                 localStorage.setItem('sopLinks', JSON.stringify(sopLinks));
                 renderGrid();
@@ -341,5 +341,6 @@
         }
     </script>
 </body>
+
 
 </html>
