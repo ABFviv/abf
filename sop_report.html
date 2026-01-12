@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASOBRICK - SOP Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            padding: 20px;
+        }
+
+        .header-bar {
+            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(247, 151, 30, 0.2);
+        }
+
+        .header-title h1 {
+            font-weight: 800;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: white;
+            color: #f7971e;
+            transform: translateY(-2px);
+        }
+
+        /* SOP Grid Styles */
+        .sop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 10px 0;
+        }
+
+        .sop-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .sop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            border-color: rgba(247, 151, 30, 0.3);
+        }
+
+        .sop-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Fallback */
+            color: #f7971e;
+        }
+
+        .sop-title {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .sop-status {
+            font-size: 0.9rem;
+            color: #718096;
+            background: #edf2f7;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .sop-status.active {
+            background: #def7ec;
+            color: #046c4e;
+        }
+
+        /* Admin Controls */
+        .admin-controls {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        }
+
+        .sop-card:hover .admin-controls {
+            opacity: 1;
+        }
+
+        .btn-control {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edit {
+            background: white;
+            color: #3b82f6;
+        }
+
+        .btn-edit:hover {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .btn-delete {
+            background: white;
+            color: #ef4444;
+        }
+
+        .btn-delete:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* Modal Customization */
+        .modal-header {
+            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header-bar">
+            <div class="header-title">
+                <h1>SOP Report</h1>
+                <small style="opacity: 0.9;">Standard Operating Procedures - ڕێکارەکانی کارکردن</small>
+            </div>
+            <a href="dashboard.html" class="btn-back">
+                <i class="bi bi-arrow-right"></i> گەڕانەوە
+            </a>
+        </div>
+
+        <!-- SOP Grid -->
+        <div id="sopContainer" class="sop-grid">
+            <!-- Cards will be rendered here by JS -->
+        </div>
+
+    </div>
+
+    <!-- Edit Link Modal -->
+    <div class="modal fade" id="editLinkModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">گۆڕینی بەستەری SOP</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="linkForm">
+                        <input type="hidden" id="editDeptId">
+                        <div class="mb-3">
+                            <label for="linkUrl" class="form-label">بەستەری گووگڵ درایڤ (Google Drive Link)</label>
+                            <input type="url" class="form-control" id="linkUrl" placeholder="https://..." required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">داخستن</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLink()"
+                        style="background-color: #f7971e; border:none;">تۆمارکردن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- Data & Config ---
+        const departments = [
+            { id: 'grinding', name: 'هاڕین', icon: 'bi-gear-wide-connected' },
+            { id: 'preparation', name: 'ئامادەکردن', icon: 'bi-tools' },
+            { id: 'cutting', name: 'بڕین', icon: 'bi-scissors' },
+            { id: 'loading', name: 'بارکردن', icon: 'bi-layers' },
+            { id: 'kiln', name: 'فڕن', icon: 'bi-fire' },
+            { id: 'dryer', name: 'درایەر', icon: 'bi-wind' },
+            { id: 'unsetting', name: 'داگرتن', icon: 'bi-box-arrow-down' }
+        ];
+
+        // --- App State ---
+        let sopLinks = JSON.parse(localStorage.getItem('sopLinks')) || {};
+        let currentUser = null;
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            renderGrid();
+        });
+
+        function checkAuth() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUser = JSON.parse(userStr);
+        }
+
+        // --- Rendering ---
+        function renderGrid() {
+            const container = document.getElementById('sopContainer');
+            container.innerHTML = '';
+
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
+            departments.forEach(dept => {
+                const link = sopLinks[dept.id];
+                const hasLink = !!link;
+
+                const card = document.createElement('div');
+                card.className = 'sop-card';
+
+                // Click handler for the whole card (navigates if link exists)
+                // We use a function wrapper to prevent triggering when clicking admin buttons
+                card.onclick = (e) => {
+                    // Prevent navigation if clicking admin controls
+                    if (e.target.closest('.admin-controls')) return;
+
+                    if (hasLink) {
+                        window.open(link, '_blank');
+                    } else if (!isAdmin) {
+                        alert('هیچ بەستەرێک دیاری نەکراوە بۆ ئەم بەشە\nNo SOP link available.');
+                    }
+                };
+
+                let adminHtml = '';
+                if (isAdmin) {
+                    adminHtml = `
+                        <div class="admin-controls">
+                            <button class="btn-control btn-edit" onclick="openEditModal('${dept.id}')" title="Edit Link">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            ${hasLink ? `
+                            <button class="btn-control btn-delete" onclick="deleteLink('${dept.id}')" title="Remove Link">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    ${adminHtml}
+                    <i class="bi ${dept.icon} sop-icon"></i>
+                    <div class="sop-title">${dept.name}</div>
+                    <div class="sop-status ${hasLink ? 'active' : ''}">
+                        ${hasLink ? 'بەردەستە (Available)' : 'بەردەست نییە (N/A)'}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // --- Actions (Admin) ---
+
+        const modal = new bootstrap.Modal(document.getElementById('editLinkModal'));
+
+        function openEditModal(deptId) {
+            document.getElementById('editDeptId').value = deptId;
+            document.getElementById('linkUrl').value = sopLinks[deptId] || '';
+            modal.show();
+        }
+
+        function saveLink() {
+            const deptId = document.getElementById('editDeptId').value;
+            const url = document.getElementById('linkUrl').value;
+
+            if (!url) {
+                alert('تکایە بەستەرێک بنووسە');
+                return;
+            }
+
+            sopLinks[deptId] = url;
+            localStorage.setItem('sopLinks', JSON.stringify(sopLinks));
+
+            modal.hide();
+            renderGrid();
+        }
+
+        function deleteLink(deptId) {
+            if (confirm('دڵنیای لە سڕینەوەی ئەم بەستەرە؟\nAre you sure you want to delete this link?')) {
+                delete sopLinks[deptId];
+                localStorage.setItem('sopLinks', JSON.stringify(sopLinks));
+                renderGrid();
+            }
+        }
+    </script>
+</body>
+
+</html>
