@@ -1774,9 +1774,13 @@
                             }
 
                             // --- Logic to Reveal Notes if they have Data ---
-                            if (el.id.includes('_note') && value && value.trim() !== '') {
+                            // Supports both "_note" (Setting/Kiln) and "note" (Cutting)
+                            if ((el.id.includes('_note') || el.id.includes('note')) && value && value.trim() !== '') {
                                 const noteRow = el.closest('.note-row');
-                                if (noteRow) noteRow.classList.add('visible');
+                                if (noteRow) {
+                                    noteRow.classList.add('visible');
+                                    noteRow.style.display = 'flex'; // Ensure flex display for visibility
+                                }
                             }
 
                             // Safe Trigger: Only trigger onchange if it's not a layout controller
@@ -2114,8 +2118,18 @@
                 if (preserveState) {
                     const existingInputs = wrapper.querySelectorAll('input, select, textarea');
                     existingInputs.forEach(el => {
-                        if (el.id) savedData[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+                        if (el.id) {
+                            savedData[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+                        }
                     });
+                } else {
+                    // Logic to ensure display totals start at 0 if not preserving state
+                    setTimeout(() => {
+                        ['s1', 's2', 's3'].forEach(s => {
+                            const disp = document.getElementById(`cut_${s}_count_display`);
+                            if (disp) disp.innerText = "0";
+                        });
+                    }, 0);
                 }
 
                 const dateValue = document.getElementById('reportDate').value;
@@ -2310,7 +2324,7 @@
                                         <tbody>
                                             <tr>
                                                 <td><input type="number" id="cut_${shift.id}_silo"></td>
-                                                <td><input type="number" id="cut_${shift.id}_total_brick" onchange="updateCuttingTotals()"></td>
+                                                <td><input type="number" id="cut_${shift.id}_total_brick"></td>
                                                 <td>
                                                     <select id="cut_${shift.id}_type" style="font-size:0.65rem">
                                                         <option value="">-</option>
@@ -2367,8 +2381,13 @@
 
                 wrapper.innerHTML = allHtml;
 
-                if (preserveState && Object.keys(savedData).length > 0) {
-                    setTimeout(() => {
+                // After rendering, if we are loading data, trigger the total calculation
+                setTimeout(() => {
+                    ['s1', 's2', 's3'].forEach(s => {
+                        updateCuttingCount(s);
+                    });
+
+                    if (preserveState) {
                         for (const [key, val] of Object.entries(savedData)) {
                             const el = document.getElementById(key);
                             if (el) {
@@ -2376,69 +2395,62 @@
                                 else el.value = val;
                             }
                         }
-                        // Recalculate total carts after restoring data
-                        updateCuttingTotals();
-                        attachCuttingEventListeners();
-                    }, 0);
-                } else {
-                    // Initialize totals even if no preserved state
-                    setTimeout(() => {
-                        updateCuttingTotals();
-                        attachCuttingEventListeners();
-                    }, 0);
-                }
+                    }
+                    // Final recalculation after potential data fill
+                    ['s1', 's2', 's3'].forEach(s => {
+                        updateCuttingCount(s);
+                    });
+                    attachCuttingEventListeners();
+                }, 50);
             }
 
-            // Auto-calculate total carts based on filled data
-            function updateCuttingTotals() {
-                const shifts = ['s1', 's2', 's3'];
-                shifts.forEach(shiftId => {
-                    const totalCarts = 72;
-                    let filledCount = 0;
+            // Real-time listener for any input in cutting table
+            function attachCuttingEventListeners() {
+                const wrapper = document.getElementById('tableWrapper');
+                if (!wrapper) return;
 
-                    // Count how many carts have data (either time or number filled)
-                    for (let i = 1; i <= totalCarts; i++) {
-                        const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
-                        const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
-                        if ((timeInput && timeInput.value && timeInput.value.trim() !== '') ||
-                            (noInput && noInput.value && noInput.value.trim() !== '')) {
-                            filledCount++;
+                // Add listener to all time and number inputs in cutting
+                wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
+                        if (idParts.length >= 2) {
+                            updateCuttingCount(idParts[1]); // shiftId
                         }
-                    }
-
-                    // Update the display element to show the count
-                    const countDisplay = document.getElementById(`cut_${shiftId}_count_display`);
-                    if (countDisplay) {
-                        countDisplay.textContent = filledCount;
-                        countDisplay.style.fontWeight = 'bold';
-                        countDisplay.style.color = filledCount > 0 ? '#2563eb' : '#6c757d';
-                    }
-
-                    // Update New Total Fields
-                    const filledInput = document.getElementById(`cut_${shiftId}_total_filled`);
-                    if (filledInput) filledInput.value = filledCount;
-
-                    const brickPerCart = parseInt(document.getElementById(`cut_${shiftId}_total_brick`)?.value) || 0;
-                    const grandTotalInput = document.getElementById(`cut_${shiftId}_grand_total`);
-                    if (grandTotalInput) grandTotalInput.value = filledCount * brickPerCart;
+                    });
                 });
             }
 
-            // Add event listeners to cart inputs to update totals
-            function attachCuttingEventListeners() {
-                const shifts = ['s1', 's2', 's3'];
-                shifts.forEach(shiftId => {
-                    // Attach listeners to all 72 cart inputs for this shift
-                    for (let i = 1; i <= 72; i++) {
-                        const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
-                        const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
-                        if (timeInput) {
-                            timeInput.addEventListener('input', updateCuttingTotals);
-                        }
-                        if (noInput) {
-                            noInput.addEventListener('input', updateCuttingTotals);
-                        }
+            // Update the display for "عەرەبانەی دەرکەوتوو" and the total field
+            function updateCuttingCount(shiftId) {
+                let count = 0;
+                for (let i = 1; i <= 72; i++) {
+                    const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
+                    const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
+                    if ((timeInput && timeInput.value) || (noInput && noInput.value)) {
+                        count++;
                     }
+                }
+
+                const disp = document.getElementById(`cut_${shiftId}_count_display`);
+                if (disp) disp.innerText = count;
+
+                const totalField = document.getElementById(`cut_${shiftId}_total_filled`);
+                if (totalField) totalField.value = count;
+            }
+
+            // Real-time listener for any input in cutting table
+            function attachCuttingEventListeners() {
+                const wrapper = document.getElementById('tableWrapper');
+                if (!wrapper) return;
+
+                // Add listener to all time and number inputs in cutting
+                wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
+                        if (idParts.length >= 2) {
+                            updateCuttingCount(idParts[1]); // shiftId: s1, s2, or s3
+                        }
+                    });
                 });
             }
 
