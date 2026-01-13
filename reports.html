@@ -16,6 +16,24 @@
 
 
     <style>
+        /* Hide AM/PM in time inputs where supported */
+        .no-ampm::-webkit-datetime-edit-ampm-field {
+            display: none;
+            -webkit-appearance: none;
+        }
+
+        .no-ampm::-webkit-clear-button,
+        .no-ampm::-webkit-inner-spin-button,
+        .no-ampm::-webkit-calendar-picker-indicator {
+            display: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="time"].no-ampm {
+            width: 75px !important;
+            text-align: center;
+        }
+
         :root {
             --primary-bg: #2c3e50;
             --primary-text: #fff;
@@ -2134,7 +2152,7 @@
                         <tr style="background: ${index % 2 === 0 ? '#fff' : '#f9f9f9'};">
                             <td class="task-text" style="background: ${shiftLightColor} !important; font-weight: 600; color: #334155;">${task}</td>
                             <td style="width: 70px; background:#fff3cd;">
-                                <input type="text" id="${rowIdBase}_time" placeholder="00:00" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
+                                <input type="time" id="${rowIdBase}_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
                             </td>
                         </tr>
                         `;
@@ -2161,7 +2179,7 @@
                             <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک (سەرەتا)</span>
                         </td>
                         <td style="background:#fff8e1;">
-                            <input type="text" id="cut_${shift.id}_start_check_time" placeholder="00:00" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                            <input type="time" id="cut_${shift.id}_start_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                         </td>
                     </tr>`;
                     }
@@ -2171,7 +2189,7 @@
                         cartsCol1 += `
                         <tr>
                             <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
-                            <td><input type="text" id="cut_${shift.id}_c${i}_time" placeholder="00:00" style="font-size:0.75rem;"></td>
+                            <td><input type="time" id="cut_${shift.id}_c${i}_time" class="no-ampm" lang="en-GB" style="font-size:0.75rem;"></td>
                             <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
@@ -2185,7 +2203,7 @@
                                 <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                             </td>
                             <td style="background:#fff8e1;">
-                                <input type="text" id="cut_${shift.id}_c${checkGroup}_left_check_time" placeholder="00:00" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                <input type="time" id="cut_${shift.id}_c${checkGroup}_left_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                             </td>
                         </tr>`;
                         }
@@ -2196,7 +2214,7 @@
                             cartsCol2 += `
                             <tr>
                                 <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
-                                <td><input type="text" id="cut_${shift.id}_c${j}_time" placeholder="00:00" style="font-size:0.75rem;"></td>
+                                <td><input type="time" id="cut_${shift.id}_c${j}_time" class="no-ampm" lang="en-GB" style="font-size:0.75rem;"></td>
                                 <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
@@ -2210,7 +2228,7 @@
                                     <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                                 </td>
                                 <td style="background:#fff8e1;">
-                                    <input type="text" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" placeholder="00:00" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                    <input type="time" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                                 </td>
                             </tr>`;
                             }
@@ -2494,7 +2512,7 @@
                 <tr class="${rowClass} compact-rows">
                     <td>${i}</td>
                     <td><input type="number" id="${rid}_kilncar" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
-                    <td><input type="text" id="${timeId}" value="${timeLabel}" style="text-align:center;"></td>
+                    <td><input type="time" id="${timeId}" value="${timeLabel}" class="no-ampm" lang="en-GB" style="text-align:center;"></td>
                     <td><input type="number" id="${rid}_d1"></td>
                     <td><input type="number" id="${rid}_d2"></td>
                     <td><input type="number" id="${rid}_d3"></td>
@@ -2717,7 +2735,7 @@
                     rowsHtml += `
                     <tr class="compact-rows">
                         <td>${i}</td>
-                        <td><input type="time" id="${timeId}" class="fw-bold" value="${timeLabel}"></td>
+                        <td><input type="time" id="${timeId}" class="fw-bold no-ampm" lang="en-GB" value="${timeLabel}"></td>
                         <td><select id="${rid}_type_out" onchange="autoFillType(this, 'type_out', ${totalRows})">${brickOptions}</select></td>
                         <td><input type="number" id="${rid}_cart_out"></td>
                         <td><select id="${rid}_type_in" onchange="autoFillType(this, 'type_in', ${totalRows})">${brickOptions}</select></td>
@@ -2952,7 +2970,7 @@
                     if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
                     const timeLabel = formatTime(currentMins);
                     const rid = `r${rowCount}`;
-                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="text" class="fw-bold" value="${timeLabel}" id="${rid}_start" style="text-align:center;"></td><td><input type="text" id="${rid}_end" placeholder="00:00" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
+                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold no-ampm" value="${timeLabel}" id="${rid}_start" lang="en-GB" style="text-align:center;"></td><td><input type="time" id="${rid}_end" class="no-ampm" lang="en-GB" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
                     currentMins += interval; rowCount++;
                 }
 
