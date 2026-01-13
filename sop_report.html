@@ -10,6 +10,10 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         body {
             background-color: #f8fafc;
@@ -220,6 +224,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+            authDomain: "abf6-96dcf.firebaseapp.com",
+            projectId: "abf6-96dcf",
+            storageBucket: "abf6-96dcf.firebasestorage.app",
+            messagingSenderId: "405357996484",
+            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // --- Data & Config ---
         const departments = [
             { id: 'grinding', name: 'هاڕین', icon: 'bi-gear-wide-connected' },
@@ -232,14 +248,24 @@
         ];
 
         // --- App State ---
-        let sopLinks = JSON.parse(localStorage.getItem('sopLinks')) || {};
+        let sopLinks = {};
         let currentUser = null;
 
         // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
-            renderGrid();
+            listenForSopLinks();
         });
+
+        function listenForSopLinks() {
+            db.collection('sop_links').onSnapshot((snapshot) => {
+                sopLinks = {};
+                snapshot.forEach(doc => {
+                    sopLinks[doc.id] = doc.data().url;
+                });
+                renderGrid();
+            });
+        }
 
         function checkAuth() {
             const userStr = localStorage.getItem('currentUser');
@@ -325,22 +351,27 @@
                 return;
             }
 
-            sopLinks[deptId] = url;
-            localStorage.setItem('sopLinks', JSON.stringify(sopLinks));
-
-            modal.hide();
-            renderGrid();
+            db.collection('sop_links').doc(deptId).set({
+                url: url,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                modal.hide();
+            }).catch(err => {
+                console.error("Error saving link:", err);
+                alert("بەستەرەکە پاشەکەوت نەکرا: " + err.message);
+            });
         }
 
         function deleteLink(deptId) {
-            if (confirm('دڵنیای لە سڕینەوەی ئەم بەستەرە؟')) {
-                delete sopLinks[deptId];
-                localStorage.setItem('sopLinks', JSON.stringify(sopLinks));
-                renderGrid();
+            if (confirm('دڵنیای لە سڕینەوەی ئەم بەستەرە؟\nAre you sure you want to delete this link?')) {
+                db.collection('sop_links').doc(deptId).delete()
+                    .catch(err => {
+                        console.error("Error deleting link:", err);
+                        alert("سڕینەوە سەرکەوتوو نەبوو");
+                    });
             }
         }
     </script>
 </body>
-
 
 </html>
