@@ -986,12 +986,14 @@
 
                     <div class="col-md-2 unsetting-ctrl">
                         <label class="control-label"><i class="bi bi-clock me-1"></i> کاتی دەستپێک</label>
-                        <input type="text" class="form-control" id="startTime" value="08:00">
+                        <input type="text" class="form-control" id="startTime" value="08:00"
+                            onchange="generateReport(true)">
                     </div>
                     <div class="col-md-2 unsetting-ctrl">
-                        <label class="control-label"><i class="bi bi-stopwatch me-1"></i> کاتژمێر (Hours/Shift)</label>
+                        <label class="control-label"><i class="bi bi-stopwatch me-1"></i> کاتژمێر (Shift
+                            Interval)</label>
                         <input type="number" class="form-control" id="timeInterval" value="60" min="15" step="15"
-                            style="font-size: 1.1rem; height: 42px;">
+                            style="font-size: 1.1rem; height: 42px;" onchange="generateReport(true)">
                     </div>
 
                     <div class="col-md-3">
@@ -1844,6 +1846,17 @@
                             }
                         });
                     }
+
+                    // Unsetting
+                    if (data.department === 'unsetting') {
+                        ['s1_hours_input', 's2_hours_input', 's3_hours_input'].forEach(id => {
+                            const input = document.getElementById(id);
+                            if (input && data.tableData[id] && input.value != data.tableData[id]) {
+                                input.value = data.tableData[id];
+                                needsRegen = true;
+                            }
+                        });
+                    }
                 }
 
                 if (needsRegen) {
@@ -1862,8 +1875,6 @@
 
                     // Unsetting special case: it might need to recalc rows based on hours after fill
                     if (data.department === 'unsetting') {
-                        // We run it with 'true' to preserve the data we just filled
-                        generateReport(true);
                         // Re-apply signatures because generateReport wiped them out
                         updatePrintFooter(data);
                     }
@@ -2944,9 +2955,13 @@
 
                 // Helper to get shift hours, preferring saved state if available, else DOM, else default
                 const getShiftHours = (id, defaultVal) => {
-                    if (preserveState && savedData[id]) return parseFloat(savedData[id]);
-                    const el = document.getElementById(id);
-                    return el ? parseFloat(el.value) || 0 : defaultVal;
+                    let val = defaultVal;
+                    if (preserveState && savedData[id]) val = parseFloat(savedData[id]);
+                    else {
+                        const el = document.getElementById(id);
+                        if (el) val = parseFloat(el.value);
+                    }
+                    return isNaN(val) || val <= 0 ? defaultVal : val;
                 };
 
                 const s1h = getShiftHours('s1_hours_input', 8);
@@ -3011,6 +3026,7 @@
                         }
 
                         // Detect manual overrides from DB load (mismatch hack)
+                        // Important: Run this BEFORE updateUnsettingTotals
                         ['s1', 's2', 's3'].forEach(s => {
                             const cartInput = document.getElementById(`${s}_carts`);
                             if (cartInput && cartInput.value) {
@@ -3024,7 +3040,7 @@
                         });
 
                         updateUnsettingTotals(); // Recalculate totals
-                    }, 0);
+                    }, 10);
                 } else {
                     updateUnsettingTotals();
                 }
