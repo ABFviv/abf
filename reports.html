@@ -959,6 +959,13 @@
                                 <br>
                                 <small style="opacity: 0.9;"></small>
                             </button>
+                            <button class="btn btn-lg" id="btnAdminPending" onclick="showPendingReportsModal()"
+                                style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); color: white; padding: 15px; font-weight: 600; border-radius: 10px; display: none;">
+                                <i class="bi bi-list-check me-2"></i>
+                                ڕاپۆرتە چاوەڕوانکراوەکان
+                                <br>
+                                <small style="opacity: 0.9; font-size: 0.8rem;">(Pending Reports)</small>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -966,7 +973,7 @@
         </div>
 
         <div id="reportSection" class="view-section">
-            <div class="control-panel">
+            <div class="control-panel" id="reportControlPanel">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="control-label"><i class="bi bi-diagram-3 me-1"></i> Department</label>
@@ -984,17 +991,7 @@
                         <input type="date" class="form-control" id="reportDate">
                     </div>
 
-                    <div class="col-md-2 unsetting-ctrl">
-                        <label class="control-label"><i class="bi bi-clock me-1"></i> کاتی دەستپێک</label>
-                        <input type="text" class="form-control" id="startTime" value="08:00"
-                            onchange="generateReport(true)">
-                    </div>
-                    <div class="col-md-2 unsetting-ctrl">
-                        <label class="control-label"><i class="bi bi-stopwatch me-1"></i> کاتژمێر (Shift
-                            Interval)</label>
-                        <input type="number" class="form-control" id="timeInterval" value="60" min="15" step="15"
-                            style="font-size: 1.1rem; height: 42px;" onchange="generateReport(true)">
-                    </div>
+
 
                     <div class="col-md-3">
                         <button id="btnGenerateReport" class="btn btn-generate w-100" onclick="startNewReport()">
@@ -1083,6 +1080,46 @@
                         <button type="button" class="btn btn-primary px-4 fw-bold" onclick="executeBatchPrint()">
                             <i class="bi bi-printer me-2"></i> چاپکردن
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- PENDING REPORTS MODAL -->
+        <div class="modal fade" id="pendingReportsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-list-check me-2"></i> ڕاپۆرتە چاوەڕوانکراوەکان
+                            (Pending Reports)</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date / بەروار</th>
+                                        <th>Department / بەش</th>
+                                        <th>Supervisor / سەرپەرشتیار</th>
+                                        <th class="text-center">Actions / کردارەکان</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingReportsList">
+                                    <!-- Pending reports will be listed here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pendingLoading" class="text-center py-5" style="display:none;">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <p class="mt-2 text-muted">Loading pending reports...</p>
+                        </div>
+                        <div id="noPendingMessage" class="text-center py-5" style="display:none;">
+                            <i class="bi bi-check2-circle fs-1 text-success"></i>
+                            <p class="mt-2 fw-bold">No pending reports found! / هیچ ڕاپۆرتێکی چاوەڕوانکراو نییە</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close / داخستن</button>
                     </div>
                 </div>
             </div>
@@ -1208,6 +1245,13 @@
 
                 // Access Control: Only admin and HR (and supervisors) can access reports
                 const allowedRoles = ['admin', 'hr', 'supervisor', 'employee'];
+
+                // Show Admin Pending button if admin
+                if (currentUser.role === 'admin' || currentUser.username === 'admin') {
+                    const adminPendingBtn = document.getElementById('btnAdminPending');
+                    if (adminPendingBtn) adminPendingBtn.style.display = 'block';
+                }
+
                 if (!allowedRoles.includes(currentUser.role)) {
                     document.querySelector('.container-fluid').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center;">
@@ -1307,6 +1351,10 @@
                 // Ensure Generate Button is VISIBLE (reset state)
                 const genBtn = document.getElementById('btnGenerateReport');
                 if (genBtn) genBtn.style.display = 'block';
+
+                // Ensure Control Panel is VISIBLE (reset state)
+                const cp = document.getElementById('reportControlPanel');
+                if (cp) cp.style.display = 'block';
 
                 updateBackBtnVisibility();
             }
@@ -1429,7 +1477,22 @@
                     }
                 }
 
-                container.innerHTML = btns + printBtn;
+                let rejectionNote = '';
+                if (currentReportData && currentReportData.rejectionReason && (status === 'draft' || status === 'pending_admin')) {
+                    rejectionNote = `
+                        <div class="alert alert-danger mb-3 text-start shadow-sm border-start border-4 border-danger">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                                <div>
+                                    <div class="fw-bold text-uppercase small" style="letter-spacing: 1px;">هۆکاری ڕەتکردنەوە / Rejection Reason</div>
+                                    <div class="mt-1 fs-5">${currentReportData.rejectionReason}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = rejectionNote + btns + printBtn;
             }
 
             function updateInputsState(status) {
@@ -1807,6 +1870,10 @@
                 const genBtn = document.getElementById('btnGenerateReport');
                 if (genBtn) genBtn.style.display = 'none';
 
+                // Hide Control Panel in History View
+                const cp = document.getElementById('reportControlPanel');
+                if (cp) cp.style.display = 'none';
+
                 document.getElementById('departmentSelect').value = data.department;
                 document.getElementById('reportDate').value = data.date;
 
@@ -1818,50 +1885,6 @@
                 // BEFORE filling the rest of the data, otherwise those rows won't exist.
 
                 let needsRegen = false;
-
-                if (data.tableData) {
-                    // Kiln
-                    if (data.department === 'klin' && data.tableData['k_rows_setting']) {
-                        const input = document.getElementById('k_rows_setting');
-                        if (input && input.value != data.tableData['k_rows_setting']) {
-                            input.value = data.tableData['k_rows_setting'];
-                            needsRegen = true;
-                        }
-                    }
-
-                    // Setting
-                    if (data.department === 'setting') {
-                        ['set_s1_count_input', 'set_s2_count_input', 'set_s3_count_input'].forEach(id => {
-                            const input = document.getElementById(id);
-                            if (input && data.tableData[id] && input.value != data.tableData[id]) {
-                                input.value = data.tableData[id];
-                                needsRegen = true;
-                            }
-                        });
-                    }
-
-                    // Cutting
-                    if (data.department === 'cutting') {
-                        ['cut_s1_rows', 'cut_s2_rows', 'cut_s3_rows'].forEach(id => {
-                            const input = document.getElementById(id);
-                            if (input && data.tableData[id] && input.value != data.tableData[id]) {
-                                input.value = data.tableData[id];
-                                needsRegen = true;
-                            }
-                        });
-                    }
-
-                    // Unsetting
-                    if (data.department === 'unsetting') {
-                        ['s1_hours_input', 's2_hours_input', 's3_hours_input'].forEach(id => {
-                            const input = document.getElementById(id);
-                            if (input && data.tableData[id] && input.value != data.tableData[id]) {
-                                input.value = data.tableData[id];
-                                needsRegen = true;
-                            }
-                        });
-                    }
-                }
 
                 if (needsRegen) {
                     generateReport();
@@ -2490,61 +2513,49 @@
                 settingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
                 const dateValue = document.getElementById('reportDate').value;
-                const startTimeStr = document.getElementById('startTime').value;
-                const interval = parseInt(document.getElementById('timeInterval').value) || 60;
 
-                function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
-                function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
 
-                // Priority: 1. Overrides 2. SavedData (Preserve) 3. DOM 4. Default 10
-                const getVal = (id, def) => {
-                    if (overrides[id]) return parseInt(overrides[id]);
-                    if (preserveState && savedData[id]) return parseInt(savedData[id]);
-                    const el = document.getElementById(id);
-                    if (el) return parseInt(el.value);
-                    return def;
-                };
-
-                const s1Count = getVal('set_s1_count_input', 10);
-                const s2Count = getVal('set_s2_count_input', 10);
-                const s3Count = getVal('set_s3_count_input', 10);
+                const s1Count = 11;
+                const s2Count = 11;
+                const s3Count = 11;
 
                 const totalRows = s1Count + s2Count + s3Count;
-
-                let currentMins = getMinutes(startTimeStr);
                 let rowsHtml = '';
 
+
                 for (let i = 1; i <= totalRows; i++) {
-                    // Preserve existing time value if available
-                    let timeLabel = formatTime(currentMins);
                     const timeId = `set_r${i}_time`;
-                    if (preserveState && savedData[timeId]) {
-                        timeLabel = savedData[timeId];
-                    }
+                    const rid = `set_r${i}`;
 
-                    let rowClass = 'row-s3'; // default
+                    // Values
+                    const valKilncar = (preserveState && savedData[`${rid}_kilncar`]) ? savedData[`${rid}_kilncar`] : '';
+                    const valTime = (preserveState && savedData[timeId]) ? savedData[timeId] : '';
+                    const valD1 = (preserveState && savedData[`${rid}_d1`]) ? savedData[`${rid}_d1`] : '';
+                    const valD2 = (preserveState && savedData[`${rid}_d2`]) ? savedData[`${rid}_d2`] : '';
+                    const valD3 = (preserveState && savedData[`${rid}_d3`]) ? savedData[`${rid}_d3`] : '';
+                    const valD4 = (preserveState && savedData[`${rid}_d4`]) ? savedData[`${rid}_d4`] : '';
+                    const valD5 = (preserveState && savedData[`${rid}_d5`]) ? savedData[`${rid}_d5`] : '';
+                    const valD6 = (preserveState && savedData[`${rid}_d6`]) ? savedData[`${rid}_d6`] : '';
 
-                    // Determine class based on counts
+                    let rowClass = 'row-s3';
                     if (i <= s1Count) rowClass = 'row-s1';
                     else if (i <= s1Count + s2Count) rowClass = 'row-s2';
                     else rowClass = 'row-s3';
 
-                    const rid = `set_r${i}`;
-
                     rowsHtml += `
                 <tr class="${rowClass} compact-rows">
                     <td>${i}</td>
-                    <td><input type="number" id="${rid}_kilncar" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
-                    <td><input type="time" id="${timeId}" value="${timeLabel}" class="no-ampm" lang="en-GB" style="text-align:center;"></td>
-                    <td><input type="number" id="${rid}_d1"></td>
-                    <td><input type="number" id="${rid}_d2"></td>
-                    <td><input type="number" id="${rid}_d3"></td>
-                    <td><input type="number" id="${rid}_d4"></td>
-                    <td><input type="number" id="${rid}_d5"></td>
-                    <td><input type="number" id="${rid}_d6"></td>
+                    <td><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
+                    <td><input type="time" id="${timeId}" value="${valTime}" class="no-ampm" lang="en-GB" style="text-align:center;"></td>
+
+                    <td><input type="number" id="${rid}_d1" value="${valD1}"></td>
+                    <td><input type="number" id="${rid}_d2" value="${valD2}"></td>
+                    <td><input type="number" id="${rid}_d3" value="${valD3}"></td>
+                    <td><input type="number" id="${rid}_d4" value="${valD4}"></td>
+                    <td><input type="number" id="${rid}_d5" value="${valD5}"></td>
+                    <td><input type="number" id="${rid}_d6" value="${valD6}"></td>
                 </tr>
                 `;
-                    currentMins += interval;
                 }
 
                 const html = `
@@ -2571,7 +2582,7 @@
                     </div>
                     <div class="col-4">
                      <div class="shift-box bg-s1">
-                        <div class="shift-header"><span> شیفتی یەکەم (08-16)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s1_count_input" value="${s1Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span> شیفتی یەکەم (08-16)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2590,7 +2601,7 @@
                      </div>
 
                      <div class="shift-box bg-s2">
-                        <div class="shift-header"><span>شیفتی دووەم (16-24)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s2_count_input" value="${s2Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span>شیفتی دووەم (16-24)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2609,7 +2620,7 @@
                      </div>
 
                      <div class="shift-box bg-s3">
-                        <div class="shift-header"><span>شیفتی سێیەم (24-08)</span><div class="d-flex align-items-center gap-1 no-print"><span style="font-size:0.6rem">Count:</span><input type="number" id="set_s3_count_input" value="${s3Count}" style="width:35px; height:20px;" onchange="generateReport(true)"></div></div>
+                        <div class="shift-header"><span>شیفتی سێیەم (24-08)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2721,18 +2732,15 @@
                     });
                 }
 
+
                 const dateValue = document.getElementById('reportDate').value;
-                const startTimeStr = document.getElementById('startTime').value;
-                const interval = parseInt(document.getElementById('timeInterval').value) || 60;
+
                 const settingEmps = REPORT_CONFIG.klin || [];
+
                 let empOptions = `<option value="">Select...</option>`;
                 settingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
-                const rowsInput = document.getElementById('k_rows_setting');
-                let totalRows = 20;
-                if (overrides['k_rows_setting']) totalRows = parseInt(overrides['k_rows_setting']);
-                else if (preserveState && savedData['k_rows_setting']) totalRows = parseInt(savedData['k_rows_setting']) || 20;
-                else if (rowsInput) totalRows = parseInt(rowsInput.value) || 20;
+                const totalRows = 25;
 
                 const brickTypes = [
                     { val: "", label: "" }, { val: "20x40", label: "20x40" }, { val: "15x40", label: "15x40" },
@@ -2743,40 +2751,51 @@
 
                 function getMinutes(timeStr) { if (!timeStr) return 480; const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
                 function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
-                let currentMins = getMinutes(startTimeStr);
                 let rowsHtml = '';
 
                 for (let i = 1; i <= totalRows; i++) {
-                    // Preserve existing time value if available
-                    let timeLabel = formatTime(currentMins);
                     const timeId = `k_r${i}_time`;
-                    if (preserveState && savedData[timeId]) {
-                        timeLabel = savedData[timeId];
-                    }
-
                     const rid = `k_r${i}`;
+
+                    // Values
+                    const valTime = (preserveState && savedData[timeId]) ? savedData[timeId] : '';
+                    const valTypeOut = (preserveState && savedData[`${rid}_type_out`]) ? savedData[`${rid}_type_out`] : '';
+                    const valCartOut = (preserveState && savedData[`${rid}_cart_out`]) ? savedData[`${rid}_cart_out`] : '';
+                    const valTypeIn = (preserveState && savedData[`${rid}_type_in`]) ? savedData[`${rid}_type_in`] : '';
+                    const valCartIn = (preserveState && savedData[`${rid}_cart_in`]) ? savedData[`${rid}_cart_in`] : '';
+
+                    // For selects, we need to inject selected attribute manually in the options or rely on fillReportData
+                    // But here we are generating the options string dynamically. 
+                    // To keep it simple and robust, let's use a helper.
+                    const getSelect = (id, options, currentVal) => {
+                        let s = `<select id="${id}" onchange="autoFillType(this, '${id.includes('type_out') ? 'type_out' : 'type_in'}', ${totalRows})">`;
+                        brickOptionsArray.forEach(opt => {
+                            s += `<option value="${opt}" ${opt === currentVal ? 'selected' : ''}>${opt}</option>`;
+                        });
+                        s += `</select>`;
+                        return s;
+                    };
+
+                    const brickOptionsArray = ["", "A-18", "A-20", "B-18", "B-20", "S-18", "S-20", "Solid", "Roof", "Blocks", "Others"];
+
                     rowsHtml += `
                     <tr class="compact-rows">
                         <td>${i}</td>
-                        <td><input type="time" id="${timeId}" class="fw-bold no-ampm" lang="en-GB" value="${timeLabel}"></td>
-                        <td><select id="${rid}_type_out" onchange="autoFillType(this, 'type_out', ${totalRows})">${brickOptions}</select></td>
-                        <td><input type="number" id="${rid}_cart_out"></td>
-                        <td><select id="${rid}_type_in" onchange="autoFillType(this, 'type_in', ${totalRows})">${brickOptions}</select></td>
-                        <td><input type="number" id="${rid}_cart_in"></td>
+                        <td><input type="time" id="${timeId}" value="${valTime}" class="fw-bold no-ampm" lang="en-GB"></td>
+
+                        <td>${getSelect(`${rid}_type_out`, null, valTypeOut)}</td>
+                        <td><input type="number" id="${rid}_cart_out" value="${valCartOut}"></td>
+                        <td>${getSelect(`${rid}_type_in`, null, valTypeIn)}</td>
+                        <td><input type="number" id="${rid}_cart_in" value="${valCartIn}"></td>
                     </tr>
                 `;
-                    currentMins += interval;
+
                 }
 
                 const html = `
                 <div class="print-full-height"> <!-- Full Height Wrapper -->
                 ${REPORT_HEADER_TEMPLATE('بەشی فڕن', dateValue)}
                 <div class="d-flex justify-content-between mb-2 p-2 rounded bg-light">
-                    <!-- Date removed from here -->
-                    <div class="d-flex align-items-center gap-1 d-print-none">
-                        <span class="fw-bold small">ژمارەی عەرەبانە:</span>
-                        <input type="number" id="k_rows_setting" value="${totalRows}" style="width:50px; border:1px solid #999; text-align:center; border-radius:4px;" onchange="generateReport(true)">
-                    </div>
                 </div>
 
                 <div class="row g-2">
@@ -2944,7 +2963,6 @@
 
             // --- UNSETTING (داگرتن) ---
             function renderUnsettingTable(wrapper, preserveState = false) {
-                // ... (preserveState logic remains same)
                 let savedData = {};
                 let savedManualState = {};
                 if (preserveState) {
@@ -2962,44 +2980,27 @@
                 unsettingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
 
                 const dateValue = document.getElementById('reportDate').value;
-                const startTimeStr = document.getElementById('startTime').value;
-                const interval = parseInt(document.getElementById('timeInterval').value) || 60;
+                const s1EndCount = 11;
+                const s2EndCount = 22;
+                const s3EndCount = 33;
 
-                // Helper to get shift hours, preferring saved state if available, else DOM, else default
-                const getShiftHours = (id, defaultVal) => {
-                    let val = defaultVal;
-                    if (preserveState && savedData[id]) val = parseFloat(savedData[id]);
-                    else {
-                        const el = document.getElementById(id);
-                        if (el) val = parseFloat(el.value);
-                    }
-                    return isNaN(val) || val <= 0 ? defaultVal : val;
-                };
-
-                const s1h = getShiftHours('s1_hours_input', 8);
-                const s2h = getShiftHours('s2_hours_input', 8);
-                const s3h = getShiftHours('s3_hours_input', 8);
-
-                function getMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
-                function formatTime(totalMins) { let h = Math.floor(totalMins / 60) % 24; let m = totalMins % 60; return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`; }
-
-                const startMins = getMinutes(startTimeStr);
-                const s1End = startMins + (s1h * 60);
-                const s2End = s1End + (s2h * 60);
-                const s3End = s2End + (s3h * 60);
-
-                let currentMins = startMins;
                 let rowsHtml = '';
-                let rowCount = 1;
 
-                while (currentMins < s3End) {
+                for (let i = 1; i <= 33; i++) {
+                    const rid = `r${i}`;
+                    const valStart = (preserveState && savedData[`${rid}_start`]) ? savedData[`${rid}_start`] : '';
+                    const valEnd = (preserveState && savedData[`${rid}_end`]) ? savedData[`${rid}_end`] : '';
+                    const valCart = (preserveState && savedData[`${rid}_cart`]) ? savedData[`${rid}_cart`] : '';
+                    const valCracks = (preserveState && savedData[`${rid}_cracks`]) ? savedData[`${rid}_cracks`] : '';
+
                     let colorClass = '';
-                    if (currentMins < s1End) colorClass = 'row-s1'; else if (currentMins < s2End) colorClass = 'row-s2'; else colorClass = 'row-s3';
-                    const timeLabel = formatTime(currentMins);
-                    const rid = `r${rowCount}`;
-                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold no-ampm" value="${timeLabel}" id="${rid}_start" lang="en-GB" style="text-align:center;"></td><td><input type="time" id="${rid}_end" class="no-ampm" lang="en-GB" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" placeholder="-"></td></tr>`;
-                    currentMins += interval; rowCount++;
+                    if (i <= s1EndCount) colorClass = 'row-s1';
+                    else if (i <= s2EndCount) colorClass = 'row-s2';
+                    else colorClass = 'row-s3';
+
+                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold no-ampm" value="${valStart}" id="${rid}_start" lang="en-GB" style="text-align:center;"></td><td><input type="time" id="${rid}_end" value="${valEnd}" class="no-ampm" lang="en-GB" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" value="${valCart}" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" value="${valCracks}" placeholder="-"></td></tr>`;
                 }
+
 
                 const html = `
                 <div class="print-full-height">
@@ -3007,9 +3008,9 @@
                 <!-- Date bar removed -->
                 <div class="row g-2">
                     <div class="col-6">
-                        <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s1_hours_input" value="${s1h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s2_hours_input" value="${s2h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
-                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span><div class="d-flex align-items-center gap-1 d-print-none"><span style="font-size:0.65rem">کاتژمێر:</span><input type="number" id="s3_hours_input" value="${s3h}" style="width:40px; height:24px; font-size:0.9rem;" onchange="generateReport(true)"></div></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                         <div class="shift-box bg-s1"><div class="shift-header"><span>شیفتی یەکەم (08:00 - 16:00)</span></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s1_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s1_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s1_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s1_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s1_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s1_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s2"><div class="shift-header"><span>شیفتی دووەم (16:00 - 00:00)</span></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s2_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s2_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s2_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s2_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s2_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s2_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s3"><div class="shift-header"><span>شیفتی سێیەم (00:00 - 08:00)</span></div><table class="report-table expanded-rows" style="border:none;"><tr><td style="width:40%">کۆی عەرەبانە</td><td><input type="number" id="s3_carts" class="fw-bold fs-6" onchange="this.dataset.manual='true'; updateUnsettingTotals()"></td></tr><tr><td>بالێتی داگیراو</td><td><input type="number" id="s3_pallets" onchange="updateUnsettingTotals()"></td></tr><tr><td>ژمارەی کۆڵۆم</td><td><input type="number" id="s3_columns"></td></tr><tr><td colspan="2" style="padding:2px;"><div class="d-flex gap-1"><select id="s3_e1" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select><select id="s3_e2" style="flex:1; font-size:0.7rem; padding:2px;">${empOptions}</select></div></td></tr><tr><td colspan="2"><textarea id="s3_note" rows="2" placeholder="تێبینی..."></textarea></td></tr></table></div>
                         <div class="shift-box bg-white mt-2"><div class="shift-header bg-light">وردەکاری تەکنیکی</div><table class="report-table expanded-rows" style="border:none;"><tr><td>کێشی سەروەرە</td><td><input type="number" id="w_top"></td></tr><tr><td>کێشی ناوەڕاست</td><td><input type="number" id="w_mid"></td></tr><tr><td>کێشی خوارەوە</td><td><input type="number" id="w_bot"></td></tr><tr><td>ژ. کۆڵۆم</td><td><input type="number" id="tech_col"></td></tr><tr><td>سەر زنجیر</td><td><input type="number" id="tech_row"></td></tr></table></div>
                     </div>
                     <div class="col-6">
@@ -3254,8 +3255,16 @@
 
                 // Handle Rejection
                 let finalStatus = status;
+                let rejectionReason = (currentReportData && currentReportData.rejectionReason) ? currentReportData.rejectionReason : '';
+
                 if (isReject) {
-                    if (!confirm("Are you sure you want to rejet this report and send it back to draft?")) return;
+                    const reason = prompt("تکایە هۆکاری ڕەتکردنەوە بنووسە / Please enter rejection reason:\n(This will be visible to the supervisor)", rejectionReason);
+                    if (reason === null) return; // Cancelled
+                    if (reason.trim() === "") {
+                        alert("هۆکاری ڕەتکردنەوە پێویستە / Rejection reason is required.");
+                        return;
+                    }
+                    rejectionReason = reason;
                     finalStatus = 'draft';
                 }
 
@@ -3265,6 +3274,7 @@
                     date: date,
                     supervisor: (currentReportData && currentReportData.supervisor) ? currentReportData.supervisor : currentUser.username,
                     status: finalStatus,
+                    rejectionReason: rejectionReason,
                     updatedAt: new Date().toISOString(),
                     tableData: tableData
                 };
@@ -3345,6 +3355,103 @@
                 renderActionButtons('draft');
                 updateInputsState('draft');
                 updatePrintFooter(null);
+
+                // HIDE CONTROL PANEL after generation
+                const cp = document.getElementById('reportControlPanel');
+                if (cp) cp.style.display = 'none';
+            }
+
+            async function showPendingReportsModal() {
+                const modal = new bootstrap.Modal(document.getElementById('pendingReportsModal'));
+                const list = document.getElementById('pendingReportsList');
+                const loading = document.getElementById('pendingLoading');
+                const noMsg = document.getElementById('noPendingMessage');
+
+                list.innerHTML = '';
+                loading.style.display = 'block';
+                noMsg.style.display = 'none';
+                modal.show();
+
+                try {
+                    const snap = await db.collection('dailyReports')
+                        .where('status', '==', 'pending_admin')
+                        .get();
+
+                    loading.style.display = 'none';
+
+                    if (snap.empty) {
+                        noMsg.style.display = 'block';
+                        return;
+                    }
+
+                    // Sort locally by date descending
+                    const reports = [];
+                    snap.forEach(doc => reports.push({ id: doc.id, ...doc.data() }));
+                    reports.sort((a, b) => b.date.localeCompare(a.date));
+
+                    reports.forEach(r => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="fw-bold">${r.date}</td>
+                            <td><span class="badge bg-info text-dark">${formatDept(r.department)}</span></td>
+                            <td>${getUserFullName(r.supervisor)}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-primary me-2" onclick="viewPendingReport('${r.id}')">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="quickApproveReport('${r.id}', event)">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                            </td>
+                        `;
+                        list.appendChild(row);
+                    });
+                } catch (e) {
+                    console.error(e);
+                    loading.style.display = 'none';
+                    alert("Error loading pending reports.");
+                }
+            }
+
+            async function viewPendingReport(id) {
+                const modalEl = document.getElementById('pendingReportsModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                const doc = await db.collection('dailyReports').doc(id).get();
+                if (doc.exists) {
+                    loadReportForView(doc.data(), id);
+                }
+            }
+
+            async function quickApproveReport(id, event) {
+                if (!confirm("Are you sure you want to approve this report?")) return;
+
+                const btn = event.currentTarget;
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+
+                try {
+                    await db.collection('dailyReports').doc(id).update({
+                        status: 'approved',
+                        approvedBy: currentUser.username,
+                        approvedAt: new Date().toISOString()
+                    });
+
+                    showToast("Report approved successfully!", "success");
+                    btn.closest('tr').remove();
+
+                    const list = document.getElementById('pendingReportsList');
+                    if (list.children.length === 0) {
+                        document.getElementById('noPendingMessage').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast("Error approving report.", "danger");
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
             }
 
             function showToast(msg, type) {
