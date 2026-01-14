@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -16,175 +16,271 @@
 
     <style>
         :root {
-            --light-bg: #f5f7fa;
-            --primary-color: #006f57;
-            /* Department Colors */
-            --col-crushing: #795548;
-            /* Brown */
-            --col-prep: #009688;
-            /* Teal */
-            --col-cutting: #FF5722;
-            /* Deep Orange */
-            --col-setting: #673AB7;
-            /* Purple (Setting) */
-            --col-dryer: #FFC107;
-            /* Amber */
-            --col-kiln: #D32F2F;
-            /* Red */
-            --col-unloading: #4CAF50;
-            /* Green */
-            --col-electrical: #a60566;
-            /* Gold */
-            --col-mechanical: #1d0feb;
-            /* Blue Grey */
+            --primary: #388e3c;
+            --secondary: #66bb6a;
+            --glass: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-muted: #475569;
         }
 
         body {
-            background-color: #f8fafc;
-            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-            padding: 15px;
+            margin: 0;
+            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        /* --- Header --- */
+        /* Animated Mesh Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(56, 142, 60, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(102, 187, 106, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            z-index: -1;
+            animation: backgroundFlow 30s ease infinite alternate;
+        }
+
+        @keyframes backgroundFlow {
+            0% {
+                transform: scale(1) translate(0, 0);
+            }
+
+            100% {
+                transform: scale(1.2) translate(20px, 20px);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
         .header-bar {
-            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
+            background: rgba(117, 183, 100, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            padding: 24px 48px;
+            border-radius: 35px;
+            margin-bottom: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 10px 25px rgba(56, 142, 60, 0.15);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-title h1 {
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #388e3c 0%, #66bb6a 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem;
         }
 
         .btn-header {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(10px);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 8px 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 600;
-            font-size: 0.9rem;
+            background: white;
+            color: var(--text-main);
+            padding: 12px 25px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
-            gap: 12px;
-            text-decoration: none;
+            gap: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
         }
 
         .btn-header:hover {
-            background: white !important;
-            color: #388e3c !important;
-            transform: translateY(-2px);
-            border-color: white;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05) translate(-5px, -2px);
+            box-shadow: 0 15px 35px -5px rgba(247, 151, 30, 0.25);
+            color: var(--primary);
+            border-color: var(--primary);
         }
 
         .user-badge {
-            background: white;
-            color: #388e3c;
-            padding: 6px 16px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 15px;
             font-weight: 700;
-            font-size: 0.85rem;
             display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* SOP Grid Styles */
+        .sop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .sop-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 35px 25px;
+            position: relative;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+            --dept-color: var(--primary);
+            --dept-gradient: linear-gradient(135deg, #f7971e, #ffd200);
+        }
+
+        .sop-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--dept-color);
+            opacity: 0.3;
+            transition: opacity 0.4s;
+        }
+
+        .sop-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 30px 60px -12px rgba(var(--dept-color-rgb), 0.2);
+            border-color: var(--dept-color);
+        }
+
+        .sop-card:hover::before {
+            opacity: 1;
+        }
+
+        .sop-icon-outer {
+            width: 85px;
+            height: 85px;
+            background: white;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .sop-card:hover .sop-icon-outer {
+            transform: rotate(12deg) scale(1.15);
+            background: var(--dept-color);
+        }
+
+        .sop-icon {
+            font-size: 2.8rem;
+            background: var(--dept-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.6s;
+        }
+
+        .sop-card:hover .sop-icon {
+            -webkit-text-fill-color: white;
+            filter: drop-shadow(0 5px 15px rgba(255, 255, 255, 0.4));
+        }
+
+        .sop-title {
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .sop-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 7px 18px;
+            border-radius: 100px;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            background: #f8fafc;
+            color: #94a3b8;
+            border: 1px solid #e2e8f0;
         }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .sop-card:hover .sop-badge {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--dept-color);
+            border-color: var(--dept-color);
         }
 
-        .logo-icon {
-            background: rgba(255, 255, 255, 0.2);
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-        }
-
-        /* --- VIEW 1: Department Folders --- */
-        .dept-card {
-            background: rgb(255, 255, 255);
-            border-radius: 15px;
-            padding: 30px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid #000000;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dept-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .dept-icon-box {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        .dept-title {
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .dept-count {
-            color: #888;
-            font-size: 0.9rem;
-            background: #f0f0f0;
-            padding: 2px 10px;
-            border-radius: 10px;
-        }
-
-        /* --- VIEW 2: Manuals List --- */
+        /* Manuals List */
         .manual-card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            border: 1px solid #eee;
-            transition: transform 0.2s;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            position: relative;
         }
 
         .manual-card:hover {
             transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            background: white;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary);
         }
 
-        .manual-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background: #f8f9fa;
+        .manual-icon-box {
+            width: 55px;
+            height: 55px;
+            background: #f8fafc;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--primary-color);
+            font-size: 1.8rem;
+            transition: all 0.3s;
+        }
+
+        .manual-card:hover .manual-icon-box {
+            background: var(--primary);
+            color: white;
+            transform: rotate(-5deg);
         }
 
         .manual-info {
@@ -192,136 +288,212 @@
         }
 
         .manual-name {
-            font-weight: 700;
-            color: #333;
-            margin: 0;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 2px;
         }
 
         .manual-type {
-            font-size: 0.8rem;
-            color: #999;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
         }
 
+        /* FAB */
         .btn-fab {
             position: fixed;
-            bottom: 30px;
-            left: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            font-size: 24px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            bottom: 40px;
+            left: 40px;
+            width: 70px;
+            height: 70px;
+            border-radius: 24px;
+            font-size: 32px;
+            background: var(--primary);
+            border: none;
+            box-shadow: 0 15px 35px rgba(247, 151, 30, 0.4);
             display: none;
-            /* Admin only */
             z-index: 1000;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .btn-fab:hover {
+            transform: translateY(-5px) rotate(90deg);
+            background: #e68a19;
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 35px;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            padding: 30px;
+            border: none;
+            color: white;
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 18px;
+            padding: 14px 22px;
+            border: 2px solid #f1f5f9;
+            background: #f8fafc;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border-radius: 18px;
+            padding: 14px 35px;
+            font-weight: 800;
+            border: none;
+            box-shadow: 0 10px 20px -5px rgba(247, 151, 30, 0.3);
+        }
+
+        /* Search Box */
+        .search-container {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 5px 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 30px;
+        }
+
+        .search-container .form-control {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Action Buttons */
+        .btn-open {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-weight: 700;
+            border: none;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 
 <body>
+    <div class="toast-container position-fixed top-0 start-0 p-3" style="z-index: 2000;"></div>
 
-    <div class="toast-container position-fixed top-0 start-0 p-3"></div>
-
-    <div class="container pb-5">
+    <div class="container">
+        <!-- Header -->
         <div class="header-bar">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="bi bi-folder2-open fs-5"></i>
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    style="background: white; width: 55px; height: 55px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 15px rgba(0,0,0,0.05);">
+                    <i class="bi bi-journal-bookmark-fill" style="font-size: 1.8rem; color: #1b5e20;"></i>
                 </div>
                 <div>
-                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">مانوەڵەکان</h5>
-                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">TECHNICAL MANUALS & DOCS</div>
+                    <h1 class="header-title m-0"
+                        style="font-size: 2.2rem; background: linear-gradient(135deg, #388e3c, #66bb6a); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                        مانوەڵەکان</h1>
+                    <small style="opacity: 0.9; font-weight: 700; color: #475569;">TECHNICAL MANUALS & DOCUMENTS</small>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="user-badge" id="userInfo">
-                    <i class="bi bi-person-circle fs-5"></i>
+                    <i class="bi bi-person-fill" style="color: var(--primary);"></i>
                     <span>User</span>
                 </div>
-                <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
-                    <i class="bi bi-arrow-right-short fs-4"></i>
-                    <span>گەڕانەوە</span>
-                </button>
+                <a href="dashboard.html" class="btn-header">
+                    <i class="bi bi-arrow-right-circle-fill"></i> گەڕانەوە
+                </a>
             </div>
         </div>
 
+        <!-- View 1: Departments -->
         <div id="view-departments">
-            <h5 class="mb-4 text-muted border-bottom pb-2">بەشێک هەڵبژێرە:</h5>
-            <div class="row g-4" id="deptGrid">
-                <div class="col-12 text-center">
-                    <div class="spinner-border text-primary"></div>
+            <div class="sop-grid" id="deptGrid">
+                <div class="col-12 text-center text-muted py-5">
+                    <div class="spinner-border" style="color: var(--primary);"></div>
                 </div>
             </div>
         </div>
 
+        <!-- View 2: Manuals List -->
         <div id="view-manuals" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <button class="btn btn-light border text-primary px-3" onclick="showDepartments()">
-                    <i class="bi bi-arrow-right me-1"></i> گەڕانەوە
+                <button class="btn btn-header" onclick="showDepartments()">
+                    <i class="bi bi-arrow-right-circle"></i> گەڕانەوە
                 </button>
                 <h4 class="m-0 fw-bold text-primary" id="currentDeptTitle"></h4>
                 <div style="width: 100px;"></div>
             </div>
 
-            <div class="input-group mb-4 shadow-sm">
-                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control border-0" id="manualSearch" placeholder="گەڕان لەم بەشە..."
+            <div class="search-container d-flex align-items-center">
+                <i class="bi bi-search text-muted me-2"></i>
+                <input type="text" class="form-control" id="manualSearch" placeholder="گەڕان لەم بەشە..."
                     onkeyup="filterManuals()">
             </div>
 
-            <div class="row g-3" id="manualsGrid">
-            </div>
+            <div class="row g-3" id="manualsGrid"></div>
         </div>
     </div>
 
-    <button class="btn btn-primary btn-fab" id="addBtn" onclick="openModal()">
-        <i class="bi bi-plus-lg"></i>
+    <!-- Admin FAB -->
+    <button class="btn btn-fab" id="addBtn" onclick="openModal()">
+        <i class="bi bi-plus"></i>
     </button>
 
+    <!-- Modal -->
     <div class="modal fade" id="manualModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold" id="modalTitle">زیادکردنی کتێب</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="manualForm">
                         <input type="hidden" id="manualId">
-
-                        <div class="mb-3">
-                            <label class="form-label">ناونیشان</label>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">ناونیشان</label>
                             <input type="text" class="form-control" id="inpTitle" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">بەش</label>
-                            <select class="form-select" id="inpDept" required>
-                            </select>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">بەش</label>
+                            <select class="form-select" id="inpDept" required></select>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">لینک (URL)</label>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">لینک (URL)</label>
                             <input type="url" class="form-control" id="inpLink" placeholder="Google Drive Link..."
                                 required>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">جۆر</label>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">جۆر</label>
                             <div class="btn-group w-100" role="group">
                                 <input type="radio" class="btn-check" name="typeOption" id="typePdf" value="pdf"
                                     checked>
-                                <label class="btn btn-outline-secondary" for="typePdf">PDF</label>
-
+                                <label class="btn btn-outline-secondary" for="typePdf"
+                                    style="border-radius: 12px 0 0 12px; padding: 12px;">PDF</label>
                                 <input type="radio" class="btn-check" name="typeOption" id="typeVideo" value="video">
-                                <label class="btn btn-outline-secondary" for="typeVideo">Video</label>
+                                <label class="btn btn-outline-secondary" for="typeVideo"
+                                    style="border-radius: 0 12px 12px 0; padding: 12px;">Video</label>
                             </div>
                         </div>
+                        <div class="d-grid mt-4">
+                            <button type="button" class="btn btn-primary btn-save"
+                                onclick="saveManual()">پاشەکەوتکردن</button>
+                        </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">داخستن</button>
-                    <button type="button" class="btn btn-primary" onclick="saveManual()">پاشەکەوتکردن</button>
                 </div>
             </div>
         </div>
@@ -341,59 +513,58 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Updated Departments based on your request
         const departments = [
-            { id: 'crushing', label: 'هاڕین', icon: 'bi-hammer', color: 'var(--col-crushing)' },
-            { id: 'prep', label: 'ئامادەکردن', icon: 'bi-tornado', color: 'var(--col-prep)' },
-            { id: 'cutting', label: 'بڕین', icon: 'bi-scissors', color: 'var(--col-cutting)' },
-            { id: 'setting', label: 'بارکردن', icon: 'bi-bricks', color: 'var(--col-setting)' }, // FIXED: Setting Area
-            { id: 'dryer', label: 'درایەر', icon: 'bi-brightness-high', color: 'var(--col-dryer)' },
-            { id: 'kiln', label: 'فڕن', icon: 'bi-fire', color: 'var(--col-kiln)' },
-            { id: 'unloading', label: 'داگرتن', icon: 'bi-box-seam', color: 'var(--col-unloading)' },
-            { id: 'electrical', label: 'کارەبا', icon: 'bi-lightning-charge', color: 'var(--col-electrical)' },
-            { id: 'mechanical', label: 'میکانیک', icon: 'bi-gear-wide-connected', color: 'var(--col-mechanical)' }
+            { id: 'crushing', label: 'هاڕین', icon: 'bi-hammer', color: '#3b82f6', grad: 'linear-gradient(135deg, #3b82f6, #60a5fa)' },
+            { id: 'prep', label: 'ئامادەکردن', icon: 'bi-tornado', color: '#10b981', grad: 'linear-gradient(135deg, #10b981, #34d399)' },
+            { id: 'cutting', label: 'بڕین', icon: 'bi-scissors', color: '#f43f5e', grad: 'linear-gradient(135deg, #f43f5e, #fb7185)' },
+            { id: 'setting', label: 'بارکردن', icon: 'bi-bricks', color: '#8b5cf6', grad: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+            { id: 'dryer', label: 'درایەر', icon: 'bi-brightness-high', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)' },
+            { id: 'kiln', label: 'فڕن', icon: 'bi-fire', color: '#f97316', grad: 'linear-gradient(135deg, #f97316, #fb923c)' },
+            { id: 'unloading', label: 'داگرتن', icon: 'bi-box-seam', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)' },
+            { id: 'electrical', label: 'کارەبا', icon: 'bi-lightning-charge', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)' },
+            { id: 'mechanical', label: 'میکانیک', icon: 'bi-gear-wide-connected', color: '#64748b', grad: 'linear-gradient(135deg, #64748b, #94a3b8)' }
         ];
 
         let currentUser = null;
         let allManuals = [];
         let currentDeptId = null;
 
-        // --- 2. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const stored = JSON.parse(localStorage.getItem('currentUser'));
             currentUser = stored;
-            document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
-
-            if (['admin', 'manager'].includes(currentUser.role)) {
-                document.getElementById('addBtn').style.display = 'block';
+            if (currentUser) {
+                document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
             }
 
-            // Populate Select Options in Modal
+            const allowedRoles = ['admin', 'manager', 'supervisor'];
+            if (!currentUser || !allowedRoles.includes(currentUser.role)) {
+                document.querySelector('.container').innerHTML = `<div class="text-center py-5"><h4>Access Denied</h4></div>`;
+                return;
+            }
+
+            if (['admin', 'manager'].includes(currentUser.role)) {
+                document.getElementById('addBtn').style.display = 'flex';
+            }
+
             const select = document.getElementById('inpDept');
-            departments.forEach(d => {
-                select.innerHTML += `<option value="${d.id}">${d.label}</option>`;
-            });
+            departments.forEach(d => select.innerHTML += `<option value="${d.id}">${d.label}</option>`);
 
             loadData();
         });
 
-        // --- 3. DATA LOADING ---
         function loadData() {
             db.collection('manuals').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 allManuals = [];
                 snap.forEach(doc => allManuals.push({ id: doc.id, ...doc.data() }));
-
-                if (!currentDeptId) {
-                    renderDepartments();
-                } else {
-                    renderManuals(currentDeptId);
-                }
+                if (!currentDeptId) renderDepartments(); else renderManuals(currentDeptId);
             });
         }
 
-        // --- 4. VIEW LOGIC ---
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 0, 0';
+        }
 
-        // View 1: Show 9 Department Folders
         function renderDepartments() {
             document.getElementById('view-departments').style.display = 'block';
             document.getElementById('view-manuals').style.display = 'none';
@@ -403,46 +574,39 @@
             grid.innerHTML = '';
 
             departments.forEach(dept => {
-                // Count manuals for this dept
                 const count = allManuals.filter(m => m.department === dept.id).length;
+                const card = document.createElement('div');
+                card.className = 'sop-card';
+                card.style.setProperty('--dept-color', dept.color);
+                card.style.setProperty('--dept-color-rgb', hexToRgb(dept.color));
+                card.style.setProperty('--dept-gradient', dept.grad);
+                card.onclick = () => openDepartment(dept.id);
 
-                grid.innerHTML += `
-                    <div class="col-md-4 col-sm-6">
-                        <div class="dept-card" onclick="openDepartment('${dept.id}')">
-                            <div class="dept-icon-box" style="background-color: ${dept.color}">
-                                <i class="bi ${dept.icon}"></i>
-                            </div>
-                            <div class="dept-title">${dept.label}</div>
-                            <span class="dept-count">${count} فایل</span>
-                        </div>
+                card.innerHTML = `
+                    <div class="sop-icon-outer">
+                        <i class="bi ${dept.icon} sop-icon"></i>
                     </div>
+                    <div class="sop-title">${dept.label}</div>
+                    <div class="sop-badge">${count} فایل</div>
                 `;
+                grid.appendChild(card);
             });
         }
 
-        // View 2: Show Manuals for ONE Department
         function openDepartment(deptId) {
             currentDeptId = deptId;
             const deptInfo = departments.find(d => d.id === deptId);
-
             document.getElementById('view-departments').style.display = 'none';
             document.getElementById('view-manuals').style.display = 'block';
-
-            // Set Header with Icon
-            document.getElementById('currentDeptTitle').innerHTML =
-                `<i class="bi ${deptInfo.icon}" style="color:${deptInfo.color}"></i> ${deptInfo.label}`;
-
+            document.getElementById('currentDeptTitle').innerHTML = `<i class="bi ${deptInfo.icon}" style="color:${deptInfo.color}"></i> ${deptInfo.label}`;
             renderManuals(deptId);
         }
 
-        function showDepartments() {
-            renderDepartments();
-        }
+        function showDepartments() { renderDepartments(); }
 
         function renderManuals(deptId) {
             const grid = document.getElementById('manualsGrid');
             grid.innerHTML = '';
-
             const filteredManuals = allManuals.filter(m => m.department === deptId);
             const isAdmin = ['admin', 'manager'].includes(currentUser.role);
 
@@ -453,43 +617,35 @@
 
             filteredManuals.forEach(m => {
                 const icon = m.type === 'video' ? 'bi-play-circle-fill text-danger' : 'bi-file-earmark-pdf-fill text-primary';
-
-                const adminBtns = isAdmin ? `
-                    <div class="ms-2 border-start ps-2">
-                        <button class="btn btn-sm text-secondary" onclick="editManual('${m.id}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm text-danger" onclick="deleteManual('${m.id}')"><i class="bi bi-trash"></i></button>
-                    </div>
-                ` : '';
-
-                grid.innerHTML += `
+                const card = `
                     <div class="col-md-6 manual-item">
                         <div class="manual-card">
-                            <div class="manual-icon">
-                                <i class="bi ${icon}"></i>
-                            </div>
+                            <div class="manual-icon-box"><i class="bi ${icon}"></i></div>
                             <div class="manual-info">
                                 <h6 class="manual-name">${m.title}</h6>
-                                <span class="manual-type">${m.type.toUpperCase()}</span>
+                                <span class="manual-type">${m.type}</span>
                             </div>
-                            <a href="${m.link}" target="_blank" class="btn btn-sm btn-outline-primary">کردنەوە</a>
-                            ${adminBtns}
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="${m.link}" target="_blank" class="btn-open">کردنەوە</a>
+                                ${isAdmin ? `
+                                <div class="btn-group">
+                                    <button class="btn btn-sm text-secondary" onclick="editManual('${m.id}')"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm text-danger" onclick="deleteManual('${m.id}')"><i class="bi bi-trash"></i></button>
+                                </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
+                grid.innerHTML += card;
             });
         }
 
-        // --- 5. CRUD ACTIONS ---
         function openModal() {
             document.getElementById('manualForm').reset();
             document.getElementById('manualId').value = '';
             document.getElementById('modalTitle').textContent = 'زیادکردنی کتێب';
-
-            // If we are inside a department folder, auto-select it
-            if (currentDeptId) {
-                document.getElementById('inpDept').value = currentDeptId;
-            }
-
+            if (currentDeptId) document.getElementById('inpDept').value = currentDeptId;
             new bootstrap.Modal(document.getElementById('manualModal')).show();
         }
 
@@ -514,24 +670,13 @@
                 type: document.querySelector('input[name="typeOption"]:checked').value,
                 updatedAt: new Date().toISOString()
             };
-
             if (!data.title || !data.link) { showToast('تکایە هەموو زانیاریەکان پڕبکەوە', 'warning'); return; }
-
             try {
-                if (id) {
-                    await db.collection('manuals').doc(id).update(data);
-                    showToast('نوێکرایەوە', 'success');
-                } else {
-                    data.createdAt = new Date().toISOString();
-                    await db.collection('manuals').add(data);
-                    showToast('زیادکرا', 'success');
-                }
+                if (id) await db.collection('manuals').doc(id).update(data);
+                else { data.createdAt = new Date().toISOString(); await db.collection('manuals').add(data); }
                 bootstrap.Modal.getInstance(document.getElementById('manualModal')).hide();
-                // Stay in current view
-            } catch (e) {
-                console.error(e);
-                showToast('هەڵە ڕوویدا', 'danger');
-            }
+                showToast('سەرکەوتووبوو', 'success');
+            } catch (e) { showToast('هەڵە ڕوویدا', 'danger'); }
         }
 
         async function deleteManual(id) {
@@ -543,14 +688,10 @@
             }
         }
 
-        // --- UTILS ---
         function filterManuals() {
             const term = document.getElementById('manualSearch').value.toLowerCase();
             const items = document.querySelectorAll('.manual-item');
-            items.forEach(item => {
-                const text = item.innerText.toLowerCase();
-                item.style.display = text.includes(term) ? '' : 'none';
-            });
+            items.forEach(item => { item.style.display = item.innerText.toLowerCase().includes(term) ? '' : 'none'; });
         }
 
         function showToast(msg, type) {
