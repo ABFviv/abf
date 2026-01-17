@@ -3460,9 +3460,9 @@
             // User is authenticated, parse user data
             currentUser = JSON.parse(userStr);
 
-            // Block 'employee' role from accessing this page
-            if (currentUser.role === 'employee') {
-                window.location.href = 'dashboard .html';
+            // Block 'employee' role from accessing this page (except 'cutemp')
+            if (currentUser.role === 'employee' && currentUser.username !== 'cutemp') {
+                window.location.href = 'dashboard.html';
                 return;
             }
 
@@ -4135,7 +4135,7 @@
 
             // Show quick record button for specific departments - ADD 'klin' to the list
             const quickRecordElements = document.querySelectorAll('.quick-record-only');
-            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department);
+            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) && currentUser.username !== 'cutemp';
             quickRecordElements.forEach(element => {
                 element.style.display = showQuickRecord ? 'inline-block' : 'none';
             });
@@ -4159,7 +4159,7 @@
 
             // Show Cleaning Work button ONLY for Cutting and Unsetting (and Admin)
             const cleaningWorkElements = document.querySelectorAll('.cleaning-work-only');
-            const showCleaningWork = ['cutting-setting', 'unsetting'].includes(currentUser.department) || currentUser.role === 'admin';
+            const showCleaningWork = (['cutting-setting', 'unsetting'].includes(currentUser.department) || currentUser.role === 'admin') && currentUser.username !== 'cutemp';
             cleaningWorkElements.forEach(element => {
                 element.style.display = showCleaningWork ? 'inline-block' : 'none';
             });
@@ -4822,6 +4822,14 @@
             }
 
             updateRecordTabs();
+
+            // Hide Add Record button for cutemp
+            if (currentUser.username === 'cutemp') {
+                document.getElementById('addRecordBtn').style.display = 'none';
+            } else {
+                document.getElementById('addRecordBtn').style.display = 'inline-block';
+            }
+
             loadWorkRecords(employee);
         }
 
