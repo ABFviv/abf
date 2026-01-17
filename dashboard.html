@@ -474,7 +474,12 @@
                 'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report']
             };
 
-            const allowedPages = rolePermissions[currentUser.role] || [];
+            let allowedPages = rolePermissions[currentUser.role] || [];
+
+            // Special access for 'cutemp'
+            if (currentUser.username === 'cutemp') {
+                allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
+            }
 
             // Get all navigation cards
             const cards = document.querySelectorAll('.nav-card');
