@@ -1833,7 +1833,16 @@
                                     el.add(newOption);
                                 }
                             } else {
-                                el.value = value;
+                                // TIME FORMAT FIX: Ensure H:MM is converted to HH:MM (e.g. 8:00 -> 08:00)
+                                if (el.type === 'time' && value && typeof value === 'string') {
+                                    if (value.length === 4 && value.indexOf(':') === 1) {
+                                        el.value = "0" + value;
+                                    } else {
+                                        el.value = value;
+                                    }
+                                } else {
+                                    el.value = value;
+                                }
                             }
 
                             // --- Logic to Reveal Notes if they have Data ---
@@ -3240,7 +3249,18 @@
                 inputs.forEach(inp => {
                     if (inp.id) {
                         // Checkbox handling logic
-                        tableData[inp.id] = inp.type === 'checkbox' ? inp.checked : inp.value;
+                        if (inp.type === 'checkbox') {
+                            tableData[inp.id] = inp.checked;
+                        } else {
+                            let val = inp.value;
+                            // TIME FORMAT FIX: Force HH:MM for time inputs
+                            if (inp.type === 'time' && val && typeof val === 'string') {
+                                if (val.length === 4 && val.indexOf(':') === 1) {
+                                    val = "0" + val;
+                                }
+                            }
+                            tableData[inp.id] = val;
+                        }
                     }
                 });
 
