@@ -2209,7 +2209,7 @@
                         <tr style="background: ${index % 2 === 0 ? '#fff' : '#f9f9f9'};">
                             <td class="task-text" style="background: ${shiftLightColor} !important; font-weight: 600; color: #334155;">${task}</td>
                             <td style="width: 70px; background:#fff3cd;">
-                                <input type="time" id="${rowIdBase}_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
+                                <input type="text" id="${rowIdBase}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
                             </td>
                         </tr>
                         `;
@@ -2236,7 +2236,7 @@
                             <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک (سەرەتا)</span>
                         </td>
                         <td style="background:#fff8e1;">
-                            <input type="time" id="cut_${shift.id}_start_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                            <input type="text" id="cut_${shift.id}_start_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                         </td>
                     </tr>`;
                     }
@@ -2246,7 +2246,7 @@
                         cartsCol1 += `
                         <tr>
                             <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
-                            <td><input type="time" id="cut_${shift.id}_c${i}_time" class="no-ampm" lang="en-GB" style="font-size:0.75rem;"></td>
+                            <td><input type="text" id="cut_${shift.id}_c${i}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="font-size:0.75rem;"></td>
                             <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
@@ -2260,7 +2260,7 @@
                                 <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                             </td>
                             <td style="background:#fff8e1;">
-                                <input type="time" id="cut_${shift.id}_c${checkGroup}_left_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                <input type="text" id="cut_${shift.id}_c${checkGroup}_left_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                             </td>
                         </tr>`;
                         }
@@ -2271,7 +2271,7 @@
                             cartsCol2 += `
                             <tr>
                                 <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
-                                <td><input type="time" id="cut_${shift.id}_c${j}_time" class="no-ampm" lang="en-GB" style="font-size:0.75rem;"></td>
+                                <td><input type="text" id="cut_${shift.id}_c${j}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="font-size:0.75rem;"></td>
                                 <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
@@ -2285,7 +2285,7 @@
                                     <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                                 </td>
                                 <td style="background:#fff8e1;">
-                                    <input type="time" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" class="no-ampm" lang="en-GB" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                    <input type="text" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                                 </td>
                             </tr>`;
                             }
@@ -2555,7 +2555,7 @@
                 <tr class="${rowClass} compact-rows">
                     <td>${i}</td>
                     <td><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
-                    <td><input type="time" id="${timeId}" value="${valTime}" class="no-ampm" lang="en-GB" style="text-align:center;"></td>
+                    <td><input type="text" id="${timeId}" value="${valTime}" class="time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td>
 
                     <td><input type="number" id="${rid}_d1" value="${valD1}"></td>
                     <td><input type="number" id="${rid}_d2" value="${valD2}"></td>
@@ -2790,7 +2790,7 @@
                     rowsHtml += `
                     <tr class="compact-rows">
                         <td>${i}</td>
-                        <td><input type="time" id="${timeId}" value="${valTime}" class="fw-bold no-ampm" lang="en-GB"></td>
+                        <td><input type="text" id="${timeId}" value="${valTime}" class="fw-bold time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td>
 
                         <td>${getSelect(`${rid}_type_out`, null, valTypeOut)}</td>
                         <td><input type="number" id="${rid}_cart_out" value="${valCartOut}"></td>
@@ -3007,7 +3007,7 @@
                     else if (i <= s2EndCount) colorClass = 'row-s2';
                     else colorClass = 'row-s3';
 
-                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold no-ampm" value="${valStart}" id="${rid}_start" lang="en-GB" style="text-align:center;"></td><td><input type="time" id="${rid}_end" value="${valEnd}" class="no-ampm" lang="en-GB" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" value="${valCart}" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" value="${valCracks}" placeholder="-"></td></tr>`;
+                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="text" class="fw-bold time-mask" value="${valStart}" id="${rid}_start" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td><td><input type="text" id="${rid}_end" value="${valEnd}" class="time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" value="${valCart}" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" value="${valCracks}" placeholder="-"></td></tr>`;
                 }
 
 
@@ -3545,6 +3545,36 @@
                     if (targetInput.select && targetInput.type !== 'range') {
                         targetInput.select();
                     }
+                }
+            });
+            // ---------------------------------------------------------
+            //  TIME INPUT MASKING (Universal)
+            // ---------------------------------------------------------
+            document.addEventListener('input', function (e) {
+                if (e.target.classList.contains('time-mask')) {
+                    var input = e.target;
+                    var val = input.value.replace(/[^0-9]/g, ''); // Remove non-numbers
+
+                    // Auto-insert colon
+                    if (val.length > 2) {
+                        val = val.substring(0, 2) + ':' + val.substring(2);
+                    }
+
+                    // Limit length to 5 (HH:mm)
+                    if (val.length > 5) {
+                        val = val.substring(0, 5);
+                    }
+
+                    input.value = val;
+                }
+            });
+
+            document.addEventListener('change', function (e) {
+                if (e.target.classList.contains('time-mask')) {
+                    var input = e.target;
+                    var val = input.value;
+                    // Simple validation: if incomplete, maybe clear or Warn?
+                    // For now, let's just let it save whatever (robustness > strictness) because user complained about deleting data.
                 }
             });
         </script>
