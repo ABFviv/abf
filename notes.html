@@ -321,6 +321,23 @@
             currentUser = stored;
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
+            // Access Control: Only admin and supervisor can access notes
+            const allowedRoles = ['admin', 'supervisor'];
+            if (!allowedRoles.includes(currentUser.role) && currentUser.username !== 'cutemp') {
+                document.querySelector('.container').innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center;">
+                        <i class="bi bi-lock-fill" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
+                        <h2 style="color: #2c3e50; margin-bottom: 10px;">بەردەست نییە</h2>
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Not Available</h3>
+                        <p style="color: #7f8c8d; font-size: 1.1rem; margin-bottom: 30px;">تۆ ڕێگەت نییە بۆ ئەم بەشە</p>
+                        <button class="btn btn-primary btn-lg" onclick="window.location.href='index.html'">
+                            <i class="bi bi-arrow-right me-2"></i> گەڕانەوە بۆ لاپەڕەی سەرەکی
+                        </button>
+                    </div>
+                `;
+                return; // Stop further execution for unauthorized users
+            }
+
             loadNotes();
         });
 
@@ -508,7 +525,7 @@
                 await db.collection('notes').doc(noteId).update({
                     adminReply: replyText
                 });
-                showToast('وەڵام  نێردرا', 'success');
+                showToast('وەڵام نێردرا', 'success');
             } catch (e) {
                 showToast('هەڵە', 'danger');
             }
@@ -536,4 +553,3 @@
 </body>
 
 </html>
-
