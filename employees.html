@@ -4347,8 +4347,12 @@
 
             let employeesToShow = filteredEmployees || employees;
 
-            // If not admin or manager, filter by department
-            if (currentUser.role !== 'admin' && currentUser.role !== 'manager') {
+            // SPECIAL RESTRICTION FOR 'cutemp'
+            if (currentUser.username === 'cutemp') {
+                employeesToShow = employeesToShow.filter(emp => emp.department === 'cutting-setting');
+            }
+            // If not admin or manager (and not cutemp), filter by department
+            else if (currentUser.role !== 'admin' && currentUser.role !== 'manager') {
                 employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
             } else {
                 // For admin and manager, apply department filter from checkboxes if any are selected
@@ -4435,7 +4439,7 @@
                         <button class="btn btn-sm btn-info btn-record-premium work-records-btn ms-1" data-id="${employee.id}" title="تۆمارەکان" style="border:none;">
                             <i class="bi bi-clipboard-data-fill"></i>
                         </button>
-                        ${currentUser.role === 'admin' ? `
+                        ${currentUser.role === 'admin' && currentUser.username !== 'cutemp' ? `
                         <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}" title="چاککردن">
                             <i class="bi bi-pencil"></i>
                         </button>
