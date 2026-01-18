@@ -2166,9 +2166,9 @@
 
                 const dateValue = document.getElementById('reportDate').value;
                 const shifts = [
-                    { id: 's1', name: 'شیفتی یەکەم (08:00 - 16:00)', defStart: '08:00' },
-                    { id: 's2', name: 'شیفتی دووەم (16:00 - 24:00)', defStart: '16:00' },
-                    { id: 's3', name: 'شیفتی سێیەم (24:00 - 08:00)', defStart: '24:00' }
+                    { id: 's1', name: 'شیفتی یەکەم (24:00 - 08:00)', defStart: '08:00' },
+                    { id: 's2', name: 'شیفتی دووەم (08:00 - 16:00)', defStart: '16:00' },
+                    { id: 's3', name: 'شیفتی سێیەم (16:00 - 24:00)', defStart: '24:00' }
                 ];
 
                 // Row count is fixed at 72 as per user request
@@ -2591,7 +2591,7 @@
                     </div>
                     <div class="col-4">
                      <div class="shift-box bg-s1">
-                        <div class="shift-header"><span> شیفتی یەکەم (08-16)</span></div>
+                        <div class="shift-header"><span> شیفتی یەکەم (24-08)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2610,7 +2610,7 @@
                      </div>
 
                      <div class="shift-box bg-s2">
-                        <div class="shift-header"><span>شیفتی دووەم (16-24)</span></div>
+                        <div class="shift-header"><span>شیفتی دووەم (08-16)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -2629,7 +2629,7 @@
                      </div>
 
                      <div class="shift-box bg-s3">
-                        <div class="shift-header"><span>شیفتی سێیەم (24-08)</span></div>
+                        <div class="shift-header"><span>شیفتی سێیەم (16-24)</span></div>
                         <div class="p-1">
                             <div class="d-flex align-items-center gap-1">
                                 <label class="mb-0" style="font-size:0.75rem;">ناوی کارمەند:</label>
@@ -3596,3 +3596,4 @@
 </body>
 
 </html>
+
