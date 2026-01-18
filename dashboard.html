@@ -336,6 +336,13 @@
             color: white;
         }
 
+        .card-annual .icon-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Purple gradient */
+            color: white;
+            padding: 10px;
+        }
+
         .card-title {
             font-family: 'Poppins', sans-serif;
             font-size: 1.5rem;
@@ -351,6 +358,14 @@
             line-height: 1.6;
             font-weight: 500;
         }
+
+        .card-annual .icon-box {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            /* Deep Purple/Indigo */
+            color: white;
+        }
+
+
 
         /* Locked card styling */
         .nav-card[style*="opacity: 0.5"] {
@@ -451,6 +466,11 @@
                 <div class="card-title">SOP Report</div>
                 <div class="card-desc">Standard Operating Procedures</div>
             </div>
+            <div onclick="window.location.href='annual_report.html'" class="nav-card card-annual">
+                <div class="icon-box"><i class="bi bi-pie-chart-fill"></i></div>
+                <div class="card-title">Annual Report</div>
+                <div class="card-desc">ڕاپۆڕتی ساڵانە</div>
+            </div>
         </div>
 
     </div>
@@ -469,16 +489,25 @@
             const rolePermissions = {
                 'hr': ['reports', 'sop_report'],
                 'employee': ['reports', 'sop_report'],
-                'manager': ['employees', 'manuals', 'sop_report'],
-                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'],
-                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report']
+                'manager': ['employees', 'manuals', 'sop_report', 'annual_report'],
+                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'], // annual_report removed, added conditionally below
+                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report']
             };
 
             let allowedPages = rolePermissions[currentUser.role] || [];
 
             // Special access for 'cutemp'
             if (currentUser.username === 'cutemp') {
-                allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
+                allowedPages = ['employees', 'manuals', 'reports', 'sop_report'];
+            }
+
+            // Annual Report specific access for supervisors
+            const annualAllowedUsers = ['himat', 'samdar', 'hemn', 'kiln'];
+            if (annualAllowedUsers.includes(currentUser.username)) {
+                // Ensure annual_report isn't added twice if they somehow already have it (though supervisor role doesn't have it now)
+                if (!allowedPages.includes('annual_report')) {
+                    allowedPages.push('annual_report');
+                }
             }
 
             // Get all navigation cards
