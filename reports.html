@@ -2166,9 +2166,9 @@
 
                 const dateValue = document.getElementById('reportDate').value;
                 const shifts = [
-                    { id: 's1', name: 'شیفتی یەکەم (24:00 - 08:00)', defStart: '08:00' },
-                    { id: 's2', name: 'شیفتی دووەم (08:00 - 16:00)', defStart: '16:00' },
-                    { id: 's3', name: 'شیفتی سێیەم (16:00 - 24:00)', defStart: '24:00' }
+                    { id: 's1', name: 'شیفتی یەکەم (08:00 - 16:00)', defStart: '08:00' },
+                    { id: 's2', name: 'شیفتی دووەم (16:00 - 24:00)', defStart: '16:00' },
+                    { id: 's3', name: 'شیفتی سێیەم (24:00 - 08:00)', defStart: '24:00' }
                 ];
 
                 // Row count is fixed at 72 as per user request
@@ -2209,7 +2209,7 @@
                         <tr style="background: ${index % 2 === 0 ? '#fff' : '#f9f9f9'};">
                             <td class="task-text" style="background: ${shiftLightColor} !important; font-weight: 600; color: #334155;">${task}</td>
                             <td style="width: 70px; background:#fff3cd;">
-                                <input type="text" id="${rowIdBase}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
+                                <input type="time" id="${rowIdBase}_time" class="time-input" style="width:100%; font-size:0.75rem; text-align:center; border:none; background:transparent;">
                             </td>
                         </tr>
                         `;
@@ -2236,7 +2236,7 @@
                             <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک (سەرەتا)</span>
                         </td>
                         <td style="background:#fff8e1;">
-                            <input type="text" id="cut_${shift.id}_start_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                            <input type="time" id="cut_${shift.id}_start_check_time" class="time-input" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                         </td>
                     </tr>`;
                     }
@@ -2246,7 +2246,7 @@
                         cartsCol1 += `
                         <tr>
                             <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
-                            <td><input type="text" id="cut_${shift.id}_c${i}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="font-size:0.75rem;"></td>
+                            <td><input type="time" id="cut_${shift.id}_c${i}_time" class="time-input" style="font-size:0.75rem;"></td>
                             <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
@@ -2260,7 +2260,7 @@
                                 <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                             </td>
                             <td style="background:#fff8e1;">
-                                <input type="text" id="cut_${shift.id}_c${checkGroup}_left_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                <input type="time" id="cut_${shift.id}_c${checkGroup}_left_check_time" class="time-input" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                             </td>
                         </tr>`;
                         }
@@ -2269,9 +2269,9 @@
                         let j = i + halfCarts;
                         if (j <= totalCarts) {
                             cartsCol2 += `
-                            <tr>
+                             <tr>
                                 <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
-                                <td><input type="text" id="cut_${shift.id}_c${j}_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="font-size:0.75rem;"></td>
+                                <td><input type="time" id="cut_${shift.id}_c${j}_time" class="time-input" style="font-size:0.75rem;"></td>
                                 <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
@@ -2284,8 +2284,8 @@
                                 <td style="background:#fff8e1; width: 40%; vertical-align: middle;">
                                     <span style="font-size:0.6rem; font-weight:bold; color:#c05621; display:block; text-align:center;">کاتی چێک</span>
                                 </td>
-                                <td style="background:#fff8e1;">
-                                    <input type="text" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" class="time-mask" placeholder="HH:mm" maxlength="5" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
+                                 <td style="background:#fff8e1;">
+                                    <input type="time" id="cut_${shift.id}_c${checkGroupRight}_right_check_time" class="time-input" style="width:100%; font-size:0.75rem; text-align:center; font-weight:bold; color:#c05621; border:none; background:transparent;">
                                 </td>
                             </tr>`;
                             }
@@ -2553,9 +2553,9 @@
 
                     rowsHtml += `
                 <tr class="${rowClass} compact-rows">
-                    <td>${i}</td>
-                    <td><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
-                    <td><input type="text" id="${timeId}" value="${valTime}" class="time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td>
+                    <td style="width:5%">${i}</td>
+                    <td style="width:15%"><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
+                    <td style="width:15%"><input type="time" id="${timeId}" value="${valTime}" class="time-input" style="text-align:center;"></td>
 
                     <td><input type="number" id="${rid}_d1" value="${valD1}"></td>
                     <td><input type="number" id="${rid}_d2" value="${valD2}"></td>
@@ -2790,7 +2790,7 @@
                     rowsHtml += `
                     <tr class="compact-rows">
                         <td>${i}</td>
-                        <td><input type="text" id="${timeId}" value="${valTime}" class="fw-bold time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td>
+                        <td><input type="time" id="${timeId}" value="${valTime}" class="fw-bold time-input" style="text-align:center;"></td>
 
                         <td>${getSelect(`${rid}_type_out`, null, valTypeOut)}</td>
                         <td><input type="number" id="${rid}_cart_out" value="${valCartOut}"></td>
@@ -3007,7 +3007,7 @@
                     else if (i <= s2EndCount) colorClass = 'row-s2';
                     else colorClass = 'row-s3';
 
-                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="text" class="fw-bold time-mask" value="${valStart}" id="${rid}_start" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td><td><input type="text" id="${rid}_end" value="${valEnd}" class="time-mask" placeholder="HH:mm" maxlength="5" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" value="${valCart}" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" value="${valCracks}" placeholder="-"></td></tr>`;
+                    rowsHtml += `<tr class="${colorClass} compact-rows"><td><input type="time" class="fw-bold time-input" value="${valStart}" id="${rid}_start" style="text-align:center;"></td><td><input type="time" id="${rid}_end" value="${valEnd}" class="time-input" style="text-align:center;"></td><td><input type="text" id="${rid}_cart" value="${valCart}" onchange="updateUnsettingTotals()"></td><td><input type="number" id="${rid}_cracks" value="${valCracks}" placeholder="-"></td></tr>`;
                 }
 
 
@@ -3563,6 +3563,25 @@
                 }
             });
             // ---------------------------------------------------------
+            //  TIME INPUT AUTO-FILL (Current Time on click/focus)
+            // ---------------------------------------------------------
+            document.addEventListener('focusin', function (e) {
+                if (e.target.tagName === 'INPUT' && (e.target.type === 'time' || e.target.classList.contains('time-input'))) {
+                    // Only fill if empty
+                    if (!e.target.value) {
+                        const now = new Date();
+                        const hh = String(now.getHours()).padStart(2, '0');
+                        const mm = String(now.getMinutes()).padStart(2, '0');
+                        e.target.value = `${hh}:${mm}`;
+
+                        // Trigger change/input listeners
+                        e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                        e.target.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            });
+
+            // ---------------------------------------------------------
             //  TIME INPUT MASKING (Universal)
             // ---------------------------------------------------------
             document.addEventListener('input', function (e) {
@@ -3596,4 +3615,3 @@
 </body>
 
 </html>
-
