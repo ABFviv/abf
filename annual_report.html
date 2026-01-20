@@ -14,13 +14,13 @@
 
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-dark: #1d4ed8;
+            --primary: #b7154e;
+            --primary-dark: #8e103d;
             --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             --card-bg: rgba(255, 255, 255, 0.8);
             --input-bg: #fff;
             --text-dark: #1e293b;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             --border-color: #e2e8f0;
 
             /* Dept Colors */
@@ -47,26 +47,37 @@
 
         /* Header Styling */
         .header-bar {
-            background: transparent;
-            padding: 10px 0;
-            margin-bottom: 30px;
+            background: rgba(183, 21, 78, 0.9);
+            /* #b7154e */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px 48px;
+            border-radius: 35px;
+            margin-bottom: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 20px 40px -10px rgba(183, 21, 78, 0.3);
         }
 
         .header-title h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--primary);
+            font-weight: 800;
             margin: 0;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd1e8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem;
         }
 
         .header-title small {
             display: block;
-            color: var(--text-muted);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 1.1rem;
             margin-top: 4px;
+            font-weight: 600;
         }
 
         /* Nav Tabs */
@@ -372,6 +383,71 @@
             border-radius: 8px;
             margin: 0 auto;
         }
+
+        /* Light column backgrounds for departments */
+        .bg-light-cut {
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+
+        .bg-light-crush {
+            background-color: rgba(16, 185, 129, 0.08);
+        }
+
+        .bg-light-un {
+            background-color: rgba(6, 182, 212, 0.08);
+        }
+
+        .bg-light-ki {
+            background-color: rgba(245, 158, 11, 0.08);
+        }
+
+        /* Folder Grid Styles */
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .folder-item {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .folder-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.15);
+        }
+
+        .folder-icon {
+            font-size: 3.5rem;
+            color: #fbbf24;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .folder-name {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .history-footer-row {
+            background: #f1f5f9;
+            font-weight: 800;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .history-footer-row td {
+            color: var(--text-dark);
+        }
     </style>
 </head>
 
@@ -380,14 +456,14 @@
         <!-- Header -->
         <div class="header-bar">
             <div class="header-title">
-                <h1>Annual Report</h1>
+                <h1><i class="bi bi-calendar3-range me-2"></i>Annual Report</h1>
                 <small style="opacity: 0.9; font-weight: 600;">ڕاپۆڕتی ساڵانە</small>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn-back" onclick="openAnalysisModal()"><i class="bi bi-graph-up-arrow"></i>
-                    Analysis</button>
+                    شیکاری</button>
                 <button class="btn-back" onclick="openHistoryModal()"><i class="bi bi-clock-history"></i>
-                    History</button>
+                    مێژوو</button>
                 <a href="dashboard.html" class="btn-back"><i class="bi bi-arrow-right-circle-fill"></i> گەڕانەوە</a>
             </div>
         </div>
@@ -395,7 +471,7 @@
         <!-- Controls -->
         <div class="row mb-4">
             <div class="col-md-4">
-                <label for="reportDate" class="form-label fw-bold text-muted">بەروار هەڵبژێرە / Select Date</label>
+                <label for="reportDate" class="form-label fw-bold text-muted">بەروار هەڵبژێرە</label>
                 <div class="input-group search-box">
                     <span class="input-group-text bg-white border-0"><i
                             class="bi bi-calendar-date text-primary"></i></span>
@@ -554,7 +630,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="form-label">Tکۆی طەنی هاڕین</label>
+                                <label class="form-label">کۆی طەنی هاڕین</label>
                                 <div class="input-wrapper">
                                     <span class="input-unit">Ton</span>
                                     <input type="number" step="0.01" class="form-control-minimal" id="cr_crush_tones"
@@ -590,7 +666,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="form-label">Bکێشی خشتەکان خوارەوە</label>
+                                <label class="form-label">کێشی خشتەکان خوارەوە</label>
                                 <div class="input-wrapper">
                                     <span class="input-unit">Kg</span>
                                     <input type="number" step="0.01" class="form-control-minimal" id="un_bot_weight"
@@ -613,7 +689,7 @@
                                 <label class="form-label">جۆری بەرهەم</label>
                                 <div class="input-wrapper">
                                     <input type="text" class="form-control-minimal" id="ki_prod_type"
-                                        placeholder="Type name">
+                                        placeholder="ناوی جۆر بنووسە">
                                 </div>
                             </div>
                             <div>
@@ -636,12 +712,11 @@
             <div class="modal-content border-0 shadow-lg position-relative"
                 style="border-radius: 20px; overflow: hidden;">
                 <div
-                    style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); position: absolute; top:0; left:0; width: 100%; height: 8px;">
+                    style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); position: absolute; top:0; left:0; width: 100%; height: 8px;">
                 </div>
                 <div class="modal-header border-0 bg-white p-4 mt-2">
                     <h5 class="modal-title fw-bold text-dark"><i
-                            class="bi bi-graph-up-arrow me-2 text-primary"></i>Period
-                        Analysis</h5>
+                            class="bi bi-graph-up-arrow me-2 text-primary"></i>ماوەی شیکاری</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
@@ -649,16 +724,17 @@
                     <div class="glass-card mb-4" style="border-radius: 16px; padding: 20px;">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted">Start Date</label>
+                                <label class="form-label small fw-bold text-muted">کاتی دەستپێک</label>
                                 <input type="date" id="an_startDate" class="form-control border-0 shadow-sm">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted">End Date</label>
+                                <label class="form-label small fw-bold text-muted">کاتی کۆتایی</label>
                                 <input type="date" id="an_endDate" class="form-control border-0 shadow-sm">
                             </div>
                             <div class="col-md-4">
                                 <button onclick="calculateAnalysis()" class="btn btn-primary w-100 fw-bold shadow-sm"
-                                    style="border-radius: 10px;"><i class="bi bi-calculator me-2"></i>Calculate</button>
+                                    style="border-radius: 10px;"><i
+                                        class="bi bi-calculator me-2"></i>هەژماردکردن</button>
                             </div>
                         </div>
                     </div>
@@ -670,14 +746,14 @@
                             <div class="col">
                                 <div
                                     class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-primary h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">Cutting Carts</small>
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی بڕین</small>
                                     <h4 class="fw-bold m-0 text-primary" id="res_cut_carts">0</h4>
                                 </div>
                             </div>
                             <!-- Setting Card -->
                             <div class="col">
                                 <div class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-info h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">Setting Carts</small>
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی بارکردن</small>
                                     <h4 class="fw-bold m-0 text-info" id="res_set_carts">0</h4>
                                 </div>
                             </div>
@@ -685,7 +761,7 @@
                             <div class="col">
                                 <div
                                     class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-success h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">Crushing Tons</small>
+                                    <small class="text-muted fw-bold d-block mb-1">خۆڵی هاڕین (طەن)</small>
                                     <h4 class="fw-bold m-0 text-success" id="res_cr_tons">0</h4>
                                 </div>
                             </div>
@@ -693,14 +769,14 @@
                             <div class="col">
                                 <div
                                     class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-secondary h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">Prep Tons</small>
+                                    <small class="text-muted fw-bold d-block mb-1">خۆڵی ئامادەکردن (طەن)</small>
                                     <h4 class="fw-bold m-0 text-secondary" id="res_prep_tons">0</h4>
                                 </div>
                             </div>
                             <!-- Kiln Card -->
                             <div class="col">
                                 <div class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-danger h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">Kiln Carts</small>
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی فڕن</small>
                                     <h4 class="fw-bold m-0 text-danger" id="res_ki_carts">0</h4>
                                 </div>
                             </div>
@@ -711,31 +787,31 @@
                         <div class="row g-3 mt-2">
                             <div class="col-md-6 col-lg-4">
                                 <div class="bg-white p-3 rounded-4 shadow-sm h-100">
-                                    <h6 class="fw-bold mb-2 text-muted small">Cutting Carts</h6>
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی بڕین</h6>
                                     <canvas id="chart_cut" height="150"></canvas>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg-4">
                                 <div class="bg-white p-3 rounded-4 shadow-sm h-100">
-                                    <h6 class="fw-bold mb-2 text-muted small">Setting Carts</h6>
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی بارکردن</h6>
                                     <canvas id="chart_set" height="150"></canvas>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg-4">
                                 <div class="bg-white p-3 rounded-4 shadow-sm h-100">
-                                    <h6 class="fw-bold mb-2 text-muted small">Crushing Tons</h6>
+                                    <h6 class="fw-bold mb-2 text-muted small">خۆڵی هاڕین (طەن)</h6>
                                     <canvas id="chart_cr" height="150"></canvas>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg-6">
                                 <div class="bg-white p-3 rounded-4 shadow-sm h-100">
-                                    <h6 class="fw-bold mb-2 text-muted small">Prep Tons</h6>
+                                    <h6 class="fw-bold mb-2 text-muted small">خۆڵی ئامادەکردن (طەن)</h6>
                                     <canvas id="chart_prep" height="150"></canvas>
                                 </div>
                             </div>
                             <div class="col-md-12 col-lg-6">
                                 <div class="bg-white p-3 rounded-4 shadow-sm h-100">
-                                    <h6 class="fw-bold mb-2 text-muted small">Kiln Carts</h6>
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی فڕن</h6>
                                     <canvas id="chart_ki_final" height="150"></canvas>
                                 </div>
                             </div>
@@ -751,14 +827,14 @@
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; background: #f8fafc;">
                 <div class="modal-header border-0 bg-white p-4" style="border-radius: 20px 20px 0 0;">
-                    <h5 class="modal-title fw-bold text-primary"><i class="bi bi-archive me-2"></i>History Archive</h5>
+                    <h5 class="modal-title fw-bold text-primary"><i class="bi bi-archive me-2"></i>مێژووی تۆمارەکان</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <!-- Breadcrumb -->
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb history-breadcrumb" id="historyBreadcrumb">
-                            <li class="breadcrumb-item active" aria-current="page">Months</li>
+                            <li class="breadcrumb-item active" aria-current="page">مانگەکان</li>
                         </ol>
                     </nav>
                     <!-- View Container -->
@@ -809,7 +885,7 @@
             const date = document.getElementById('reportDate').value;
 
             if (!date) {
-                alert("Please select a date first.");
+                alert("تکایە بەروارێک هەڵبژێرە");
                 return;
             }
 
@@ -1024,7 +1100,7 @@
             const end = document.getElementById('an_endDate').value;
 
             if (!start || !end) {
-                alert("Please select both start and end dates.");
+                alert("تکایە ماوەیەک هەڵبژێرە");
                 return;
             }
 
@@ -1164,7 +1240,12 @@
                 records.sort((a, b) => a.id.localeCompare(b.id));
 
                 // Build Table
-                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="4" class="bg-primary text-white">Cutting & Loading</th><th colspan="2" class="bg-success text-white">Crushing / Prep</th><th colspan="3" class="bg-info text-dark">Unsetting</th><th colspan="2" class="bg-warning text-dark">Kiln</th><th rowspan="2">Actions</th></tr><tr><th>Total</th><th>Load</th><th>Garage</th><th>Speed</th><th>Prep</th><th>Crush</th><th>Top</th><th>Mid</th><th>Bot</th><th>Type</th><th>Count</th></tr></thead><tbody>`;
+                let totals = {
+                    total: 0, load: 0, garage: 0, speed: 0, bw1: 0, bw2: 0,
+                    prep: 0, crush: 0, top: 0, mid: 0, bot: 0, ki_count: 0
+                };
+
+                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="6" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="2" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت</th><th>کێشی خشت (بار)</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>جۆری بەرهەم</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
 
                 records.forEach(rec => {
                     const cut = rec.cutting_loading || {};
@@ -1172,20 +1253,36 @@
                     const un = rec.unsetting || {};
                     const ki = rec.kiln || {};
 
+                    // Accumulate Totals
+                    totals.total += Number(cut.total) || 0;
+                    totals.load += Number(cut.loading_total) || 0;
+                    totals.garage += Number(cut.garage_carts) || 0;
+                    totals.speed += Number(cut.boxfeeder_speed) || 0;
+                    totals.bw1 += Number(cut.brick_weight_day) || 0;
+                    totals.bw2 += Number(cut.brick_weight_load) || 0;
+                    totals.prep += Number(cr.prep_tones) || 0;
+                    totals.crush += Number(cr.crush_tones) || 0;
+                    totals.top += Number(un.top_weight) || 0;
+                    totals.mid += Number(un.mid_weight) || 0;
+                    totals.bot += Number(un.bot_weight) || 0;
+                    totals.ki_count += Number(ki.prod_count) || 0;
+
                     tableHtml += `
                         <tr>
                             <td class="fw-bold">${rec.id}</td>
-                            <td class="total-col">${cut.total || 0}</td>
-                            <td>${cut.loading_total || 0}</td>
-                            <td>${cut.garage_carts || 0}</td>
-                            <td>${cut.boxfeeder_speed || 0}</td>
-                            <td>${cr.prep_tones || 0}</td>
-                            <td>${cr.crush_tones || 0}</td>
-                            <td>${un.top_weight || 0}</td>
-                            <td>${un.mid_weight || 0}</td>
-                            <td>${un.bot_weight || 0}</td>
-                            <td style="font-size: 0.75rem">${ki.prod_type || '-'}</td>
-                            <td>${ki.prod_count || 0}</td>
+                            <td class="total-col bg-light-cut">${cut.total || 0}</td>
+                            <td class="bg-light-cut">${cut.loading_total || 0}</td>
+                            <td class="bg-light-cut">${cut.garage_carts || 0}</td>
+                            <td class="bg-light-cut">${cut.boxfeeder_speed || 0}</td>
+                            <td class="bg-light-cut">${cut.brick_weight_day || 0}</td>
+                            <td class="bg-light-cut">${cut.brick_weight_load || 0}</td>
+                            <td class="bg-light-crush">${cr.prep_tones || 0}</td>
+                            <td class="bg-light-crush">${cr.crush_tones || 0}</td>
+                            <td class="bg-light-un">${un.top_weight || 0}</td>
+                            <td class="bg-light-un">${un.mid_weight || 0}</td>
+                            <td class="bg-light-un">${un.bot_weight || 0}</td>
+                            <td class="bg-light-ki" style="font-size: 0.75rem">${ki.prod_type || '-'}</td>
+                            <td class="bg-light-ki">${ki.prod_count || 0}</td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary" onclick="loadHistDate('${rec.id}')">
                                     <i class="bi bi-box-arrow-in-down-right"></i>
@@ -1195,7 +1292,29 @@
                     `;
                 });
 
-                tableHtml += `</tbody></table></div>`;
+                // Add Totals Row
+                tableHtml += `
+                    </tbody>
+                    <tfoot class="history-footer-row">
+                        <tr>
+                            <td class="fw-bold">کۆی گشتی</td>
+                            <td class="bg-light-cut">${totals.total}</td>
+                            <td class="bg-light-cut">${totals.load}</td>
+                            <td class="bg-light-cut">${totals.garage}</td>
+                            <td class="bg-light-cut">${totals.speed.toFixed(1)}</td>
+                            <td class="bg-light-cut">${totals.bw1.toFixed(2)}</td>
+                            <td class="bg-light-cut">${totals.bw2.toFixed(2)}</td>
+                            <td class="bg-light-crush">${totals.prep.toFixed(1)}</td>
+                            <td class="bg-light-crush">${totals.crush.toFixed(1)}</td>
+                            <td class="bg-light-un">${totals.top.toFixed(2)}</td>
+                            <td class="bg-light-un">${totals.mid.toFixed(2)}</td>
+                            <td class="bg-light-un">${totals.bot.toFixed(2)}</td>
+                            <td class="bg-light-ki">-</td>
+                            <td class="bg-light-ki">${totals.ki_count}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table></div>`;
                 container.innerHTML = tableHtml;
 
             }
