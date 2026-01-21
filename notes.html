@@ -187,6 +187,8 @@
             margin-bottom: 25px;
             flex-grow: 1;
             white-space: pre-wrap;
+            word-break: break-word;
+            /* Ensure long text wraps */
         }
 
         .note-footer {
@@ -222,8 +224,10 @@
             background: rgba(250, 112, 154, 0.05);
             border-radius: 18px;
             padding: 15px 20px;
-            margin-top: 20px;
+            margin-top: 15px;
             border-right: 4px solid var(--primary);
+            word-break: break-word;
+            /* Ensure long text wraps */
         }
 
         .reply-header {
@@ -594,21 +598,35 @@
                 actionBtns = `<button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')"><i class="bi bi-trash"></i></button>`;
             }
 
-            // Reply Section
-            let replyHTML = '';
-            if (note.adminReply) {
-                replyHTML = `
+            // Reply Section - Multi-reply support
+            let repliesHTML = '';
+            if (note.replies && note.replies.length > 0) {
+                note.replies.forEach(rep => {
+                    const replyLabel = rep.user === 'admin' ? 'وەڵامی بەڕێوبەی بەرهەم' : `وەڵامی ${rep.user}`;
+                    repliesHTML += `
+                        <div class="reply-box">
+                            <div class="reply-header"><i class="bi bi-arrow-return-left"></i> ${replyLabel}:</div>
+                            <div class="small">${rep.text}</div>
+                        </div>
+                    `;
+                });
+            } else if (note.adminReply) {
+                // Backward compatibility for old single replies
+                repliesHTML = `
                     <div class="reply-box">
                         <div class="reply-header"><i class="bi bi-arrow-return-left"></i> وەڵام:</div>
                         <div class="small">${note.adminReply}</div>
                     </div>
                 `;
-            } else if (isAdmin || (isHimat && isNoteFromCutemp)) {
-                // Admin or Himat (for cutemp notes) can Add Reply
-                replyHTML = `
+            }
+
+            // Input field for new reply
+            let inputHTML = '';
+            if (isAdmin || (isHimat && isNoteFromCutemp)) {
+                inputHTML = `
                     <div class="mt-3 pt-2 border-top">
                         <div class="input-group input-group-sm">
-                            <input type="text" class="form-control" id="reply-input-${note.id}" placeholder="نووسینی وەڵام...">
+                            <textarea class="form-control" id="reply-input-${note.id}" rows="1" placeholder="نووسینی وەڵام..." style="resize:none;"></textarea>
                             <button class="btn btn-primary" onclick="submitReply('${note.id}')"><i class="bi bi-send"></i></button>
                         </div>
                     </div>
@@ -636,7 +654,8 @@
                             ${actionBtns}
                         </div>
 
-                        ${replyHTML}
+                        ${repliesHTML}
+                        ${inputHTML}
                     </div>
                 </div>
             `;
@@ -748,18 +767,26 @@
             }
         }
 
-        // Admin Reply Logic
+        // Multi-Reply Logic
         async function submitReply(noteId) {
-            const replyText = document.getElementById(`reply-input-${noteId}`).value;
+            const inputEl = document.getElementById(`reply-input-${noteId}`);
+            const replyText = inputEl.value.trim();
             if (!replyText) return;
 
             try {
+                // Add to replies array using arrayUnion for safety
                 await db.collection('notes').doc(noteId).update({
-                    adminReply: replyText
+                    replies: firebase.firestore.FieldValue.arrayUnion({
+                        user: currentUser.username,
+                        text: replyText,
+                        timestamp: new Date().toISOString()
+                    })
                 });
+                inputEl.value = ''; // Clear input
                 showToast('وەڵام نێردرا', 'success');
             } catch (e) {
-                showToast('هەڵە', 'danger');
+                console.error(e);
+                showToast('هەڵە ڕوویدا', 'danger');
             }
         }
 
