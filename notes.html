@@ -73,7 +73,7 @@
         }
 
         .header-bar {
-            background: linear-gradient(135deg, rgba(250, 112, 154, 0.6) 0%, rgba(254, 225, 64, 0.6) 100%);
+            background: linear-gradient(135deg, rgba(254, 225, 64, 0.6) 0%, rgba(250, 112, 154, 0.6) 100%);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
@@ -449,9 +449,17 @@
 
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">پاشگەزبوونەوە</button>
-                    <button type="button" class="btn btn-primary" onclick="saveNote()">پاشەکەوتکردن</button>
+                <div class="modal-footer d-flex flex-column gap-2">
+                    <div class="w-100 d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal"
+                            style="border-radius: 18px; font-weight:800;">پاشگەزبوونەوە</button>
+                        <button type="button" class="btn btn-primary px-4" onclick="saveNote()"
+                            style="border-radius: 18px; font-weight:800;">پاشەکەوتکردن</button>
+                    </div>
+                    <div id="cutempWarning" class="text-danger small fw-bold text-center w-100 mt-1"
+                        style="display: none;">
+                        تێبینی: دوای ناردن، تێبینییەکە ناگۆڕدرێت و ناسڕێتەوە
+                    </div>
                 </div>
             </div>
         </div>
@@ -570,10 +578,11 @@
 
             // Permissions
             const isMyNote = (note.author === currentUser.username);
+            const isCutemp = (currentUser.username === 'cutemp');
 
             // Buttons
             let actionBtns = '';
-            if (isMyNote) {
+            if (isMyNote && !isCutemp) {
                 actionBtns = `
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-light text-primary p-0 px-1" onclick="editNote('${note.id}')" title="دەستکاری"><i class="bi bi-pencil-square"></i></button>
@@ -643,10 +652,12 @@
 
             // Handle verification section for shared accounts
             const vSection = document.getElementById('verificationSection');
+            const vWarning = document.getElementById('cutempWarning');
             const empSelect = document.getElementById('employeeName');
 
             if (currentUser.username === 'cutemp') {
                 vSection.style.display = 'block';
+                vWarning.style.display = 'block';
                 // Populate names if empty
                 if (empSelect.options.length <= 1) {
                     Object.keys(employeeRegistry).forEach(name => {
