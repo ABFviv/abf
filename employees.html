@@ -3460,8 +3460,8 @@
             // User is authenticated, parse user data
             currentUser = JSON.parse(userStr);
 
-            // Block 'employee' role from accessing this page (except 'cutemp')
-            if (currentUser.role === 'employee' && currentUser.username !== 'cutemp') {
+            // Block 'employee' role from accessing this page (except 'cutemp' and 'electrical')
+            if (currentUser.role === 'employee' && currentUser.username !== 'cutemp' && currentUser.username !== 'electrical') {
                 window.location.href = 'dashboard.html';
                 return;
             }
