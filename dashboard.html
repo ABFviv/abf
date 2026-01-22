@@ -501,6 +501,11 @@
                 allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
             }
 
+            // Special access for 'electrical'
+            if (currentUser.username === 'electrical') {
+                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
+            }
+
             // Annual Report specific access for supervisors
             const annualAllowedUsers = ['himat', 'samdar', 'hemn', 'kiln'];
             if (annualAllowedUsers.includes(currentUser.username)) {
