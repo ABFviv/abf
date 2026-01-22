@@ -472,7 +472,7 @@
                                     <label class="form-label">ناوی کارمەند</label>
                                     <select class="form-select" id="employeeName">
                                         <option value="">هەڵبژێرە...</option>
-                                        <!-- Will be populated from employeeRegistry -->
+                                        <!-- Will be populated from cutempRegistry or electricalRegistry -->
                                     </select>
                                 </div>
                                 <div class="col-6">
@@ -520,8 +520,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Employee Registry for shared accounts (like cutemp)
-        const employeeRegistry = {
+        // Employee Registry for shared accounts (cutemp and electrical)
+        const cutempRegistry = {
             "ئامانج محمود": "16571",
             "هاڕوون ئازاد": "00982",
             "پەیڕەو جەلیل": "21763",
@@ -538,6 +538,18 @@
             "اسماعیل ئەکرەم": "34294"
         };
 
+        // Electrical employees registry (8 employees)
+        const electricalRegistry = {
+            "هەڵکەوت اسماعیل حەمە سعید": "21A1300",
+            "ئومێد اسماعیل ڕەمەزان": "21A7649",
+            "توانا حەسەن فەتاح": "21A9266",
+            "ئومێد جمعە فتاح": "21A0916",
+            "سۆران لوقمان سەلمان": "21A8522",
+            "ئیدریس حەسەن موستەفا": "21A3148",
+            "دانا خیراللە عبداللە": "21A5611",
+            "عیماد عبید کەریم": "21A0012"
+        };
+
         let currentUser = null;
         let notesList = [];
         let activeEmployee = sessionStorage.getItem('activeEmployee');
@@ -548,18 +560,19 @@
             currentUser = stored;
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
 
-            if (currentUser.username === 'cutemp') {
+            // Handle shared accounts (cutemp and electrical)
+            if (currentUser.username === 'cutemp' || currentUser.username === 'electrical') {
                 document.getElementById('switchEmpBtn').style.display = 'flex';
                 if (!activeEmployee) {
                     showSessionModal();
                 } else {
-                    document.getElementById('userInfo').querySelector('span').innerText = `cutemp (${activeEmployee})`;
+                    document.getElementById('userInfo').querySelector('span').innerText = `${currentUser.username} (${activeEmployee})`;
                 }
             }
 
             // Access Control: Only admin and supervisor can access notes
             const allowedRoles = ['admin', 'supervisor'];
-            if (!allowedRoles.includes(currentUser.role) && currentUser.username !== 'cutemp') {
+            if (!allowedRoles.includes(currentUser.role) && currentUser.username !== 'cutemp' && currentUser.username !== 'electrical') {
                 document.querySelector('.container').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center;">
                         <i class="bi bi-lock-fill" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
@@ -600,14 +613,21 @@
             // Filter logic: Admin sees all, User sees ONLY their own
             const isAdmin = (currentUser.role === 'admin' || currentUser.role === 'manager');
             const isHimat = (currentUser.username === 'himat');
+            const isSarezh = (currentUser.username === 'sarezh');
 
             const visibleNotes = notesList.filter(n => {
                 if (isAdmin) return true;
                 if (isHimat && n.author === 'cutemp') return true; // Himat sees all cutemp notes
+                if (isSarezh && n.author === 'electrical') return true; // Sarezh sees all electrical notes
 
                 if (currentUser.username === 'cutemp') {
-                    // Employee only sees notes where they match the name
+                    // Cutemp employee only sees notes where they match the name
                     return n.author === 'cutemp' && n.employeeName === activeEmployee;
+                }
+
+                if (currentUser.username === 'electrical') {
+                    // Electrical employee only sees notes where they match the name
+                    return n.author === 'electrical' && n.employeeName === activeEmployee;
                 }
 
                 return n.author === currentUser.username;
@@ -626,7 +646,9 @@
         // --- 4. CREATE CARD HTML ---
         function createNoteCard(note, isAdmin) {
             const isHimat = (currentUser.username === 'himat');
+            const isSarezh = (currentUser.username === 'sarezh');
             const isNoteFromCutemp = (note.author === 'cutemp');
+            const isNoteFromElectrical = (note.author === 'electrical');
 
             // Author Info
             const authorInitial = note.author.charAt(0).toUpperCase();
@@ -636,10 +658,11 @@
             // Permissions
             const isMyNote = (note.author === currentUser.username);
             const isCutemp = (currentUser.username === 'cutemp');
+            const isElectrical = (currentUser.username === 'electrical');
 
             // Buttons
             let actionBtns = '';
-            if (isMyNote && !isCutemp) {
+            if (isMyNote && !isCutemp && !isElectrical) {
                 actionBtns = `
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-light text-primary p-0 px-1" onclick="editNote('${note.id}')" title="دەستکاری"><i class="bi bi-pencil-square"></i></button>
@@ -675,7 +698,7 @@
 
             // Input field for new reply
             let inputHTML = '';
-            if (isAdmin || (isHimat && isNoteFromCutemp)) {
+            if (isAdmin || (isHimat && isNoteFromCutemp) || (isSarezh && isNoteFromElectrical)) {
                 inputHTML = `
                     <div class="mt-3 pt-2 border-top">
                         <div class="input-group input-group-sm">
@@ -725,14 +748,15 @@
             const vSection = document.getElementById('verificationSection');
             const vWarning = document.getElementById('cutempWarning');
 
-            if (currentUser.username === 'cutemp') {
+            if (currentUser.username === 'cutemp' || currentUser.username === 'electrical') {
                 vWarning.style.display = 'block';
                 // Verification section already handled by session - only show if somehow skip session
                 vSection.style.display = activeEmployee ? 'none' : 'block';
                 if (!activeEmployee) {
                     const empSelect = document.getElementById('employeeName');
                     if (empSelect.options.length <= 1) {
-                        Object.keys(employeeRegistry).forEach(name => {
+                        const registry = currentUser.username === 'cutemp' ? cutempRegistry : electricalRegistry;
+                        Object.keys(registry).forEach(name => {
                             const opt = document.createElement('option');
                             opt.value = name;
                             opt.innerText = name;
@@ -775,8 +799,8 @@
                 updatedAt: new Date().toISOString()
             };
 
-            // Verification for new notes from cutemp
-            if (!id && currentUser.username === 'cutemp') {
+            // Verification for new notes from cutemp or electrical
+            if (!id && (currentUser.username === 'cutemp' || currentUser.username === 'electrical')) {
                 if (activeEmployee) {
                     data.employeeName = activeEmployee;
                 } else {
@@ -788,7 +812,8 @@
                         return;
                     }
 
-                    if (employeeRegistry[empName] !== empCode) {
+                    const registry = currentUser.username === 'cutemp' ? cutempRegistry : electricalRegistry;
+                    if (registry[empName] !== empCode) {
                         showToast('کۆدەکە هەڵەیە!', 'danger');
                         return;
                     }
@@ -869,14 +894,16 @@
         // --- Session Management ---
         function showSessionModal() {
             const select = document.getElementById('sessionEmployeeName');
-            if (select.options.length <= 1) {
-                Object.keys(employeeRegistry).forEach(name => {
-                    const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.innerText = name;
-                    select.appendChild(opt);
-                });
-            }
+            select.innerHTML = '<option value="">هەڵبژێرە...</option>';
+
+            const registry = currentUser.username === 'cutemp' ? cutempRegistry : electricalRegistry;
+            Object.keys(registry).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                select.appendChild(opt);
+            });
+
             new bootstrap.Modal(document.getElementById('sessionModal')).show();
         }
 
@@ -889,10 +916,11 @@
                 return;
             }
 
-            if (employeeRegistry[name] === code) {
+            const registry = currentUser.username === 'cutemp' ? cutempRegistry : electricalRegistry;
+            if (registry[name] === code) {
                 activeEmployee = name;
                 sessionStorage.setItem('activeEmployee', name);
-                document.getElementById('userInfo').querySelector('span').innerText = `cutemp (${activeEmployee})`;
+                document.getElementById('userInfo').querySelector('span').innerText = `${currentUser.username} (${activeEmployee})`;
                 bootstrap.Modal.getInstance(document.getElementById('sessionModal')).hide();
                 renderNotes();
             } else {
