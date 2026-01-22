@@ -390,11 +390,6 @@
                     <span>User</span>
                 </div>
                 <!-- Switch employee button for cutemp -->
-                <button id="switchEmpBtn" class="btn btn-header bg-danger text-white" style="display:none;"
-                    onclick="logoutEmployee()">
-                    <i class="bi bi-box-arrow-left fs-4"></i>
-                    <span>گۆڕین</span>
-                </button>
                 <a href="dashboard.html" class="btn btn-header">
                     <i class="bi bi-arrow-right-short fs-4"></i>
                     <span>گەڕانەوە</span>
@@ -562,7 +557,6 @@
 
             // Handle shared accounts (cutemp and electrical)
             if (currentUser.username === 'cutemp' || currentUser.username === 'electrical') {
-                document.getElementById('switchEmpBtn').style.display = 'flex';
                 if (!activeEmployee) {
                     showSessionModal();
                 } else {
@@ -928,12 +922,7 @@
             }
         }
 
-        function logoutEmployee() {
-            sessionStorage.removeItem('activeEmployee');
-            window.location.reload();
-        }
     </script>
 </body>
 
 </html>
-
