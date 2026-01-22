@@ -436,16 +436,16 @@
                 </button>
             </div>
             <div class="sop-grid">
-                <div class="sop-card" onclick="openSubDepartment('هێڵی یەک')"
+                <div class="sop-card" onclick="openSubDepartment('LINE 1')"
                     style="--dept-color: #ef4444; --dept-color-rgb: 239, 68, 68; --dept-gradient: linear-gradient(135deg, #ef4444, #f87171);">
                     <div class="sop-icon-outer"><i class="bi bi-lightning-charge sop-icon"></i></div>
-                    <div class="sop-title">هێڵی یەک</div>
+                    <div class="sop-title">هێڵی یەک (LINE 1)</div>
                     <div class="sop-badge" id="count-line1">0 فایل</div>
                 </div>
-                <div class="sop-card" onclick="openSubDepartment('هێڵی دوو')"
+                <div class="sop-card" onclick="openSubDepartment('LINE 2')"
                     style="--dept-color: #ef4444; --dept-color-rgb: 239, 68, 68; --dept-gradient: linear-gradient(135deg, #ef4444, #f87171);">
                     <div class="sop-icon-outer"><i class="bi bi-lightning-charge sop-icon"></i></div>
-                    <div class="sop-title">هێڵی دوو</div>
+                    <div class="sop-title">هێڵی دوو (LINE 2)</div>
                     <div class="sop-badge" id="count-line2">0 فایل</div>
                 </div>
             </div>
@@ -496,10 +496,10 @@
                             <select class="form-select" id="inpDept" required onchange="toggleSubDeptField()"></select>
                         </div>
                         <div class="mb-4" id="subDeptField" style="display: none;">
-                            <label class="form-label fw-bold">دیاریکردنی هێڵ (تایبەت بە بەشی کارەبا)</label>
+                            <label class="form-label fw-bold">Sub-category (Electrical Only)</label>
                             <select class="form-select" id="inpSubDept">
-                                <option value="هێڵی یەک">هێڵی یەک</option>
-                                <option value="هێڵی دوو" selected>هێڵی دوو</option>
+                                <option value="LINE 1">هێڵی یەک (LINE 1)</option>
+                                <option value="LINE 2" selected>هێڵی دوو (LINE 2)</option>
                             </select>
                         </div>
                         <div class="mb-4">
@@ -551,7 +551,7 @@
             { id: 'dryer', label: 'درایەر', icon: 'bi-brightness-high', color: '#06b6d4', grad: 'linear-gradient(135deg, #06b6d4, #22d3ee)' },
             { id: 'kiln', label: 'فڕن', icon: 'bi-fire', color: '#f97316', grad: 'linear-gradient(135deg, #f97316, #fb923c)' },
             { id: 'unloading', label: 'داگرتن', icon: 'bi-box-seam', color: '#6366f1', grad: 'linear-gradient(135deg, #6366f1, #818cf8)' },
-            { id: 'electrical', label: 'کارەبا', icon: 'bi-lightning-charge', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)' },
+            { id: 'electrical-ac', label: 'کارەبا', icon: 'bi-lightning-charge', color: '#ef4444', grad: 'linear-gradient(135deg, #ef4444, #f87171)' },
             { id: 'mechanical', label: 'میکانیک', icon: 'bi-gear-wide-connected', color: '#64748b', grad: 'linear-gradient(135deg, #64748b, #94a3b8)' }
         ];
 
@@ -627,7 +627,7 @@
         }
 
         function openDepartment(deptId) {
-            if (deptId === 'electrical') {
+            if (deptId === 'electrical' || deptId === 'electrical-ac') {
                 showElectricalSubcategories();
                 return;
             }
@@ -641,15 +641,15 @@
         }
 
         function showElectricalSubcategories() {
-            currentDeptId = 'electrical';
+            currentDeptId = 'electrical-ac';
             currentSubDept = null;
             document.getElementById('view-departments').style.display = 'none';
             document.getElementById('view-manuals').style.display = 'none';
             document.getElementById('view-subcategories').style.display = 'block';
 
             // Update counts for subcategories
-            const line1Count = allManuals.filter(m => m.department === 'electrical' && m.subDept === 'LINE 1').length;
-            const line2Count = allManuals.filter(m => m.department === 'electrical' && (m.subDept === 'LINE 2' || !m.subDept)).length;
+            const line1Count = allManuals.filter(m => (m.department === 'electrical' || m.department === 'electrical-ac') && m.subDept === 'LINE 1').length;
+            const line2Count = allManuals.filter(m => (m.department === 'electrical' || m.department === 'electrical-ac') && (m.subDept === 'LINE 2' || !m.subDept)).length;
 
             document.getElementById('count-line1').innerText = `${line1Count} فایل`;
             document.getElementById('count-line2').innerText = `${line2Count} فایل`;
@@ -657,7 +657,7 @@
 
         function openSubDepartment(subDept) {
             currentSubDept = subDept;
-            const deptId = 'electrical';
+            const deptId = 'electrical-ac';
             const deptInfo = departments.find(d => d.id === deptId);
             document.getElementById('view-subcategories').style.display = 'none';
             document.getElementById('view-manuals').style.display = 'block';
@@ -671,9 +671,9 @@
             const grid = document.getElementById('manualsGrid');
             grid.innerHTML = '';
 
-            let filteredManuals = allManuals.filter(m => m.department === deptId);
+            let filteredManuals = allManuals.filter(m => m.department === deptId || (deptId === 'electrical-ac' && m.department === 'electrical'));
 
-            if (deptId === 'electrical' && subDept) {
+            if ((deptId === 'electrical-ac' || deptId === 'electrical') && subDept) {
                 if (subDept === 'LINE 2') {
                     // Include LINE 2 OR items with NO subDept (defaults to LINE 2)
                     filteredManuals = filteredManuals.filter(m => m.subDept === 'LINE 2' || !m.subDept);
@@ -727,7 +727,7 @@
         function toggleSubDeptField() {
             const dept = document.getElementById('inpDept').value;
             const field = document.getElementById('subDeptField');
-            field.style.display = (dept === 'electrical') ? 'block' : 'none';
+            field.style.display = (dept === 'electrical' || dept === 'electrical-ac') ? 'block' : 'none';
         }
 
         function editManual(id) {
@@ -736,7 +736,7 @@
             document.getElementById('manualId').value = m.id;
             document.getElementById('inpTitle').value = m.title;
             document.getElementById('inpDept').value = m.department;
-            if (m.department === 'electrical') {
+            if (m.department === 'electrical' || m.department === 'electrical-ac') {
                 document.getElementById('inpSubDept').value = m.subDept || 'LINE 2';
             }
             toggleSubDeptField();
@@ -756,7 +756,7 @@
                 updatedAt: new Date().toISOString()
             };
 
-            if (data.department === 'electrical') {
+            if (data.department === 'electrical' || data.department === 'electrical-ac') {
                 data.subDept = document.getElementById('inpSubDept').value;
             }
             if (!data.title || !data.link) { showToast('تکایە هەموو زانیاریەکان پڕبکەوە', 'warning'); return; }
