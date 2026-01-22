@@ -488,23 +488,29 @@
         document.addEventListener('DOMContentLoaded', () => {
             const rolePermissions = {
                 'hr': ['reports', 'sop_report'],
-                'employee': ['reports', 'sop_report'],
                 'manager': ['employees', 'manuals', 'sop_report', 'annual_report'],
                 'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'], // annual_report removed, added conditionally below
                 'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report']
             };
 
-            let allowedPages = rolePermissions[currentUser.role] || [];
+            let allowedPages = [];
 
-            // Special access for 'cutemp'
+            // Special access for specific usernames (check these FIRST before role-based)
             if (currentUser.username === 'cutemp') {
                 allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
+            } else if (currentUser.username === 'electrical') {
+                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
+            } else if (currentUser.username === 'kilnemp') {
+                allowedPages = ['reports', 'sop_report'];
+            } else {
+                // Use role-based permissions for other users
+                allowedPages = rolePermissions[currentUser.role] || [];
             }
 
-            // Special access for 'electrical'
-            if (currentUser.username === 'electrical') {
-                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
-            }
+            // Debug logging
+            console.log('Current User:', currentUser.username);
+            console.log('User Role:', currentUser.role);
+            console.log('Allowed Pages:', allowedPages);
 
             // Annual Report specific access for supervisors
             const annualAllowedUsers = ['himat', 'samdar', 'hemn', 'kiln'];
@@ -522,6 +528,8 @@
                 if (onclick) {
                     const page = onclick.match(/window\.location\.href='(\w+)\.html'/)?.[1];
                     let isAllowed = allowedPages.includes(page);
+
+                    console.log(`Checking page: ${page}, isAllowed: ${isAllowed}`);
 
                     // Specific USER restrictions (Shalaw & Sarezh blocked from reports)
                     const username = currentUser.username.toLowerCase();
