@@ -8312,6 +8312,68 @@
             renderEmployeeTable();
             updateElectricalMechanicalTotals();
         }
+
+        // Permission Control for Restricted Accounts (electrical, cutemp, kilnemp)
+        function applyPermissionRestrictions() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            // Check if user is a restricted employee account
+            const restrictedAccounts = ['electrical', 'cutemp', 'kilnemp'];
+            const isRestricted = restrictedAccounts.includes(currentUser.username) || currentUser.role === 'employee';
+
+            if (isRestricted) {
+                // Hide all buttons that allow adding/editing/deleting
+                const buttonsToHide = [
+                    // Add employee buttons
+                    ...document.querySelectorAll('[onclick*="openEmployeeModal"]'),
+                    ...document.querySelectorAll('[onclick*="addEmployee"]'),
+                    // Edit/Delete buttons
+                    ...document.querySelectorAll('[onclick*="editEmployee"]'),
+                    ...document.querySelectorAll('[onclick*="deleteEmployee"]'),
+                    // Work record buttons
+                    ...document.querySelectorAll('[onclick*="addDailyWork"]'),
+                    ...document.querySelectorAll('[onclick*="addOtherWork"]'),
+                    ...document.querySelectorAll('[onclick*="editWorkRecord"]'),
+                    ...document.querySelectorAll('[onclick*="deleteWorkRecord"]'),
+                    // Special work buttons
+                    ...document.querySelectorAll('[onclick*="openQuickRecordModal"]'),
+                    ...document.querySelectorAll('[onclick*="openSpecialDailyWorkModal"]'),
+                    ...document.querySelectorAll('[onclick*="openGreasingWorkModal"]'),
+                    // Any button with class containing 'add', 'edit', 'delete'
+                    ...document.querySelectorAll('.btn-manage'),
+                    ...document.querySelectorAll('.btn-work'),
+                    ...document.querySelectorAll('.btn-special')
+                ];
+
+                buttonsToHide.forEach(btn => {
+                    if (btn) btn.style.display = 'none';
+                });
+
+                // Disable all form inputs in modals
+                const allInputs = document.querySelectorAll('input, textarea, select, button[type="submit"]');
+                allInputs.forEach(input => {
+                    // Don't disable navigation or read-only buttons
+                    if (!input.onclick || !input.onclick.toString().includes('back') && !input.onclick.toString().includes('view')) {
+                        if (input.type !== 'button' || input.classList.contains('btn-primary') || input.classList.contains('btn-success')) {
+                            input.disabled = true;
+                        }
+                    }
+                });
+
+                console.log('✅ Read-only mode enabled for user:', currentUser.username);
+            }
+        }
+
+        // Apply restrictions when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyPermissionRestrictions);
+        } else {
+            applyPermissionRestrictions();
+        }
+
+        // Also apply after any dynamic content is loaded
+        setTimeout(applyPermissionRestrictions, 1000);
     </script>
 </body>
 
