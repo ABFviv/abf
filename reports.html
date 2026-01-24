@@ -47,6 +47,14 @@
             background-color: #f8fafc;
             font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #historySection,
+        #reportSection {
+            flex: 1;
         }
 
         /* --- Header & UI --- */
@@ -896,6 +904,38 @@
             #tableWrapper>div[style*="flex-direction: column"] {
                 min-height: calc(100vh - 200px);
             }
+        }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -2168,9 +2208,9 @@
 
                 const dateValue = document.getElementById('reportDate').value;
                 const shifts = [
-                    { id: 's1', name: 'شیفتی یەکەم (24:00 - 08:00)', defStart: '24:00' },
-                    { id: 's2', name: 'شیفتی دووەم (08:00 - 16:00)', defStart: '08:00' },
-                    { id: 's3', name: 'شیفتی سێیەم (16:00 - 24:00)', defStart: '16:00' }
+                    { id: 's1', name: 'شیفتی یەکەم (08:00 - 16:00)', defStart: '08:00' },
+                    { id: 's2', name: 'شیفتی دووەم (16:00 - 24:00)', defStart: '16:00' },
+                    { id: 's3', name: 'شیفتی سێیەم (24:00 - 08:00)', defStart: '24:00' }
                 ];
 
                 // Row count is fixed at 72 as per user request
@@ -2811,7 +2851,7 @@
 
                 <div class="row g-2">
                     <div class="col-5">
-                          <div class="shift-box bg-s1"><div class="shift-header">شیفتی یەکەم (24:00 - 08:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s1_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s1_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s1_note" rows="3"></textarea></td></tr></table></div>
+                        <div class="shift-box bg-s1"><div class="shift-header">شیفتی یەکەم (24:00 - 08:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s1_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s1_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s1_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s1_note" rows="3"></textarea></td></tr></table></div>
                         <div class="shift-box bg-s2"><div class="shift-header">شیفتی دووەم (08:00 - 16:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s2_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s2_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s2_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s2_note" rows="3"></textarea></td></tr></table></div>
                         <div class="shift-box bg-s3"><div class="shift-header">شیفتی سێیەم (16:00 - 24:00)</div><table class="report-table" style="border:none;"><tr><td>کارمەند ١</td><td><select id="k_s3_e1">${empOptions}</select></td></tr><tr><td>کارمەند ٢</td><td><select id="k_s3_e2">${empOptions}</select></td></tr><tr><td>کارمەند ٣</td><td><select id="k_s3_e3">${empOptions}</select></td></tr><tr><td colspan="2" class="fw-bold bg-light">تێبینی</td></tr><tr><td colspan="2"><textarea id="k_s3_note" rows="3"></textarea></td></tr></table></div>
                     </div>
@@ -3614,11 +3654,11 @@
                 }
             });
         </script>
+
+        <div class="global-footer no-print">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
+        </div>
 </body>
 
 </html>
-
-
-
-
-
