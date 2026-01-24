@@ -35,6 +35,16 @@
             background-color: #f1f5f9;
             font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #loginPage,
+        #notificationsPage,
+        #dashboardPage,
+        #workRecordsPage {
+            flex: 1;
         }
 
         #notificationsPage {
@@ -785,6 +795,50 @@
                 transform: translateX(-100%);
                 opacity: 0;
             }
+        }
+
+        /* --- Splash Screen --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .splash-logo {
+            width: 300px;
+            height: auto;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+            animation: splashPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes splashPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
         }
 
         /* --- Folder Grid (Premium Style) --- */
@@ -1930,10 +1984,46 @@
             padding-top: 10px;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
         }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
 <body>
+    <div id="splash-screen">
+        <img src="logo.png" alt="ASOBRICK" class="splash-logo">
+    </div>
+
     <!-- Login Page -->
     <div class="login-container" id="loginPage">
         <div class="login-card">
@@ -2566,6 +2656,12 @@
         <div id="notificationsContainer" class="px-2">
             <!-- Navigation folder explorer will be inserted here -->
         </div>
+    </div>
+
+    <!-- Global Footer -->
+    <div class="global-footer">
+        <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+        <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
     </div>
 
     <!-- Add Daily Work Record Modal -->
@@ -8343,7 +8439,15 @@
                     // Any button with class containing 'add', 'edit', 'delete'
                     ...document.querySelectorAll('.btn-manage'),
                     ...document.querySelectorAll('.btn-work'),
-                    ...document.querySelectorAll('.btn-special')
+                    ...document.querySelectorAll('.btn-special'),
+                    // Target specific buttons by ID
+                    document.getElementById('addRecordBtn'),
+                    document.getElementById('addSpecialRecordBtn'),
+                    document.getElementById('specialDailyWorkBtn'),
+                    document.getElementById('quickRecordBtn'),
+                    document.getElementById('cleaningWorkBtn'),
+                    document.getElementById('greasingWorkBtn'),
+                    document.getElementById('floatingAddBtn')
                 ];
 
                 buttonsToHide.forEach(btn => {
@@ -8371,6 +8475,16 @@
         } else {
             applyPermissionRestrictions();
         }
+
+        // --- Splash Screen Logic ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.classList.add('fade-out');
+                }
+            }, 500); // Show splash for 1.5 seconds
+        });
 
         // Also apply after any dynamic content is loaded
         setTimeout(applyPermissionRestrictions, 1000);
