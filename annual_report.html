@@ -37,12 +37,15 @@
             min-height: 100vh;
             color: var(--text-dark);
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px 20px;
+            flex: 1;
         }
 
         /* Header Styling */
@@ -448,6 +451,38 @@
         .history-footer-row td {
             color: var(--text-dark);
         }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
@@ -703,6 +738,11 @@
                     </form>
                 </div>
             </div>
+        </div>
+
+        <div class="global-footer">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
     </div>
 
@@ -1245,7 +1285,7 @@
                     prep: 0, crush: 0, top: 0, mid: 0, bot: 0, ki_count: 0
                 };
 
-                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="6" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="2" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت بڕ</th><th>کێشی خشت (بار)</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>جۆری بەرهەم</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
+                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="6" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="2" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت</th><th>کێشی خشت (بار)</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>جۆری بەرهەم</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
 
                 records.forEach(rec => {
                     const cut = rec.cutting_loading || {};
@@ -1369,4 +1409,3 @@
 </body>
 
 </html>
-
