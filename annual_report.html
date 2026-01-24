@@ -4,381 +4,456 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASOBRICK - Dashboard</title>
+    <title>ASOBRICK - Annual Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
-            --card-bg: #ffffff;
-            --sidebar-width: 280px;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
-        }
+            --primary: #b7154e;
+            --primary-dark: #8e103d;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --input-bg: #fff;
+            --text-dark: #1e293b;
+            --text-muted: #475569;
+            --border-color: #e2e8f0;
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            /* Dept Colors */
+            --color-cut: #3b82f6;
+            --color-crush: #10b981;
+            --color-un: #f59e0b;
+            --color-kiln: #ef4444;
         }
 
         body {
-            background: linear-gradient(135deg, #ffffff 0%, #3d3838 50%, #000000 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            margin: 0;
+            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+            background: var(--bg-gradient);
             min-height: 100vh;
+            color: var(--text-dark);
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        @keyframes gradientShift {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            flex: 1;
         }
 
-        /* --- Header with Glassmorphism --- */
-        .header {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 25px 35px;
-            border-radius: 24px;
-            margin-bottom: 40px;
+        /* Header Styling */
+        .header-bar {
+            background: rgba(183, 21, 78, 0.9);
+            /* #b7154e */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px 48px;
+            border-radius: 35px;
+            margin-bottom: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            position: relative;
-            z-index: 10;
+            box-shadow: 0 20px 40px -10px rgba(183, 21, 78, 0.3);
         }
 
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-logo {
-            height: 60px;
-            border-radius: 16px;
-            background: white;
-            padding: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-
-        .header-logo:hover {
-            transform: scale(1.05) rotate(2deg);
-        }
-
-        .header-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.8rem;
+        .header-title h1 {
             font-weight: 800;
             margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-            letter-spacing: -0.5px;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffd1e8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem;
         }
 
-        .header-subtitle {
-            font-size: 0.95rem;
-            opacity: 0.95;
-            margin: 0;
-            font-weight: 500;
+        .header-title small {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-top: 4px;
+            font-weight: 600;
         }
 
-        /* --- Menu Button  --- */
-        .menu-btn {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+        /* Nav Tabs */
+        .nav-pills {
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .nav-pills .nav-link {
+            background: white;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-pills .nav-link.active {
+            background: var(--primary);
             color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 16px;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Dept Tab Colors */
+        #cutting-tab.active {
+            background-color: var(--color-cut) !important;
+            border-color: var(--color-cut) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        #crushing-tab.active {
+            background-color: var(--color-crush) !important;
+            border-color: var(--color-crush) !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        #unsetting-tab.active {
+            background-color: var(--color-un) !important;
+            border-color: var(--color-un) !important;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+        }
+
+        #kiln-tab.active {
+            background-color: var(--color-kiln) !important;
+            border-color: var(--color-kiln) !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        /* Content Card */
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 25px;
+            border: 1px solid white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .dept-title {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #334155;
+            font-size: 1.1rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .input-wrapper {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 2px 10px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-control-minimal {
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 10px 0;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: right;
+            /* RTL focus */
+            outline: none !important;
+        }
+
+        .form-control-minimal.total-value {
+            color: var(--primary);
+        }
+
+        .input-unit {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        /* Buttons */
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Department Specific styling */
+        .tab-pane#cutting .dept-title,
+        .tab-pane#cutting .section-header {
+            color: var(--color-cut);
+        }
+
+        .tab-pane#cutting .input-wrapper:focus-within {
+            border-color: var(--color-cut);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .tab-pane#cutting .form-control-minimal.total-value {
+            color: var(--color-cut);
+        }
+
+        .tab-pane#crushing .dept-title,
+        .tab-pane#crushing .section-header {
+            color: var(--color-crush);
+        }
+
+        .tab-pane#crushing .input-wrapper:focus-within {
+            border-color: var(--color-crush);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .tab-pane#crushing .form-control-minimal.total-value {
+            color: var(--color-crush);
+        }
+
+        .tab-pane#unsetting .dept-title,
+        .tab-pane#unsetting .section-header {
+            color: var(--color-un);
+        }
+
+        .tab-pane#unsetting .input-wrapper:focus-within {
+            border-color: var(--color-un);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .tab-pane#unsetting .form-control-minimal.total-value {
+            color: var(--color-un);
+        }
+
+        .tab-pane#kiln .dept-title,
+        .tab-pane#kiln .section-header {
+            color: var(--color-kiln);
+        }
+
+        .tab-pane#kiln .input-wrapper:focus-within {
+            border-color: var(--color-kiln);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .tab-pane#kiln .form-control-minimal.total-value {
+            color: var(--color-kiln);
+        }
+
+        /* Restored Glass Button Styles */
+        .btn-back {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            color: var(--text-dark);
+            padding: 12px 24px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-3px);
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout Helpers */
+        .premium-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 160px));
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: flex-start;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px 25px;
+            border: 1px solid white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .dept-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        /* History Table Styles */
+        .history-table-wrapper {
+            background: white;
+            border-radius: 15px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .history-table th {
+            padding: 12px 10px;
+            font-weight: 700;
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .history-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .history-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .total-col {
+            background: rgba(59, 130, 246, 0.05);
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .history-table .btn-outline-primary {
+            width: 32px;
+            height: 32px;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 1.3rem;
-        }
-
-        .menu-btn:hover {
-            background: rgba(255, 255, 255, 0.35);
-            transform: scale(1.1) rotate(90deg);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        /* --- Sidebar --- */
-        .offcanvas {
-            border-radius: 0;
-            width: 300px;
-            background: #ffffff;
-        }
-
-        .offcanvas-header {
-            background: linear-gradient(135deg, #030303 0%, #66636f 100%);
-            color: white;
-            padding: 32px 24px;
-            border: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .offcanvas-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            animation: pulse 8s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 0.5;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-        }
-
-        .offcanvas-title {
-            font-weight: 700;
-            font-size: 1.25rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .offcanvas-body {
-            padding: 20px 0;
-            background: #fafafa;
-        }
-
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 24px;
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: all 0.2s ease;
-            margin: 4px 12px;
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sidebar-link::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            transform: scaleY(0);
-            transition: transform 0.2s ease;
-        }
-
-        .sidebar-link:hover {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .sidebar-link:hover::before {
-            transform: scaleY(1);
-        }
-
-        .sidebar-link.active {
-            background: white;
-            color: var(--primary);
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
-        }
-
-        .sidebar-link.active::before {
-            transform: scaleY(1);
-        }
-
-        .sidebar-link i {
-            font-size: 1.25rem;
-            margin-left: 12px;
-            width: 24px;
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-
-        .sidebar-link:hover i {
-            transform: scale(1.1);
-        }
-
-        /* --- Dashboard Grid with Premium Cards --- */
-        .dashboard-container {
-            max-width: 1400px;
+            border-radius: 8px;
             margin: 0 auto;
         }
 
-        .dashboard-grid {
+        /* Light column backgrounds for departments */
+        .bg-light-cut {
+            background-color: rgba(59, 130, 246, 0.08);
+        }
+
+        .bg-light-crush {
+            background-color: rgba(16, 185, 129, 0.08);
+        }
+
+        .bg-light-un {
+            background-color: rgba(6, 182, 212, 0.08);
+        }
+
+        .bg-light-ki {
+            background-color: rgba(245, 158, 11, 0.08);
+        }
+
+        /* Folder Grid Styles */
+        .folder-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            padding: 0 10px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
         }
 
-        .nav-card {
-            background: rgba(255, 253, 253, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 28px;
-            padding: 36px;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        .folder-item {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 15px;
+            text-align: center;
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            text-decoration: none;
-            color: inherit;
-            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .nav-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.5) 100%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            pointer-events: none;
+        .folder-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.15);
         }
 
-        .nav-card:hover::before {
-            opacity: 1;
+        .folder-icon {
+            font-size: 3.5rem;
+            color: #fbbf24;
+            display: block;
+            margin-bottom: 12px;
         }
 
-        .nav-card:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            border-color: rgba(255, 255, 255, 0.8);
-        }
-
-        .icon-box {
-            width: 80px;
-            height: 80px;
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            margin-bottom: 24px;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-card:hover .icon-box {
-            transform: scale(1.15) rotate(5deg);
-        }
-
-        .card-employees .icon-box {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            color: white;
-        }
-
-        .card-maintenance .icon-box {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-
-        .card-manuals .icon-box {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: white;
-        }
-
-        .card-notes .icon-box {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: white;
-        }
-
-        .card-reports .icon-box {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #764ba2;
-        }
-
-        .card-sop .icon-box {
-            background: linear-gradient(135deg, #ffd200 0%, #f7971e 100%);
-            color: white;
-        }
-
-        .card-annual .icon-box {
-            background: linear-gradient(135deg, #FF4081 0%, #ff2b2b 100%);
-            /* Purple gradient */
-            color: white;
-            padding: 10px;
-        }
-
-        .card-title {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.5rem;
+        .folder-name {
             font-weight: 700;
-            margin-bottom: 10px;
-            color: #2c3e50;
-            letter-spacing: -0.3px;
+            color: var(--text-dark);
+            font-size: 1.1rem;
         }
 
-        .card-desc {
-            font-size: 1rem;
-            color: #6c757d;
-            line-height: 1.6;
-            font-weight: 500;
+        .history-footer-row {
+            background: #f1f5f9;
+            font-weight: 800;
+            border-top: 2px solid var(--border-color);
         }
 
-        .card-annual .icon-box {
-            background: linear-gradient(135deg, #ff41b0 0%, #b7154e 100%);
-            /* Violet Theme */
-            color: white;
+        .history-footer-row td {
+            color: var(--text-dark);
         }
 
-
-
-        /* Locked card styling */
-        .nav-card[style*="opacity: 0.5"] {
-            background: rgba(255, 255, 255, 0.6);
-        }
-
-        .nav-card[style*="opacity: 0.5"]:hover {
-            transform: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-        }
-
-        /* --- Footer Styling --- */
-        .dashboard-footer {
+        /* --- Global Footer Styling --- */
+        .global-footer {
             margin-top: auto;
             padding: 20px 0;
             display: flex;
@@ -393,18 +468,17 @@
         .teg-logo-footer {
             height: 60px;
             width: auto;
-            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
 
         .teg-logo-footer:hover {
             transform: scale(1.1) rotate(-2deg);
-            filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.3));
         }
 
         .copyright-text {
-            color: rgba(255, 255, 255, 0.7);
+            color: #64748b;
             font-size: 0.75rem;
             font-weight: 500;
             letter-spacing: 0.5px;
@@ -413,192 +487,925 @@
 </head>
 
 <body>
-
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
-        <div class="offcanvas-header">
-            <div>
-                <h5 class="offcanvas-title fw-bold">ASOBRICK</h5>
-                <small class="opacity-75" id="menuUserInfo">Loading...</small>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-bar">
+            <div class="header-title">
+                <h1><i class="bi bi-calendar3-range me-2"></i>Annual Report</h1>
+                <small style="opacity: 0.9; font-weight: 600;">ڕاپۆڕتی ساڵانە</small>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            <div class="d-flex gap-2">
+                <button class="btn-back" onclick="openAnalysisModal()"><i class="bi bi-graph-up-arrow"></i>
+                    شیکاری</button>
+                <button class="btn-back" onclick="openHistoryModal()"><i class="bi bi-clock-history"></i>
+                    مێژوو</button>
+                <a href="dashboard.html" class="btn-back"><i class="bi bi-arrow-right-circle-fill"></i> گەڕانەوە</a>
+            </div>
         </div>
-        <div class="offcanvas-body p-0 pt-3">
-            <nav class="nav flex-column">
-                <a class="sidebar-link active" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                <a class="sidebar-link" href="employees.html"><i class="bi bi-people"></i> Employees</a>
-                <a class="sidebar-link" href="maintenance.html"><i class="bi bi-tools"></i> Maintenance</a>
-                <a class="sidebar-link" href="manuals.html"><i class="bi bi-book"></i> Manuals</a>
-                <a class="sidebar-link" href="notes.html"><i class="bi bi-journal-text"></i> Notes</a>
-                <a class="sidebar-link" href="reports.html"><i class="bi bi-file-text"></i> Reports</a>
-                <hr class="mx-3 my-2">
-                <a class="sidebar-link text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i>
-                    Logout</a>
-            </nav>
+
+        <!-- Controls -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label for="reportDate" class="form-label fw-bold text-muted">بەروار هەڵبژێرە</label>
+                <div class="input-group search-box">
+                    <span class="input-group-text bg-white border-0"><i
+                            class="bi bi-calendar-date text-primary"></i></span>
+                    <input type="date" id="reportDate" class="form-control border-0 shadow-none"
+                        onchange="loadDailyData()">
+                </div>
+            </div>
+            <div class="col-md-8 text-end d-flex align-items-end justify-content-end">
+                <button onclick="saveDailyData()" class="btn btn-primary btn-save px-5">
+                    <span id="saveBtnText">پاشەکەوت کردن / Save</span>
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="container-fluid dashboard-container">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs nav-pills mb-4" id="deptTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="cutting-tab" data-bs-toggle="tab" data-bs-target="#cutting"
+                    type="button" role="tab">
+                    <i class="bi bi-scissors me-2"></i>بڕین و بارکردن
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="crushing-tab" data-bs-toggle="tab" data-bs-target="#crushing" type="button"
+                    role="tab">
+                    <i class="bi bi-gear-wide-connected me-2"></i>هاڕین و ئامادەکردن
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="unsetting-tab" data-bs-toggle="tab" data-bs-target="#unsetting"
+                    type="button" role="tab">
+                    <i class="bi bi-box-arrow-down me-2"></i>داگرتن
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="kiln-tab" data-bs-toggle="tab" data-bs-target="#kiln" type="button"
+                    role="tab">
+                    <i class="bi bi-fire me-2"></i>فڕن
+                </button>
+            </li>
+        </ul>
 
-        <div class="header">
-            <div class="header-brand">
-                <img src="logo.png" alt="ASOBRICK Logo" class="header-logo">
-                <div>
-                    <h1 class="header-title">ASOBRICK FACTORY</h1>
-                    <p class="header-subtitle">سیستەمی سەرەکی</p>
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+
+            <!-- Cut & Load Tab -->
+            <div class="tab-pane fade show active" id="cutting" role="tabpanel">
+                <div class="content-card text-start d-block">
+                    <h2 class="dept-title">زانیاریەکانی بەشی بڕین و بارکردن</h2>
+
+                    <form id="cuttingForm">
+                        <!-- Group 1: Cutting Carts -->
+                        <div class="section-header">
+                            (ژمارەی عەرەبانەکان) <i class="bi bi-cart3"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">(کۆی گشتی)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal total-value" id="cut_total"
+                                        placeholder="0" readonly>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">(شیفتی ١)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="cut_s1" placeholder="0"
+                                        oninput="calcCuttingTotal()">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">(شیفتی ٢)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="cut_s2" placeholder="0"
+                                        oninput="calcCuttingTotal()">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">(شیفتی ٣)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="cut_s3" placeholder="0"
+                                        oninput="calcCuttingTotal()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Specs -->
+                        <div class="section-header">
+                            (پێوەرەکان) <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">خێرایی بۆکس فیدەر</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="boxfeeder_speed"
+                                        placeholder="0">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">کێشی خشت</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Kg</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="brick_weight_day"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 3: Loading -->
+                        <div class="section-header">
+                            (بارکردن) <i class="bi bi-send"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">کێشی خشت (بارکردن)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Kg</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="brick_weight_load"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">ژمارەی عەرەبانە لە گەراج</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="garage_carts" placeholder="0">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">کۆی عەرەبانەی بارکردن</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="load_total_carts"
+                                        placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <button class="menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-        </div>
-
-        <div class="dashboard-grid">
-            <div onclick="window.location.href='employees.html'" class="nav-card card-employees">
-                <div class="icon-box"><i class="bi bi-people-fill"></i></div>
-                <div class="card-title">Employees</div>
-                <div class="card-desc">بەڕێوەبردنی کارمەندان و هەڵسەنگاندن</div>
-            </div>
-            <div onclick="window.location.href='maintenance.html'" class="nav-card card-maintenance">
-                <div class="icon-box"><i class="bi bi-gear-wide-connected"></i></div>
-                <div class="card-title">Maintenance</div>
-                <div class="card-desc">چاکسازی ئامێرەکان و تۆماری کێشەکان</div>
-            </div>
-            <div onclick="window.location.href='manuals.html'" class="nav-card card-manuals">
-                <div class="icon-box"><i class="bi bi-book-half"></i></div>
-                <div class="card-title">Manuals</div>
-                <div class="card-desc"> ڕێنماییەکان</div>
-            </div>
-            <div onclick="window.location.href='notes.html'" class="nav-card card-notes">
-                <div class="icon-box"><i class="bi bi-journal-check"></i></div>
-                <div class="card-title">Daily Notes</div>
-                <div class="card-desc">تۆماری تێبینی و ئاگادارکردنەوەکان</div>
-            </div>
-            <div onclick="window.location.href='reports.html'" class="nav-card card-reports">
-                <div class="icon-box"><i class="bi bi-file-earmark-bar-graph"></i></div>
-                <div class="card-title">Reports</div>
-                <div class="card-desc">ڕاپۆرتی ڕۆژانە و ئامارەکان</div>
-            </div>
-            <div onclick="window.location.href='sop_report.html'" class="nav-card card-sop">
-                <div class="icon-box">
-                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-                            stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M9 2H15V6H9V2Z" fill="white" />
-                        <text x="12" y="11.5" font-family="Inter, Arial, sans-serif" font-size="4.5" font-weight="900"
-                            text-anchor="middle" fill="white" style="letter-spacing: 0.5px;">S.O.P</text>
-                        <path d="M7 15H13" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                        <path d="M7 18H11" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                        <!-- Gear -->
-                        <path
-                            d="M21.5 17.5C21.5 18.1 21.3 18.6 21 19L22 20L21 21L20 20C19.6 20.3 19.1 20.5 18.5 20.5C17.9 20.5 17.4 20.3 17 20L16 21L15 20L16 19C15.7 18.6 15.5 18.1 15.5 17.5C15.5 16.9 15.7 16.4 16 16L15 15L16 14L17 15C17.4 14.7 17.9 14.5 18.5 14.5C19.1 14.5 19.6 14.7 20 15L21 14L22 15L21 16C21.3 16.4 21.5 16.9 21.5 17.5Z"
-                            fill="white" />
-                        <circle cx="18.5" cy="17.5" r="1" fill="#f7971e" />
-                    </svg>
+            <!-- Other Tabs -->
+            <div class="tab-pane fade" id="crushing" role="tabpanel">
+                <div class="content-card text-start d-block">
+                    <h2 class="dept-title">زانیاریەکانی بەشی هاڕین و ئامادەکردن</h2>
+                    <form id="crushingForm">
+                        <div class="section-header">
+                            کۆیی گشتی طەن <i class="bi bi-gear-wide-connected"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">کۆی طەنی ئامادەکردن</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Ton</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="cr_prep_tones"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">کۆی طەنی هاڕین</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Ton</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="cr_crush_tones"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="card-title">SOP Report</div>
-                <div class="card-desc">Standard Operating Procedures</div>
             </div>
-            <div onclick="window.location.href='annual_report.html'" class="nav-card card-annual">
-                <div class="icon-box"><i class="bi bi-calendar3-range"></i></div>
-                <div class="card-title">Annual Report</div>
-                <div class="card-desc">ڕاپۆڕتی ساڵانە</div>
+            <div class="tab-pane fade" id="unsetting" role="tabpanel">
+                <div class="content-card text-start d-block">
+                    <h2 class="dept-title">زانیاریەکانی بەشی داگرتن</h2>
+                    <form id="unsettingForm">
+                        <div class="section-header">
+                            کێشی خشتەکان <i class="bi bi-box-arrow-down"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">کێشی سەرەوە</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Kg</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="un_top_weight"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">کێشی ناوەڕاست</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Kg</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="un_mid_weight"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">کێشی خشتەکان خوارەوە</label>
+                                <div class="input-wrapper">
+                                    <span class="input-unit">Kg</span>
+                                    <input type="number" step="0.01" class="form-control-minimal" id="un_bot_weight"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="kiln" role="tabpanel">
+                <div class="content-card text-start d-block">
+                    <h2 class="dept-title">زانیاریەکانی بەشی فڕن</h2>
+                    <form id="kilnForm">
+                        <div class="section-header">
+                            زانیاری بەرهەم <i class="bi bi-fire"></i>
+                        </div>
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label">جۆری بەرهەم</label>
+                                <div class="input-wrapper">
+                                    <input type="text" class="form-control-minimal" id="ki_prod_type"
+                                        placeholder="ناوی جۆر بنووسە">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">ژمارەی بەرهەم</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="form-control-minimal" id="ki_prod_count"
+                                        placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="dashboard-footer">
+        <div class="global-footer">
             <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
             <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
     </div>
 
+    <!-- Analysis Modal -->
+    <div class="modal fade" id="analysisModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg position-relative"
+                style="border-radius: 20px; overflow: hidden;">
+                <div
+                    style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); position: absolute; top:0; left:0; width: 100%; height: 8px;">
+                </div>
+                <div class="modal-header border-0 bg-white p-4 mt-2">
+                    <h5 class="modal-title fw-bold text-dark"><i
+                            class="bi bi-graph-up-arrow me-2 text-primary"></i>ماوەی شیکاری</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <!-- Controls -->
+                    <div class="glass-card mb-4" style="border-radius: 16px; padding: 20px;">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">کاتی دەستپێک</label>
+                                <input type="date" id="an_startDate" class="form-control border-0 shadow-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">کاتی کۆتایی</label>
+                                <input type="date" id="an_endDate" class="form-control border-0 shadow-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button onclick="calculateAnalysis()" class="btn btn-primary w-100 fw-bold shadow-sm"
+                                    style="border-radius: 10px;"><i
+                                        class="bi bi-calculator me-2"></i>هەژماردکردن</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="analysisResults" class="d-none">
+                        <div class="row g-3 mb-4">
+                            <!-- Cutting Card -->
+                            <div class="col">
+                                <div
+                                    class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-primary h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی بڕین</small>
+                                    <h4 class="fw-bold m-0 text-primary" id="res_cut_carts">0</h4>
+                                </div>
+                            </div>
+                            <!-- Setting Card -->
+                            <div class="col">
+                                <div class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-info h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی بارکردن</small>
+                                    <h4 class="fw-bold m-0 text-info" id="res_set_carts">0</h4>
+                                </div>
+                            </div>
+                            <!-- Crushing Card -->
+                            <div class="col">
+                                <div
+                                    class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-success h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">خۆڵی هاڕین (طەن)</small>
+                                    <h4 class="fw-bold m-0 text-success" id="res_cr_tons">0</h4>
+                                </div>
+                            </div>
+                            <!-- Prep Card -->
+                            <div class="col">
+                                <div
+                                    class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-secondary h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">خۆڵی ئامادەکردن (طەن)</small>
+                                    <h4 class="fw-bold m-0 text-secondary" id="res_prep_tons">0</h4>
+                                </div>
+                            </div>
+                            <!-- Kiln Card -->
+                            <div class="col">
+                                <div class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-danger h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی فڕن</small>
+                                    <h4 class="fw-bold m-0 text-danger" id="res_ki_carts">0</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart Section (Individual Department Charts) -->
+                        <!-- Chart Section (5 Individual Charts) -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="bg-white p-3 rounded-4 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی بڕین</h6>
+                                    <canvas id="chart_cut" height="150"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="bg-white p-3 rounded-4 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی بارکردن</h6>
+                                    <canvas id="chart_set" height="150"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="bg-white p-3 rounded-4 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-2 text-muted small">خۆڵی هاڕین (طەن)</h6>
+                                    <canvas id="chart_cr" height="150"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6">
+                                <div class="bg-white p-3 rounded-4 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-2 text-muted small">خۆڵی ئامادەکردن (طەن)</h6>
+                                    <canvas id="chart_prep" height="150"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                                <div class="bg-white p-3 rounded-4 shadow-sm h-100">
+                                    <h6 class="fw-bold mb-2 text-muted small">عەرەبانەکانی فڕن</h6>
+                                    <canvas id="chart_ki_final" height="150"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; background: #f8fafc;">
+                <div class="modal-header border-0 bg-white p-4" style="border-radius: 20px 20px 0 0;">
+                    <h5 class="modal-title fw-bold text-primary"><i class="bi bi-archive me-2"></i>مێژووی تۆمارەکان</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb history-breadcrumb" id="historyBreadcrumb">
+                            <li class="breadcrumb-item active" aria-current="page">مانگەکان</li>
+                        </ol>
+                    </nav>
+                    <!-- View Container -->
+                    <div id="historyContent">
+                        <!-- Folders or Table will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Check Login
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) window.location.href = 'index.html';
+    <script> // --- Configuration ---
 
-        // Display User Info in Menu
-        document.getElementById('menuUserInfo').textContent = `${currentUser.username} (${currentUser.role})`;
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+            authDomain: "abf6-96dcf.firebaseapp.com",
+            projectId: "abf6-96dcf",
+            storageBucket: "abf6-96dcf.firebasestorage.app",
+            messagingSenderId: "405357996484",
+            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+        }
 
-        // Role-based card access control
+            ;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- Init ---
+        // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
-            const rolePermissions = {
-                'hr': ['reports', 'sop_report'],
-                'manager': ['employees', 'manuals', 'sop_report', 'annual_report'],
-                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'], // annual_report removed, added conditionally below
-                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report']
-            };
-
-            let allowedPages = [];
-
-            // Special access for specific usernames (check these FIRST before role-based)
-            if (currentUser.username === 'cutemp') {
-                allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
-            } else if (currentUser.username === 'electrical') {
-                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
-            } else if (currentUser.username === 'kilnemp') {
-                allowedPages = ['reports', 'sop_report'];
-            } else {
-                // Use role-based permissions for other users
-                allowedPages = rolePermissions[currentUser.role] || [];
-            }
-
-            // Debug logging
-            console.log('Current User:', currentUser.username);
-            console.log('User Role:', currentUser.role);
-            console.log('Allowed Pages:', allowedPages);
-
-            // Annual Report specific access for supervisors
-            const annualAllowedUsers = ['himat', 'samdar', 'hemn', 'kiln'];
-            if (annualAllowedUsers.includes(currentUser.username)) {
-                // Ensure annual_report isn't added twice if they somehow already have it (though supervisor role doesn't have it now)
-                if (!allowedPages.includes('annual_report')) {
-                    allowedPages.push('annual_report');
-                }
-            }
-
-            // Get all navigation cards
-            const cards = document.querySelectorAll('.nav-card');
-            cards.forEach(card => {
-                const onclick = card.getAttribute('onclick');
-                if (onclick) {
-                    const page = onclick.match(/window\.location\.href='(\w+)\.html'/)?.[1];
-                    let isAllowed = allowedPages.includes(page);
-
-                    console.log(`Checking page: ${page}, isAllowed: ${isAllowed}`);
-
-                    // Specific USER restrictions (Shalaw & Sarezh blocked from reports)
-                    const username = currentUser.username.toLowerCase();
-                    if (page === 'reports' && (username === 'shalaw' || username === 'sarezh')) {
-                        isAllowed = false;
-                    }
-
-                    if (page && !isAllowed) {
-                        // Disable the card
-                        card.style.opacity = '0.5';
-                        card.style.cursor = 'not-allowed';
-                        card.style.filter = 'grayscale(80%)';
-
-                        // Add locked icon
-                        const iconBox = card.querySelector('.icon-box');
-                        if (iconBox) {
-                            iconBox.innerHTML = '<i class="bi bi-lock-fill"></i>';
-                        }
-
-                        // Change onclick to show alert
-                        card.setAttribute('onclick', `alert('بەردەست نییە - Not Available\\nتۆ ڕێگەت نییە بۆ ئەم بەشە')`);
-                    }
-                }
-            });
+            // Updated Date Logic: Start Empty
+            // document.getElementById('reportDate').value = today; // Removed
         });
 
-        // Logout Logic
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+        // --- Logic ---
+        function calcCuttingTotal() {
+            const s1 = parseFloat(document.getElementById('cut_s1').value) || 0;
+            const s2 = parseFloat(document.getElementById('cut_s2').value) || 0;
+            const s3 = parseFloat(document.getElementById('cut_s3').value) || 0;
+            const total = s1 + s2 + s3;
+            document.getElementById('cut_total').value = total;
         }
+
+        async function saveDailyData() {
+            const date = document.getElementById('reportDate').value;
+
+            if (!date) {
+                alert("تکایە بەروارێک هەڵبژێرە");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-save');
+            const originalText = document.getElementById('saveBtnText').innerText;
+            btn.disabled = true;
+            document.getElementById('saveBtnText').innerText = "Saving...";
+
+            const data = {
+                permissions: {
+                    last_updated_by: getCurrentUser()
+                }
+
+                ,
+                cutting_loading: {
+                    shift1: Number(document.getElementById('cut_s1').value),
+                    shift2: Number(document.getElementById('cut_s2').value),
+                    shift3: Number(document.getElementById('cut_s3').value),
+                    total: Number(document.getElementById('cut_total').value),
+                    brick_weight_day: Number(document.getElementById('brick_weight_day').value),
+                    boxfeeder_speed: Number(document.getElementById('boxfeeder_speed').value),
+                    loading_total: Number(document.getElementById('load_total_carts').value),
+                    garage_carts: Number(document.getElementById('garage_carts').value),
+                    brick_weight_load: Number(document.getElementById('brick_weight_load').value)
+                }
+
+                ,
+                unsetting: {
+                    top_weight: Number(document.getElementById('un_top_weight').value),
+                    mid_weight: Number(document.getElementById('un_mid_weight').value),
+                    bot_weight: Number(document.getElementById('un_bot_weight').value)
+                }
+
+                ,
+                crushing_prep: {
+                    prep_tones: Number(document.getElementById('cr_prep_tones').value),
+                    crush_tones: Number(document.getElementById('cr_crush_tones').value)
+                }
+
+                ,
+                kiln: {
+                    prod_type: document.getElementById('ki_prod_type').value,
+                    prod_count: Number(document.getElementById('ki_prod_count').value)
+                }
+            }
+
+                ;
+
+            try {
+                await db.collection('annual_daily_records').doc(date).set(data, {
+                    merge: true
+                });
+                // Show success feedback (simple for now)
+                btn.classList.replace('btn-primary', 'btn-success');
+                document.getElementById('saveBtnText').innerText = "Saved Successfully!";
+
+                setTimeout(() => {
+                    btn.classList.replace('btn-success', 'btn-primary');
+                    document.getElementById('saveBtnText').innerText = originalText;
+                    btn.disabled = false;
+                }
+
+                    , 2000);
+            }
+
+            catch (error) {
+                console.error("Error saving document: ", error);
+                alert("Error saving data: " + error.message);
+                btn.disabled = false;
+                document.getElementById('saveBtnText').innerText = originalText;
+            }
+        }
+
+        async function loadDailyData() {
+            const date = document.getElementById('reportDate').value;
+            if (!date) return;
+
+            // Clear forms first
+            document.getElementById('cuttingForm').reset();
+            document.getElementById('crushingForm').reset();
+            document.getElementById('unsettingForm').reset();
+            document.getElementById('kilnForm').reset();
+
+            try {
+                const doc = await db.collection('annual_daily_records').doc(date).get();
+
+                if (doc.exists) {
+                    const data = doc.data();
+
+                    // Populate Cutting & Loading
+                    if (data.cutting_loading) {
+                        document.getElementById('cut_s1').value = data.cutting_loading.shift1 || '';
+                        document.getElementById('cut_s2').value = data.cutting_loading.shift2 || '';
+                        document.getElementById('cut_s3').value = data.cutting_loading.shift3 || '';
+                        document.getElementById('cut_total').value = data.cutting_loading.total || '';
+
+                        if (document.getElementById('cut_total_display')) {
+                            document.getElementById('cut_total_display').innerText = data.cutting_loading.total || '0';
+                        }
+
+                        document.getElementById('brick_weight_day').value = data.cutting_loading.brick_weight_day || '';
+                        document.getElementById('boxfeeder_speed').value = data.cutting_loading.boxfeeder_speed || '';
+                        document.getElementById('load_total_carts').value = data.cutting_loading.loading_total || '';
+                        document.getElementById('garage_carts').value = data.cutting_loading.garage_carts || '';
+                        document.getElementById('brick_weight_load').value = data.cutting_loading.brick_weight_load || '';
+                    }
+
+                    // Populate Unsetting
+                    if (data.unsetting) {
+                        document.getElementById('un_top_weight').value = data.unsetting.top_weight || '';
+                        document.getElementById('un_mid_weight').value = data.unsetting.mid_weight || '';
+                        document.getElementById('un_bot_weight').value = data.unsetting.bot_weight || '';
+                    }
+
+                    // Populate Crushing
+                    if (data.crushing_prep) {
+                        document.getElementById('cr_prep_tones').value = data.crushing_prep.prep_tones || '';
+                        document.getElementById('cr_crush_tones').value = data.crushing_prep.crush_tones || '';
+                    }
+
+                    // Populate Kiln
+                    if (data.kiln) {
+                        document.getElementById('ki_prod_type').value = data.kiln.prod_type || '';
+                        document.getElementById('ki_prod_count').value = data.kiln.prod_count || '';
+                    }
+                }
+            }
+
+            catch (error) {
+                console.error("Error getting document: ", error);
+            }
+        }
+
+        // --- History Logic ---
+        let historyModal;
+
+        function openHistoryModal() {
+            if (!historyModal) {
+                historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+            }
+
+            historyModal.show();
+            loadMonths();
+        }
+
+        async function loadMonths() {
+            const container = document.getElementById('historyContent');
+            const breadcrumb = document.getElementById('historyBreadcrumb');
+
+            container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+            breadcrumb.innerHTML = '<li class="breadcrumb-item active">Months</li>';
+
+            try {
+                // Get all documents to extract unique year-months
+                // Note: Efficient way would be to store a 'months' metadata collection, 
+                // but for now we scan the collection as requested.
+                const snapshot = await db.collection('annual_daily_records').get();
+                const months = new Set();
+
+                snapshot.forEach(doc => {
+                    // ID is YYYY-MM-DD
+                    const date = doc.id;
+
+                    if (date.length === 10) {
+                        const month = date.substring(0, 7); // YYYY-MM
+                        months.add(month);
+                    }
+                });
+
+                const sortedMonths = Array.from(months).sort().reverse();
+
+                if (sortedMonths.length === 0) {
+                    container.innerHTML = '<div class="text-center p-5 text-muted">No records found.</div>';
+                    return;
+                }
+
+                let html = '<div class="folder-grid">';
+                sortedMonths.forEach(month => {
+                    html += `
+                        <div class="folder-item" onclick="loadMonthTable('${month}')">
+                            <i class="bi bi-folder-fill folder-icon"></i>
+                            <div class="folder-name">${month}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            }
+
+            catch (error) {
+                console.error("Error loading history:", error);
+                container.innerHTML = '<div class="text-danger text-center p-3">Error loading history.</div>';
+            }
+        }
+
+        // --- Analysis Logic ---
+        let analysisModal;
+
+        function openAnalysisModal() {
+            if (!analysisModal) {
+                analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
+            }
+
+            analysisModal.show();
+        }
+
+        let charts = { cut: null, set: null, cr: null, prep: null, ki: null };
+
+        async function calculateAnalysis() {
+            const start = document.getElementById('an_startDate').value;
+            const end = document.getElementById('an_endDate').value;
+
+            if (!start || !end) {
+                alert("تکایە ماوەیەک هەڵبژێرە");
+                return;
+            }
+
+            const btn = document.querySelector('#analysisModal button.btn-primary');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Computing...';
+            btn.disabled = true;
+
+            try {
+                const snapshot = await db.collection('annual_daily_records').where(firebase.firestore.FieldPath.documentId(), '>=', start).where(firebase.firestore.FieldPath.documentId(), '<=', end).get();
+
+                if (snapshot.empty) {
+                    alert("No records found in this range.");
+                    return;
+                }
+
+                let stats = {
+                    cut_carts: 0,
+                    set_carts: 0,
+                    cr_tons: 0,
+                    prep_tons: 0,
+                    ki_carts: 0,
+                    labels: [],
+                    data_cut: [],
+                    data_set: [],
+                    data_cr: [],
+                    data_prep: [],
+                    data_ki: []
+                };
+
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    const cut = d.cutting_loading || {};
+                    const cr = d.crushing_prep || {};
+                    const ki = d.kiln || {};
+
+                    stats.cut_carts += Number(cut.total) || 0;
+                    stats.set_carts += Number(cut.loading_total) || 0;
+                    stats.cr_tons += Number(cr.crush_tones) || 0;
+                    stats.prep_tons += Number(cr.prep_tones) || 0;
+                    stats.ki_carts += Number(ki.prod_count) || 0;
+
+                    stats.labels.push(doc.id);
+                    stats.data_cut.push(Number(cut.total) || 0);
+                    stats.data_set.push(Number(cut.loading_total) || 0);
+                    stats.data_cr.push(Number(cr.crush_tones) || 0);
+                    stats.data_prep.push(Number(cr.prep_tones) || 0);
+                    stats.data_ki.push(Number(ki.prod_count) || 0);
+                });
+
+                // Update UI Numbers
+                document.getElementById('res_cut_carts').innerText = stats.cut_carts;
+                document.getElementById('res_set_carts').innerText = stats.set_carts;
+                document.getElementById('res_cr_tons').innerText = stats.cr_tons.toFixed(1);
+                document.getElementById('res_prep_tons').innerText = stats.prep_tons.toFixed(1);
+                document.getElementById('res_ki_carts').innerText = stats.ki_carts;
+
+                // Render Charts
+                const render = (id, label, data, color, type = 'line') => {
+                    if (charts[id]) charts[id].destroy();
+                    const canvasId = (id === 'ki') ? 'chart_ki_final' : 'chart_' + id;
+                    const el = document.getElementById(canvasId);
+                    if (!el) return;
+                    const ctx = el.getContext('2d');
+
+                    charts[id] = new Chart(ctx, {
+                        type: type,
+                        data: {
+                            labels: stats.labels,
+                            datasets: [{
+                                label: label,
+                                data: data,
+                                borderColor: color,
+                                backgroundColor: color + '1a',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                };
+
+                render('cut', 'Cutting Carts', stats.data_cut, '#3b82f6');
+                render('set', 'Setting Carts', stats.data_set, '#0ea5e9');
+                render('cr', 'Crushing Tons', stats.data_cr, '#10b981');
+                render('prep', 'Prep Tons', stats.data_prep, '#64748b');
+                render('ki', 'Kiln Carts', stats.data_ki, '#ef4444', 'bar');
+
+                document.getElementById('analysisResults').classList.remove('d-none');
+
+            }
+
+            catch (error) {
+                console.error("Analysis Error:", error);
+                alert("Error calculating analysis.");
+            }
+
+            finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function loadMonthTable(month) {
+            // month = YYYY-MM
+            const container = document.getElementById('historyContent');
+            const breadcrumb = document.getElementById('historyBreadcrumb');
+
+            container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+
+            // Update Breadcrumb
+            breadcrumb.innerHTML = `<li class="breadcrumb-item"><a href="#" onclick="loadMonths(); return false;">Months</a></li><li class="breadcrumb-item active">${month}</li>`;
+
+            try {
+                // Query strings strictly: start at "2026-01-01" end at "2026-01-31" effectively
+                // Using string range comparison on Document ID (Date)
+                const snapshot = await db.collection('annual_daily_records').where(firebase.firestore.FieldPath.documentId(), '>=', month + '-01').where(firebase.firestore.FieldPath.documentId(), '<=', month + '-31').get();
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="text-center p-5 text-muted">No records found for this month.</div>';
+                    return;
+                }
+
+                let records = [];
+
+                snapshot.forEach(doc => {
+                    records.push({
+                        id: doc.id, ...doc.data()
+                    });
+                });
+
+                // Sort by date ascending
+                records.sort((a, b) => a.id.localeCompare(b.id));
+
+                // Build Table
+                let totals = {
+                    total: 0, load: 0, garage: 0, speed: 0, bw1: 0, bw2: 0,
+                    prep: 0, crush: 0, top: 0, mid: 0, bot: 0, ki_count: 0
+                };
+
+                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="6" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="2" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت</th><th>کێشی خشت (بار)</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>جۆری بەرهەم</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
+
+                records.forEach(rec => {
+                    const cut = rec.cutting_loading || {};
+                    const cr = rec.crushing_prep || {};
+                    const un = rec.unsetting || {};
+                    const ki = rec.kiln || {};
+
+                    // Accumulate Totals
+                    totals.total += Number(cut.total) || 0;
+                    totals.load += Number(cut.loading_total) || 0;
+                    totals.garage += Number(cut.garage_carts) || 0;
+                    totals.speed += Number(cut.boxfeeder_speed) || 0;
+                    totals.bw1 += Number(cut.brick_weight_day) || 0;
+                    totals.bw2 += Number(cut.brick_weight_load) || 0;
+                    totals.prep += Number(cr.prep_tones) || 0;
+                    totals.crush += Number(cr.crush_tones) || 0;
+                    totals.top += Number(un.top_weight) || 0;
+                    totals.mid += Number(un.mid_weight) || 0;
+                    totals.bot += Number(un.bot_weight) || 0;
+                    totals.ki_count += Number(ki.prod_count) || 0;
+
+                    tableHtml += `
+                        <tr>
+                            <td class="fw-bold">${rec.id}</td>
+                            <td class="total-col bg-light-cut">${cut.total || 0}</td>
+                            <td class="bg-light-cut">${cut.loading_total || 0}</td>
+                            <td class="bg-light-cut">${cut.garage_carts || 0}</td>
+                            <td class="bg-light-cut">${cut.boxfeeder_speed || 0}</td>
+                            <td class="bg-light-cut">${cut.brick_weight_day || 0}</td>
+                            <td class="bg-light-cut">${cut.brick_weight_load || 0}</td>
+                            <td class="bg-light-crush">${cr.prep_tones || 0}</td>
+                            <td class="bg-light-crush">${cr.crush_tones || 0}</td>
+                            <td class="bg-light-un">${un.top_weight || 0}</td>
+                            <td class="bg-light-un">${un.mid_weight || 0}</td>
+                            <td class="bg-light-un">${un.bot_weight || 0}</td>
+                            <td class="bg-light-ki" style="font-size: 0.75rem">${ki.prod_type || '-'}</td>
+                            <td class="bg-light-ki">${ki.prod_count || 0}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadHistDate('${rec.id}')">
+                                    <i class="bi bi-box-arrow-in-down-right"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                // Add Totals Row
+                tableHtml += `
+                    </tbody>
+                    <tfoot class="history-footer-row">
+                        <tr>
+                            <td class="fw-bold">کۆی گشتی</td>
+                            <td class="bg-light-cut">${totals.total}</td>
+                            <td class="bg-light-cut">${totals.load}</td>
+                            <td class="bg-light-cut">${totals.garage}</td>
+                            <td class="bg-light-cut">${totals.speed.toFixed(1)}</td>
+                            <td class="bg-light-cut">${totals.bw1.toFixed(2)}</td>
+                            <td class="bg-light-cut">${totals.bw2.toFixed(2)}</td>
+                            <td class="bg-light-crush">${totals.prep.toFixed(1)}</td>
+                            <td class="bg-light-crush">${totals.crush.toFixed(1)}</td>
+                            <td class="bg-light-un">${totals.top.toFixed(2)}</td>
+                            <td class="bg-light-un">${totals.mid.toFixed(2)}</td>
+                            <td class="bg-light-un">${totals.bot.toFixed(2)}</td>
+                            <td class="bg-light-ki">-</td>
+                            <td class="bg-light-ki">${totals.ki_count}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table></div>`;
+                container.innerHTML = tableHtml;
+
+            }
+
+            catch (error) {
+                console.error("Error loading month table:", error);
+                container.innerHTML = '<div class="text-danger text-center p-3">Error loading table.</div>';
+            }
+        }
+
+        function loadHistDate(date) {
+            document.getElementById('reportDate').value = date;
+            loadDailyData(); // From existing logic
+            historyModal.hide();
+        }
+
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('currentUser');
+            return userStr ? JSON.parse(userStr).username : 'unknown';
+        }
+
     </script>
+    <style>
+        /* Extra styles for the new UI */
+        .search-box {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .analysis-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+    </style>
 </body>
 
 </html>
