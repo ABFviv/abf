@@ -70,6 +70,7 @@
             padding: 40px 20px;
             position: relative;
             z-index: 1;
+            flex: 1;
         }
 
         .header-bar {
@@ -371,6 +372,38 @@
             background: #e68a19;
             color: white;
         }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
@@ -407,6 +440,11 @@
             <div class="col-12 text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
             </div>
+        </div>
+
+        <div class="global-footer">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
     </div>
 
@@ -656,26 +694,38 @@
 
             // Buttons
             let actionBtns = '';
-            if (isMyNote && !isCutemp && !isElectrical) {
+            if (isAdmin) {
+                // Admin can delete anyone's note
+                actionBtns = `<button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')" title="سڕینەوە"><i class="bi bi-trash"></i></button>`;
+            } else if (isMyNote && !isCutemp && !isElectrical) {
                 actionBtns = `
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-light text-primary p-0 px-1" onclick="editNote('${note.id}')" title="دەستکاری"><i class="bi bi-pencil-square"></i></button>
                         <button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')" title="سڕینەوە"><i class="bi bi-trash"></i></button>
                     </div>
                 `;
-            } else if (isAdmin) {
-                // Admin can delete anyone's note
-                actionBtns = `<button class="btn btn-sm btn-light text-danger p-0 px-1" onclick="deleteNote('${note.id}')"><i class="bi bi-trash"></i></button>`;
             }
 
             // Reply Section - Multi-reply support
             let repliesHTML = '';
             if (note.replies && note.replies.length > 0) {
-                note.replies.forEach(rep => {
+                note.replies.forEach((rep, index) => {
                     const replyLabel = rep.user === 'admin' ? 'وەڵامی بەڕێوبەی بەرهەم' : `وەڵامی ${rep.user}`;
+                    let replyActions = '';
+                    if (rep.user === currentUser.username) {
+                        replyActions = `
+                            <div class="ms-auto d-flex gap-1" style="opacity: 0.7;">
+                                <button class="btn btn-sm btn-link text-warning p-0" onclick="editReply('${note.id}', ${index})" title="دەستکاری"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteReply('${note.id}', ${index})" title="سڕینەوە"><i class="bi bi-trash"></i></button>
+                            </div>
+                        `;
+                    }
                     repliesHTML += `
                         <div class="reply-box">
-                            <div class="reply-header"><i class="bi bi-arrow-return-left"></i> ${replyLabel}:</div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="reply-header"><i class="bi bi-arrow-return-left"></i> ${replyLabel}:</div>
+                                ${replyActions}
+                            </div>
                             <div class="small">${rep.text}</div>
                         </div>
                     `;
@@ -860,6 +910,62 @@
                 });
                 inputEl.value = ''; // Clear input
                 showToast('وەڵام نێردرا', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('هەڵە ڕوویدا', 'danger');
+            }
+        }
+
+        async function editReply(noteId, index) {
+            const note = notesList.find(n => n.id === noteId);
+            if (!note || !note.replies || !note.replies[index]) return;
+
+            // Ownership check
+            if (note.replies[index].user !== currentUser.username) {
+                showToast('تۆ ناتوانیت ئەم وەڵامە بگۆڕیت (بۆ تۆ نییە)', 'danger');
+                return;
+            }
+
+            const currentText = note.replies[index].text;
+            const newText = prompt('تکایە وەڵامەکە نوێ بکەرەوە:', currentText);
+
+            if (newText === null || newText === currentText || !newText.trim()) return;
+
+            const updatedReplies = [...note.replies];
+            updatedReplies[index].text = newText.trim();
+            updatedReplies[index].lastEditedAt = new Date().toISOString();
+
+            try {
+                await db.collection('notes').doc(noteId).update({
+                    replies: updatedReplies
+                });
+                showToast('وەڵامەکە نوێکرایەوە', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('هەڵە ڕوویدا', 'danger');
+            }
+        }
+
+        async function deleteReply(noteId, index) {
+            const note = notesList.find(n => n.id === noteId);
+            if (!note || !note.replies || !note.replies[index]) return;
+
+            // Ownership check
+            if (note.replies[index].user !== currentUser.username) {
+                showToast('تۆ ناتوانیت ئەم وەڵامە بسڕیتەوە (بۆ تۆ نییە)', 'danger');
+                return;
+            }
+
+            if (!confirm('دڵنیایت لە سڕینەوەی ئەم وەڵامە؟')) return;
+
+            const updatedReplies = [...note.replies];
+            updatedReplies.splice(index, 1);
+
+            try {
+                await db.collection('notes').doc(noteId).update({
+                    replies: updatedReplies
+                });
+                showToast('وەڵامەکە سڕایەوە', 'success');
             } catch (e) {
                 console.error(e);
                 showToast('هەڵە ڕوویدا', 'danger');
