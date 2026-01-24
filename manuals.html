@@ -68,6 +68,7 @@
             padding: 40px 20px;
             position: relative;
             z-index: 1;
+            flex: 1;
         }
 
         .header-bar {
@@ -387,6 +388,38 @@
             border: none;
             font-size: 0.9rem;
         }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
@@ -468,6 +501,11 @@
             </div>
 
             <div class="row g-3" id="manualsGrid"></div>
+        </div>
+
+        <div class="global-footer">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
     </div>
 
