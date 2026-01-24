@@ -32,6 +32,13 @@
             background-color: #f8fafc;
             font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container-fluid {
+            flex: 1;
         }
 
         /* --- HEADER --- */
@@ -398,6 +405,38 @@
 
         .excel-table tr:hover td {
             background: #f8fafc;
+        }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -794,6 +833,11 @@
             <h3 class="text-muted mt-3">تکایە سەرەتا ئامێرێک هەڵبژێرە</h3>
             <p class="text-muted">بۆ بینینی داتا و شیکارییەکان، ناوی ئامێرەکە لە لیستی سەرەوە دیاری بکە</p>
         </div>
+
+        <div class="global-footer">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
+        </div>
     </div>
 
     <div class="modal fade" id="bulkImportModal" tabindex="-1">
@@ -1183,7 +1227,7 @@
 
         // Block 'employee' role from accessing this page
         if (currentUser.role === 'employee') {
-            window.location.href = 'dashboard .html';
+            window.location.href = 'dashboard.html';
         }
 
         document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
