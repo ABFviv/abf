@@ -68,10 +68,11 @@
             padding: 40px 20px;
             position: relative;
             z-index: 1;
+            flex: 1;
         }
 
         .header-bar {
-            background: rgba(238, 229, 184, 0.6);
+            background: rgba(250, 220, 71, 0.6);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
@@ -88,7 +89,7 @@
             font-weight: 800;
             margin: 0;
             letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            background: linear-gradient(135deg, #000000 0%, #5a5930 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -379,6 +380,38 @@
             box-shadow: 0 15px 30px -5px rgba(247, 151, 30, 0.4);
             background: #e68a19;
         }
+
+        /* --- Global Footer Styling --- */
+        .global-footer {
+            margin-top: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .teg-logo-footer {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .teg-logo-footer:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .copyright-text {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
@@ -400,6 +433,10 @@
             <!-- Cards will be rendered here by JS -->
         </div>
 
+        <div class="global-footer">
+            <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
+        </div>
     </div>
 
     <!-- Edit Link Modal -->
