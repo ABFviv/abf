@@ -2832,7 +2832,7 @@
                     rowsHtml += `
                     <tr class="compact-rows">
                         <td>${i}</td>
-                        <td><input type="time" id="${timeId}" value="${valTime}" class="fw-bold time-input" style="text-align:center;"></td>
+                        <td><input type="time" id="${timeId}" value="${valTime}" class="fw-bold time-input no-ampm" style="text-align:center;"></td>
 
                         <td>${getSelect(`${rid}_type_out`, null, valTypeOut)}</td>
                         <td><input type="number" id="${rid}_cart_out" value="${valCartOut}"></td>
@@ -2877,7 +2877,32 @@
                 </div>
                 <div class="row g-2 mt-1">
                     <div class="col-8">
-                        <table class="report-table"><thead><tr class="bg-light"><th>Oil Balance</th><th>کۆی گشتی عەرەبانە</th><th>ژمارەی  خشت بۆ یەک عەرەبانە</th><th>ژمارەی خشتی بەرهەمهێنراو</th></tr></thead><tbody><tr><td><input type="number" id="k_oil_bal" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_cars" class="fw-bold fs-6"></td><td><input type="number" id="k_pcs_car" class="fw-bold fs-6"></td><td><input type="number" id="k_tot_unload" class="fw-bold fs-6"></td></tr></tbody></table>
+                        <table class="report-table">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th>Oil Balance</th>
+                                    <th>کۆی گشتی عەرەبانە</th>
+                                    <th>ژمارەی خشت بۆ یەک عەرەبانە</th>
+                                    <th>ژمارەی خشتی بەرهەمهێنراو</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td rowspan="3" style="vertical-align: middle;"><input type="number" id="k_oil_bal" class="fw-bold fs-6" style="height: 100%; text-align: center;"></td>
+                                    <td rowspan="3" style="vertical-align: middle;"><input type="number" id="k_tot_cars" class="fw-bold fs-6" style="height: 100%; text-align: center;"></td>
+                                    <td><input type="text" id="k_pcs_car" class="fw-bold fs-6" placeholder="--"></td>
+                                    <td><input type="text" id="k_tot_unload" class="fw-bold fs-6" placeholder="--"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="k_pcs_car_2" class="fw-bold fs-6" placeholder="--"></td>
+                                    <td><input type="text" id="k_tot_unload_2" class="fw-bold fs-6" placeholder="--"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" id="k_pcs_car_3" class="fw-bold fs-6" placeholder="--"></td>
+                                    <td><input type="text" id="k_tot_unload_3" class="fw-bold fs-6" placeholder="--"></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="col-4">
                         <table class="report-table"><tr><td class="bg-light fw-bold" style="font-size:0.7rem">پاککردنەوەی عەرەبانەکان</td><td><select id="k_clean_cart">${empOptions}</select></td></tr><tr><td class="bg-light fw-bold" style="font-size:0.7rem">گسک دانی فڕن و درایەر</td><td><select id="k_sweep_kiln">${empOptions}</select></td></tr></table>
@@ -3662,4 +3687,3 @@
 </body>
 
 </html>
-
