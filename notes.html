@@ -573,7 +573,7 @@
 
         // Electrical employees registry (8 employees)
         const electricalRegistry = {
-            "هەڵکەوت اسماعیل حەمە سعید": "21A4242",
+            "هەڵکەوت اسماعیل حەمە سعید": "21A1300",
             "ئومێد اسماعیل ڕەمەزان": "21A7649",
             "توانا حەسەن فەتاح": "21A9266",
             "ئومێد جمعە فتاح": "21A0916",
@@ -585,13 +585,18 @@
 
         let currentUser = null;
         let notesList = [];
-        let activeEmployee = sessionStorage.getItem('activeEmployee');
+        let activeEmployee = null;
 
         // --- 2. AUTH & INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             const stored = JSON.parse(localStorage.getItem('currentUser'));
             currentUser = stored;
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
+
+            // Only persist session for cutemp (as requested, electrical should always ask)
+            if (currentUser.username === 'cutemp') {
+                activeEmployee = sessionStorage.getItem('activeEmployee');
+            }
 
             // Handle shared accounts (cutemp and electrical)
             if (currentUser.username === 'cutemp' || currentUser.username === 'electrical') {
@@ -878,6 +883,13 @@
                     showToast('زیادکرا', 'success');
                 }
                 bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
+
+                // Force re-verification for electrical users (as requested "Always ask")
+                if (currentUser.username === 'electrical') {
+                    activeEmployee = null;
+                    renderNotes(); // Clear the view
+                    showSessionModal(); // Ask for code again
+                }
             } catch (e) {
                 console.error(e);
                 showToast('هەڵە ڕوویدا', 'danger');
@@ -1019,7 +1031,9 @@
             const registry = currentUser.username === 'cutemp' ? cutempRegistry : electricalRegistry;
             if (registry[name] === code) {
                 activeEmployee = name;
-                sessionStorage.setItem('activeEmployee', name);
+                if (currentUser.username === 'cutemp') {
+                    sessionStorage.setItem('activeEmployee', name);
+                }
                 document.getElementById('userInfo').querySelector('span').innerText = `${currentUser.username} (${activeEmployee})`;
                 bootstrap.Modal.getInstance(document.getElementById('sessionModal')).hide();
                 renderNotes();
