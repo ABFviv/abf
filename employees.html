@@ -2740,6 +2740,34 @@
                             <label for="otherWorkName" class="form-label">ناوی کار</label>
                             <input type="text" class="form-control" id="otherWorkName" required>
                         </div>
+                        <div class="electrical-mechanical-only" style="display: none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label for="otherWorkDepartment" class="form-label">بەشی کارکردن (Departments of
+                                        Working)</label>
+                                    <select class="form-select" id="otherWorkDepartment">
+                                        <option value="">هەڵبژێرە...</option>
+                                        <option value="crushing-prep">وردکردن و ئامادەکردن</option>
+                                        <option value="cutting-setting">بڕین و ڕێکخستن</option>
+                                        <option value="klin">کوورە</option>
+                                        <option value="unsetting">هەڵگرتن</option>
+                                        <option value="mechanical">میکانیک (General)</option>
+                                        <option value="electrical-ac">کارەبا (General)</option>
+                                        <option value="dryer">درایەر</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">کاتی کارکردن (Hours of Working)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="otherWorkHours" placeholder="H"
+                                            min="0">
+                                        <span class="input-group-text">:</span>
+                                        <input type="number" class="form-control" id="otherWorkMinutes" placeholder="M"
+                                            min="0" max="59">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label for="otherWorkRating" class="form-label">هەڵسەنگاندن (-100 بۆ 100)</label>
                             <div class="rating-control">
@@ -2800,15 +2828,16 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="specialWorkDepartment" class="form-label">هەڵبژاردنی ئەو بەشەی کارەکەی لێ ئەنجام
-                                دراوە</label>
+                            <label for="specialWorkDepartment" class="form-label">بەشی کارکردن (Departments of
+                                Working)</label>
                             <select class="form-select" id="specialWorkDepartment" required>
                                 <option value="">بەش هەڵبژێرە</option>
                                 <!-- Departments will be populated based on user type -->
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">کاتی کارکردن <span class="optional-field">(دەتوانیت کات
+                            <label class="form-label">کاتی کارکردن (Hours of Working) <span
+                                    class="optional-field">(دەتوانیت کات
                                     بنوسیت)</span></label>
                             <div class="time-input-group mb-2">
                                 <div>
@@ -5127,15 +5156,15 @@
                     if (isSpecial) {
                         recordContent += `
                             <div class="detail-item">
-                                <span class="detail-label">بەش</span>
+                                <span class="detail-label">بەشی کارکردن</span>
                                 <span class="detail-value">${getDepartmentDisplayName(work.workDepartment)}</span>
                             </div>
                         `;
-                        if (work.totalHours) {
+                        if (work.totalHours || work.totalMinutes) {
                             recordContent += `
                                 <div class="detail-item">
-                                    <span class="detail-label">کات</span>
-                                    <span class="detail-value">${work.totalHours}س ${work.totalMinutes}د</span>
+                                    <span class="detail-label">کاتی کارکردن</span>
+                                    <span class="detail-value">${work.totalHours || 0}س ${work.totalMinutes || 0}د</span>
                                 </div>
                             `;
                         }
@@ -5528,6 +5557,16 @@
             document.getElementById('otherWorkRatingValue').textContent = '0';
             document.getElementById('otherWorkDate').valueAsDate = new Date();
 
+            const employee = employees.find(emp => emp.id === currentEmployeeId);
+            const electricalMechanicalFields = document.querySelector('#addOtherWorkModal .electrical-mechanical-only');
+            if (electricalMechanicalFields && employee) {
+                if (employee.department === 'electrical-ac' || employee.department === 'mechanical') {
+                    electricalMechanicalFields.style.display = 'block';
+                } else {
+                    electricalMechanicalFields.style.display = 'none';
+                }
+            }
+
             const modal = new bootstrap.Modal(document.getElementById('addOtherWorkModal'));
             modal.show();
         }
@@ -5854,6 +5893,11 @@
             const rate = document.getElementById('otherWorkRating').value;
             const note = document.getElementById('otherWorkNote').value;
 
+            // New fields for electrical/mechanical
+            const workDepartment = document.getElementById('otherWorkDepartment').value;
+            const workHours = document.getElementById('otherWorkHours').value;
+            const workMinutes = document.getElementById('otherWorkMinutes').value;
+
             if (!date || !name) {
                 showNotification('تکایە هەموو خانە پێویستەکان پڕبکەرەوە', 'danger');
                 return;
@@ -5874,6 +5918,14 @@
                 createdAt: new Date().toISOString(),
                 needsConfirmation: !(employee.department === 'electrical-ac' || employee.department === 'mechanical')
             };
+
+            // Add new fields if it's an electrical/mechanical employee
+            if (employee.department === 'electrical-ac' || employee.department === 'mechanical') {
+                workRecord.workDepartment = workDepartment;
+                workRecord.totalHours = workHours || 0;
+                workRecord.totalMinutes = workMinutes || 0;
+                workRecord.isSpecial = true; // Mark as special to show timing details
+            }
 
             employee.otherWork.push(workRecord);
 
