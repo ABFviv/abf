@@ -524,7 +524,7 @@
         // Role-based card access control
         document.addEventListener('DOMContentLoaded', () => {
             const rolePermissions = {
-                'hr': ['reports', 'sop_report'],
+                'hr': ['reports'],
                 'manager': ['employees', 'manuals', 'sop_report', 'annual_report'],
                 'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'], // annual_report removed, added conditionally below
                 'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report']
@@ -535,8 +535,12 @@
             // Special access for specific usernames (check these FIRST before role-based)
             if (currentUser.username === 'cutemp') {
                 allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
+            } else if (currentUser.username === 'unemp') {
+                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
             } else if (currentUser.username === 'electrical') {
                 allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
+            } else if (currentUser.username === 'setemp') {
+                allowedPages = ['manuals', 'notes', 'reports', 'sop_report'];
             } else if (currentUser.username === 'kilnemp') {
                 allowedPages = ['reports', 'sop_report'];
             } else {
