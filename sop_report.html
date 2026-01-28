@@ -518,6 +518,11 @@
                 return;
             }
             currentUser = JSON.parse(userStr);
+            if (currentUser.role === 'hr') {
+                alert('You do not have permission to access this page.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
         }
 
         // --- Rendering ---
