@@ -606,7 +606,11 @@
             }
 
             const allowedRoles = ['admin', 'manager', 'supervisor'];
-            if (!currentUser || (!allowedRoles.includes(currentUser.role) && currentUser.username !== 'cutemp' && currentUser.username !== 'electrical')) {
+            if (!currentUser || (!allowedRoles.includes(currentUser.role) &&
+                currentUser.username !== 'cutemp' &&
+                currentUser.username !== 'unemp' &&
+                currentUser.username !== 'electrical' &&
+                currentUser.username !== 'setemp')) {
                 document.querySelector('.container').innerHTML = `<div class="text-center py-5"><h4>Access Denied</h4></div>`;
                 return;
             }
