@@ -907,9 +907,19 @@
 
         // --- Init ---
         // --- Init ---
+        let currentUser = null;
         document.addEventListener('DOMContentLoaded', () => {
-            // Updated Date Logic: Start Empty
-            // document.getElementById('reportDate').value = today; // Removed
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUser = JSON.parse(userStr);
+            if (currentUser.username === 'unemp' || currentUser.role === 'employee' || currentUser.role === 'hr') {
+                alert('You do not have permission to access this page.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
         });
 
         // --- Logic ---
