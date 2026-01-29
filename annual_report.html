@@ -11,496 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        :root {
-            --primary: #b7154e;
-            --primary-dark: #8e103d;
-            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --input-bg: #fff;
-            --text-dark: #1e293b;
-            --text-muted: #475569;
-            --border-color: #e2e8f0;
-
-            /* Dept Colors */
-            --color-cut: #3b82f6;
-            --color-crush: #10b981;
-            --color-un: #f59e0b;
-            --color-kiln: #ef4444;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            color: var(--text-dark);
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px 20px;
-            flex: 1;
-        }
-
-        /* Header Styling */
-        .header-bar {
-            background: rgba(183, 21, 78, 0.9);
-            /* #b7154e */
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 24px 48px;
-            border-radius: 35px;
-            margin-bottom: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 20px 40px -10px rgba(183, 21, 78, 0.3);
-        }
-
-        .header-title h1 {
-            font-weight: 800;
-            margin: 0;
-            letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #ffffff 0%, #ffd1e8 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2.8rem;
-        }
-
-        .header-title small {
-            display: block;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-            margin-top: 4px;
-            font-weight: 600;
-        }
-
-        /* Nav Tabs */
-        .nav-pills {
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-
-        .nav-pills .nav-link {
-            background: white;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .nav-pills .nav-link.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        /* Dept Tab Colors */
-        #cutting-tab.active {
-            background-color: var(--color-cut) !important;
-            border-color: var(--color-cut) !important;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-        }
-
-        #crushing-tab.active {
-            background-color: var(--color-crush) !important;
-            border-color: var(--color-crush) !important;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
-        }
-
-        #unsetting-tab.active {
-            background-color: var(--color-un) !important;
-            border-color: var(--color-un) !important;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
-        }
-
-        #kiln-tab.active {
-            background-color: var(--color-kiln) !important;
-            border-color: var(--color-kiln) !important;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-        }
-
-        /* Content Card */
-        .content-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px 25px;
-            border: 1px solid white;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        .dept-title {
-            color: var(--primary);
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 40px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            color: #334155;
-            font-size: 1.1rem;
-        }
-
-        /* Form Controls */
-        .form-label {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #475569;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .input-wrapper {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 2px 10px;
-            display: flex;
-            align-items: center;
-            transition: border-color 0.2s;
-        }
-
-        .input-wrapper:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-control-minimal {
-            border: none;
-            background: transparent;
-            width: 100%;
-            padding: 10px 0;
-            font-weight: 700;
-            color: var(--text-dark);
-            text-align: right;
-            /* RTL focus */
-            outline: none !important;
-        }
-
-        .form-control-minimal.total-value {
-            color: var(--primary);
-        }
-
-        .input-unit {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-right: 10px;
-        }
-
-        /* Buttons */
-        .btn-save {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 40px;
-            border-radius: 12px;
-            font-weight: 700;
-            transition: all 0.2s;
-        }
-
-        .btn-save:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        /* Department Specific styling */
-        .tab-pane#cutting .dept-title,
-        .tab-pane#cutting .section-header {
-            color: var(--color-cut);
-        }
-
-        .tab-pane#cutting .input-wrapper:focus-within {
-            border-color: var(--color-cut);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .tab-pane#cutting .form-control-minimal.total-value {
-            color: var(--color-cut);
-        }
-
-        .tab-pane#crushing .dept-title,
-        .tab-pane#crushing .section-header {
-            color: var(--color-crush);
-        }
-
-        .tab-pane#crushing .input-wrapper:focus-within {
-            border-color: var(--color-crush);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-
-        .tab-pane#crushing .form-control-minimal.total-value {
-            color: var(--color-crush);
-        }
-
-        .tab-pane#unsetting .dept-title,
-        .tab-pane#unsetting .section-header {
-            color: var(--color-un);
-        }
-
-        .tab-pane#unsetting .input-wrapper:focus-within {
-            border-color: var(--color-un);
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
-        }
-
-        .tab-pane#unsetting .form-control-minimal.total-value {
-            color: var(--color-un);
-        }
-
-        .tab-pane#kiln .dept-title,
-        .tab-pane#kiln .section-header {
-            color: var(--color-kiln);
-        }
-
-        .tab-pane#kiln .input-wrapper:focus-within {
-            border-color: var(--color-kiln);
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-        }
-
-        .tab-pane#kiln .form-control-minimal.total-value {
-            color: var(--color-kiln);
-        }
-
-        /* Restored Glass Button Styles */
-        .btn-back {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(10px);
-            color: var(--text-dark);
-            padding: 12px 24px;
-            border-radius: 15px;
-            text-decoration: none;
-            font-weight: 700;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-back:hover {
-            transform: translateY(-3px);
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Layout Helpers */
-        .premium-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 160px));
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: flex-start;
-        }
-
-        .content-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px 25px;
-            border: 1px solid white;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        .dept-title {
-            color: var(--primary);
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 25px;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            font-weight: 700;
-            color: #334155;
-            font-size: 0.95rem;
-        }
-
-        /* History Table Styles */
-        .history-table-wrapper {
-            background: white;
-            border-radius: 15px;
-            overflow-x: auto;
-            border: 1px solid var(--border-color);
-        }
-
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .history-table th {
-            padding: 12px 10px;
-            font-weight: 700;
-            text-align: center;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .history-table td {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-
-        .history-table tr:hover {
-            background: #f8fafc;
-        }
-
-        .total-col {
-            background: rgba(59, 130, 246, 0.05);
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .history-table .btn-outline-primary {
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            margin: 0 auto;
-        }
-
-        /* Light column backgrounds for departments */
-        .bg-light-cut {
-            background-color: rgba(59, 130, 246, 0.08);
-        }
-
-        .bg-light-crush {
-            background-color: rgba(16, 185, 129, 0.08);
-        }
-
-        .bg-light-un {
-            background-color: rgba(6, 182, 212, 0.08);
-        }
-
-        .bg-light-ki {
-            background-color: rgba(245, 158, 11, 0.08);
-        }
-
-        /* Dept Text Colors */
-        .text-dept-cut {
-            color: #2563eb !important;
-        }
-
-        .text-dept-crush {
-            color: #059669 !important;
-        }
-
-        .text-dept-un {
-            color: #0891b2 !important;
-        }
-
-        .text-dept-ki {
-            color: #d97706 !important;
-        }
-
-        /* Folder Grid Styles */
-        .folder-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        .folder-item {
-            background: white;
-            border-radius: 16px;
-            padding: 25px 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .folder-item:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.15);
-        }
-
-        .folder-icon {
-            font-size: 3.5rem;
-            color: #fbbf24;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .folder-name {
-            font-weight: 700;
-            color: var(--text-dark);
-            font-size: 1.1rem;
-        }
-
-        .history-footer-row {
-            background: #f1f5f9;
-            font-weight: 800;
-            border-top: 2px solid var(--border-color);
-        }
-
-        .history-footer-row td {
-            color: var(--text-dark);
-        }
-
-        /* --- Global Footer Styling --- */
-        .global-footer {
-            margin-top: auto;
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .teg-logo-footer {
-            height: 60px;
-            width: auto;
-            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-        }
-
-        .teg-logo-footer:hover {
-            transform: scale(1.1) rotate(-2deg);
-        }
-
-        .copyright-text {
-            color: #64748b;
-            font-size: 0.75rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-    </style>
+    <link rel="stylesheet" href="annual_report.css">
 </head>
 
 <body>
@@ -615,8 +126,15 @@
                             <div>
                                 <label class="form-label d-flex justify-content-between align-items-center">
                                     جۆری بەرهەم
-                                    <span id="prod_type_count_badge" class="badge rounded-pill bg-primary"
-                                        style="font-size: 0.65rem; display:none;">Count: 0</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span id="prod_type_count_badge" class="badge rounded-pill bg-primary"
+                                            style="font-size: 0.65rem; display:none;">Count: 0</span>
+                                        <button type="button" id="btn_reset_counter"
+                                            class="btn btn-ghost p-0 text-danger" style="display:none; font-size: 1rem;"
+                                            title="Reset Counter" onclick="resetProductCounter()">
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+                                        </button>
+                                    </div>
                                 </label>
                                 <div class="input-wrapper">
                                     <select class="form-control-minimal" id="ki_prod_type"
@@ -986,6 +504,10 @@
                 window.location.href = 'dashboard.html';
                 return;
             }
+            // Show reset button if admin or himat
+            if (currentUser.username === 'admin' || currentUser.username === 'himat') {
+                document.getElementById('btn_reset_counter').style.display = 'inline-block';
+            }
         });
 
         // --- Logic ---
@@ -1000,16 +522,30 @@
         async function updateProductTypeCounter() {
             const type = document.getElementById('ki_prod_type').value;
             const badge = document.getElementById('prod_type_count_badge');
+            const date = document.getElementById('reportDate').value;
 
-            if (!type) {
+            if (!type || !date) {
                 badge.style.display = 'none';
                 return;
             }
 
             try {
-                // Count all documents where kiln.prod_type == selected type
+                // Fetch latest reset for this type (specific or global 'ALL')
+                const resetSnap = await db.collection('annual_report_config').doc('resets').get();
+                let lastResetDate = '0000-00-00';
+                if (resetSnap.exists) {
+                    const resets = resetSnap.data().resets || [];
+                    const applicableResets = resets.filter(r => (r.type === type || r.type === 'ALL') && r.date <= date).map(r => r.date);
+                    if (applicableResets.length > 0) {
+                        lastResetDate = applicableResets.sort().reverse()[0];
+                    }
+                }
+
+                // Count documents since last reset
                 const snapshot = await db.collection('annual_daily_records')
                     .where('kiln.prod_type', '==', type)
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', lastResetDate)
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', date)
                     .get();
 
                 const count = snapshot.size;
@@ -1018,6 +554,35 @@
             } catch (error) {
                 console.error("Error counting product types:", error);
                 badge.style.display = 'none';
+            }
+        }
+
+        async function resetProductCounter() {
+            const date = document.getElementById('reportDate').value;
+            if (!date) {
+                alert("Please select a date first.");
+                return;
+            }
+
+            if (!confirm(`Are you sure?`)) {
+                return;
+            }
+
+            try {
+                const marker = {
+                    type: 'ALL',
+                    date: date,
+                    by: currentUser.username
+                };
+                await db.collection('annual_report_config').doc('resets').set({
+                    resets: firebase.firestore.FieldValue.arrayUnion(marker)
+                }, { merge: true });
+
+                alert("Counter reset successfully for all types!");
+                updateProductTypeCounter();
+            } catch (error) {
+                console.error("Reset Error:", error);
+                alert("Failed to reset counter.");
             }
         }
 
@@ -1467,21 +1032,40 @@
                 // Sort by date ascending
                 records.sort((a, b) => a.id.localeCompare(b.id));
 
-                // Get base counts for product types before this month
-                const uniqueTypes = [...new Set(records.map(r => r.kiln?.prod_type).filter(Boolean))];
-                let prodCounters = {};
-                for (const type of uniqueTypes) {
-                    try {
-                        const snap = await db.collection('annual_daily_records')
-                            .where('kiln.prod_type', '==', type)
-                            .where(firebase.firestore.FieldPath.documentId(), '<', month + '-01')
-                            .get();
-                        prodCounters[type] = snap.size;
-                    } catch (e) {
-                        console.error("Error fetching base count for", type, e);
-                        prodCounters[type] = 0;
+                // Get all resets
+                const resetSnap = await db.collection('annual_report_config').doc('resets').get();
+                const allResets = resetSnap.exists ? (resetSnap.data().resets || []) : [];
+
+                // Pre-calculate era base counts for performance
+                let eraBaseCounts = {};
+                const erasToFetch = [];
+
+                records.forEach(rec => {
+                    const type = rec.kiln?.prod_type;
+                    if (!type) return;
+
+                    const applicableResets = allResets.filter(r => (r.type === type || r.type === 'ALL') && r.date <= rec.id).map(r => r.date);
+                    const lastResetDate = applicableResets.length > 0 ? applicableResets.sort().reverse()[0] : '0000-00-00';
+                    const eraKey = `${type}_${lastResetDate}`;
+
+                    if (!eraBaseCounts.hasOwnProperty(eraKey)) {
+                        eraBaseCounts[eraKey] = 0;
+                        // If reset era started before this month, we need to fetch the historical count
+                        if (lastResetDate < month + '-01') {
+                            erasToFetch.push({ type, lastResetDate, eraKey });
+                        }
                     }
-                }
+                });
+
+                // Fetch base counts in parallel
+                await Promise.all(erasToFetch.map(async era => {
+                    const snap = await db.collection('annual_daily_records')
+                        .where('kiln.prod_type', '==', era.type)
+                        .where(firebase.firestore.FieldPath.documentId(), '>=', era.lastResetDate)
+                        .where(firebase.firestore.FieldPath.documentId(), '<', month + '-01')
+                        .get();
+                    eraBaseCounts[era.eraKey] = snap.size;
+                }));
 
                 // Build Table
                 let totals = {
@@ -1514,8 +1098,14 @@
                     // Product Sequence
                     let sequenceNum = '';
                     if (ki.prod_type) {
-                        prodCounters[ki.prod_type]++;
-                        sequenceNum = ` - ${prodCounters[ki.prod_type]}`;
+                        const applicableResets = allResets.filter(r => (r.type === ki.prod_type || r.type === 'ALL') && r.date <= rec.id).map(r => r.date);
+                        const lastResetDate = applicableResets.length > 0 ? applicableResets.sort().reverse()[0] : '0000-00-00';
+                        const eraKey = `${ki.prod_type}_${lastResetDate}`;
+
+                        if (eraBaseCounts.hasOwnProperty(eraKey)) {
+                            eraBaseCounts[eraKey]++;
+                            sequenceNum = ` - ${eraBaseCounts[eraKey]}`;
+                        }
                     }
 
                     tableHtml += `
