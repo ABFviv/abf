@@ -1130,7 +1130,7 @@
                 <div class="modal-content">
                     <div class="modal-header bg-warning text-dark">
                         <h5 class="modal-title fw-bold"><i class="bi bi-list-check me-2"></i> ڕاپۆرتە چاوەڕوانکراوەکان
-                            (Pending Reports)</h5>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-0">
@@ -1138,10 +1138,10 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Date / بەروار</th>
-                                        <th>Department / بەش</th>
-                                        <th>Supervisor / سەرپەرشتیار</th>
-                                        <th class="text-center">Actions / کردارەکان</th>
+                                        <th>بەروار</th>
+                                        <th>بەش</th>
+                                        <th> سەرپەرشتیار</th>
+                                        <th class="text-center">کردارەکان</th>
                                     </tr>
                                 </thead>
                                 <tbody id="pendingReportsList">
@@ -1151,15 +1151,15 @@
                         </div>
                         <div id="pendingLoading" class="text-center py-5" style="display:none;">
                             <div class="spinner-border text-warning" role="status"></div>
-                            <p class="mt-2 text-muted">Loading pending reports...</p>
+                            <p class="mt-2 text-muted">...</p>
                         </div>
                         <div id="noPendingMessage" class="text-center py-5" style="display:none;">
                             <i class="bi bi-check2-circle fs-1 text-success"></i>
-                            <p class="mt-2 fw-bold">No pending reports found! / هیچ ڕاپۆرتێکی چاوەڕوانکراو نییە</p>
+                            <p class="mt-2 fw-bold">هیچ ڕاپۆرتێکی چاوەڕوانکراو نییە</p>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close / داخستن</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">داخستن</button>
                     </div>
                 </div>
             </div>
@@ -2566,9 +2566,9 @@
                 const dateValue = document.getElementById('reportDate').value;
 
 
-                const s1Count = 11;
-                const s2Count = 11;
-                const s3Count = 11;
+                const s1Count = 12;
+                const s2Count = 12;
+                const s3Count = 12;
 
                 const totalRows = s1Count + s2Count + s3Count;
                 let rowsHtml = '';
@@ -2728,15 +2728,15 @@
                         <div class="row">
                             <div class="col-4">
                                 <small class="fw-bold d-block mb-0">شیفتی یەکەم:</small>
-                                <textarea id="set_s1_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <textarea id="set_s1_note" rows="8" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                             <div class="col-4">
                                 <small class="fw-bold d-block mb-0">شیفتی دووەم:</small>
-                                <textarea id="set_s2_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <textarea id="set_s2_note" rows="8" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                             <div class="col-4">
                                 <small class="fw-bold d-block mb-0">شیفتی سێیەم:</small>
-                                <textarea id="set_s3_note" rows="3" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
+                                <textarea id="set_s3_note" rows="8" class="form-control form-control-sm" placeholder="تێبینی..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -3696,9 +3696,8 @@
 
         <div class="global-footer no-print">
             <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
-            <div class="copyright-text">&copy; 2026 Aso brick Factory System</div>
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
 </body>
 
 </html>
-
