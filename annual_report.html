@@ -404,6 +404,23 @@
             background-color: rgba(245, 158, 11, 0.08);
         }
 
+        /* Dept Text Colors */
+        .text-dept-cut {
+            color: #2563eb !important;
+        }
+
+        .text-dept-crush {
+            color: #059669 !important;
+        }
+
+        .text-dept-un {
+            color: #0891b2 !important;
+        }
+
+        .text-dept-ki {
+            color: #d97706 !important;
+        }
+
         /* Folder Grid Styles */
         .folder-grid {
             display: grid;
@@ -594,6 +611,29 @@
                             </div>
                         </div>
 
+                        <div class="premium-row">
+                            <div>
+                                <label class="form-label d-flex justify-content-between align-items-center">
+                                    جۆری بەرهەم
+                                    <span id="prod_type_count_badge" class="badge rounded-pill bg-primary"
+                                        style="font-size: 0.65rem; display:none;">Count: 0</span>
+                                </label>
+                                <div class="input-wrapper">
+                                    <select class="form-control-minimal" id="ki_prod_type"
+                                        onchange="updateProductTypeCounter()">
+                                        <option value="">هەڵبژێرە...</option>
+                                        <option value="بلۆکی 10">بلۆکی 10</option>
+                                        <option value="بلۆکی 15">بلۆکی 15</option>
+                                        <option value="بلۆکی 20">بلۆکی 20</option>
+                                        <option value="بلۆکی 24">بلۆکی 24</option>
+                                        <option value="10 قواطع">10 قواطع</option>
+                                        <option value="15 قواطع">15 قواطع</option>
+                                        <option value="24 قواطع">24 قواطع</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Group 2: Specs -->
                         <div class="section-header">
                             (پێوەرەکان) <i class="bi bi-speedometer2"></i>
@@ -721,13 +761,6 @@
                         </div>
                         <div class="premium-row">
                             <div>
-                                <label class="form-label">جۆری بەرهەم</label>
-                                <div class="input-wrapper">
-                                    <input type="text" class="form-control-minimal" id="ki_prod_type"
-                                        placeholder="ناوی جۆر بنووسە">
-                                </div>
-                            </div>
-                            <div>
                                 <label class="form-label">ژمارەی بەرهەم</label>
                                 <div class="input-wrapper">
                                     <input type="number" class="form-control-minimal" id="ki_prod_count"
@@ -825,11 +858,17 @@
                             </div>
                             <!-- Kiln Card -->
                             <div class="col">
-                                <div class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-danger h-100">
-                                    <small class="text-muted fw-bold d-block mb-1">عەرەبانەکانی فڕن</small>
-                                    <h4 class="fw-bold m-0 text-danger" id="res_ki_carts">0</h4>
+                                <div
+                                    class="p-3 bg-white rounded-4 shadow-sm border-start border-4 border-warning h-100">
+                                    <small class="text-muted fw-bold d-block mb-1">بەرهەم (بە گشتی)</small>
+                                    <h4 class="fw-bold m-0 text-warning" id="res_ki_carts">0</h4>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Product Type Breakdown -->
+                        <div id="productTypeBreakdown" class="mb-4">
+                            <!-- Populated via JS -->
                         </div>
 
                         <!-- Chart Section (Individual Department Charts) -->
@@ -956,6 +995,30 @@
             const s3 = parseFloat(document.getElementById('cut_s3').value) || 0;
             const total = s1 + s2 + s3;
             document.getElementById('cut_total').value = total;
+        }
+
+        async function updateProductTypeCounter() {
+            const type = document.getElementById('ki_prod_type').value;
+            const badge = document.getElementById('prod_type_count_badge');
+
+            if (!type) {
+                badge.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Count all documents where kiln.prod_type == selected type
+                const snapshot = await db.collection('annual_daily_records')
+                    .where('kiln.prod_type', '==', type)
+                    .get();
+
+                const count = snapshot.size;
+                badge.innerText = `Count: ${count}`;
+                badge.style.display = 'inline-block';
+            } catch (error) {
+                console.error("Error counting product types:", error);
+                badge.style.display = 'none';
+            }
         }
 
         async function saveDailyData() {
@@ -1087,6 +1150,7 @@
                     if (data.kiln) {
                         document.getElementById('ki_prod_type').value = data.kiln.prod_type || '';
                         document.getElementById('ki_prod_count').value = data.kiln.prod_count || '';
+                        updateProductTypeCounter();
                     }
                 }
             }
@@ -1267,7 +1331,8 @@
                     data_set: [],
                     data_cr: [],
                     data_prep: [],
-                    data_ki: []
+                    data_ki: [],
+                    prod_breakdown: {}
                 };
 
                 snapshot.forEach(doc => {
@@ -1281,6 +1346,10 @@
                     stats.cr_tons += Number(cr.crush_tones) || 0;
                     stats.prep_tons += Number(cr.prep_tones) || 0;
                     stats.ki_carts += Number(ki.prod_count) || 0;
+
+                    if (ki.prod_type) {
+                        stats.prod_breakdown[ki.prod_type] = (stats.prod_breakdown[ki.prod_type] || 0) + 1;
+                    }
 
                     stats.labels.push(doc.id);
                     stats.data_cut.push(Number(cut.total) || 0);
@@ -1296,6 +1365,24 @@
                 document.getElementById('res_cr_tons').innerText = stats.cr_tons.toFixed(1);
                 document.getElementById('res_prep_tons').innerText = stats.prep_tons.toFixed(1);
                 document.getElementById('res_ki_carts').innerText = stats.ki_carts;
+
+                // Update Breakdown UI
+                const breakdownEl = document.getElementById('productTypeBreakdown');
+                breakdownEl.innerHTML = '<h6 class="fw-bold mb-3 text-muted"><i class="bi bi-list-stars me-2"></i>جۆرەکانی بەرهەم</h6>';
+                const grid = document.createElement('div');
+                grid.className = 'row row-cols-2 row-cols-md-4 g-2';
+
+                Object.entries(stats.prod_breakdown).forEach(([type, count]) => {
+                    grid.innerHTML += `
+                        <div class="col">
+                            <div class="p-2 bg-white rounded-3 shadow-sm border-start border-3 border-primary d-flex justify-content-between align-items-center">
+                                <small class="fw-bold text-dark">${type}</small>
+                                <span class="badge bg-primary rounded-pill">${count}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                breakdownEl.appendChild(grid);
 
                 // Render Charts
                 const render = (id, label, data, color, type = 'line') => {
@@ -1380,13 +1467,29 @@
                 // Sort by date ascending
                 records.sort((a, b) => a.id.localeCompare(b.id));
 
+                // Get base counts for product types before this month
+                const uniqueTypes = [...new Set(records.map(r => r.kiln?.prod_type).filter(Boolean))];
+                let prodCounters = {};
+                for (const type of uniqueTypes) {
+                    try {
+                        const snap = await db.collection('annual_daily_records')
+                            .where('kiln.prod_type', '==', type)
+                            .where(firebase.firestore.FieldPath.documentId(), '<', month + '-01')
+                            .get();
+                        prodCounters[type] = snap.size;
+                    } catch (e) {
+                        console.error("Error fetching base count for", type, e);
+                        prodCounters[type] = 0;
+                    }
+                }
+
                 // Build Table
                 let totals = {
                     total: 0, load: 0, garage: 0, speed: 0, bw1: 0, bw2: 0,
                     prep: 0, crush: 0, top: 0, mid: 0, bot: 0, ki_count: 0
                 };
 
-                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="6" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="2" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت</th><th>کێشی خشت (بار)</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>جۆری بەرهەم</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
+                let tableHtml = ` <div class="history-table-wrapper"><table class="history-table"><thead><tr><th rowspan="2">Date</th><th colspan="7" class="bg-primary text-white">بڕین و بارکردن</th><th colspan="2" class="bg-success text-white">هاڕین و ئامادەکردن</th><th colspan="3" class="bg-info text-dark">داگرتن</th><th colspan="1" class="bg-warning text-dark">فڕن</th><th rowspan="2">Actions</th></tr><tr><th>عەرەبانەی بڕین</th><th>عەرەبانەی بارکردن</th><th>عەرەبانەی گەڕاج</th><th>خێرایی بۆکسفیدەر</th><th>کێشی خشت</th><th>کێشی خشت (بار)</th><th>جۆری بەرهەم</th><th>ئامادەکردن طەن</th><th>هاڕین طەن</th><th>ک.سەرەوە</th><th>ک.ناوەڕاست</th><th>ک.خوارەوە</th><th>ژمارەی بەرهەم</th></tr></thead><tbody>`;
 
                 records.forEach(rec => {
                     const cut = rec.cutting_loading || {};
@@ -1408,22 +1511,29 @@
                     totals.bot += Number(un.bot_weight) || 0;
                     totals.ki_count += Number(ki.prod_count) || 0;
 
+                    // Product Sequence
+                    let sequenceNum = '';
+                    if (ki.prod_type) {
+                        prodCounters[ki.prod_type]++;
+                        sequenceNum = ` - ${prodCounters[ki.prod_type]}`;
+                    }
+
                     tableHtml += `
                         <tr>
                             <td class="fw-bold">${rec.id}</td>
-                            <td class="total-col bg-light-cut">${cut.total || 0}</td>
-                            <td class="bg-light-cut">${cut.loading_total || 0}</td>
-                            <td class="bg-light-cut">${cut.garage_carts || 0}</td>
-                            <td class="bg-light-cut">${cut.boxfeeder_speed || 0}</td>
-                            <td class="bg-light-cut">${cut.brick_weight_day || 0}</td>
-                            <td class="bg-light-cut">${cut.brick_weight_load || 0}</td>
-                            <td class="bg-light-crush">${cr.prep_tones || 0}</td>
-                            <td class="bg-light-crush">${cr.crush_tones || 0}</td>
-                            <td class="bg-light-un">${un.top_weight || 0}</td>
-                            <td class="bg-light-un">${un.mid_weight || 0}</td>
-                            <td class="bg-light-un">${un.bot_weight || 0}</td>
-                            <td class="bg-light-ki" style="font-size: 0.75rem">${ki.prod_type || '-'}</td>
-                            <td class="bg-light-ki">${ki.prod_count || 0}</td>
+                            <td class="total-col bg-light-cut text-dept-cut fw-bold">${cut.total || 0}</td>
+                            <td class="bg-light-cut text-dept-cut">${cut.loading_total || 0}</td>
+                            <td class="bg-light-cut text-dept-cut">${cut.garage_carts || 0}</td>
+                            <td class="bg-light-cut text-dept-cut">${cut.boxfeeder_speed || 0}</td>
+                            <td class="bg-light-cut text-dept-cut">${cut.brick_weight_day || 0}</td>
+                            <td class="bg-light-cut text-dept-cut">${cut.brick_weight_load || 0}</td>
+                            <td class="bg-light-cut text-dept-cut fw-bold" style="font-size: 0.75rem">${ki.prod_type ? ki.prod_type + sequenceNum : '-'}</td>
+                            <td class="bg-light-crush text-dept-crush">${cr.prep_tones || 0}</td>
+                            <td class="bg-light-crush text-dept-crush">${cr.crush_tones || 0}</td>
+                            <td class="bg-light-un text-dept-un">${un.top_weight || 0}</td>
+                            <td class="bg-light-un text-dept-un">${un.mid_weight || 0}</td>
+                            <td class="bg-light-un text-dept-un">${un.bot_weight || 0}</td>
+                            <td class="bg-light-ki text-dept-ki">${ki.prod_count || 0}</td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary" onclick="loadHistDate('${rec.id}')">
                                     <i class="bi bi-box-arrow-in-down-right"></i>
@@ -1439,19 +1549,19 @@
                     <tfoot class="history-footer-row">
                         <tr>
                             <td class="fw-bold">کۆی گشتی</td>
-                            <td class="bg-light-cut">${totals.total}</td>
-                            <td class="bg-light-cut">${totals.load}</td>
-                            <td class="bg-light-cut">${totals.garage}</td>
-                            <td class="bg-light-cut">${totals.speed.toFixed(1)}</td>
-                            <td class="bg-light-cut">${totals.bw1.toFixed(2)}</td>
-                            <td class="bg-light-cut">${totals.bw2.toFixed(2)}</td>
-                            <td class="bg-light-crush">${totals.prep.toFixed(1)}</td>
-                            <td class="bg-light-crush">${totals.crush.toFixed(1)}</td>
-                            <td class="bg-light-un">${totals.top.toFixed(2)}</td>
-                            <td class="bg-light-un">${totals.mid.toFixed(2)}</td>
-                            <td class="bg-light-un">${totals.bot.toFixed(2)}</td>
-                            <td class="bg-light-ki">-</td>
-                            <td class="bg-light-ki">${totals.ki_count}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.total}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.load}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.garage}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.speed.toFixed(1)}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.bw1.toFixed(2)}</td>
+                            <td class="bg-light-cut text-dept-cut">${totals.bw2.toFixed(2)}</td>
+                            <td class="bg-light-cut text-dept-cut">-</td>
+                            <td class="bg-light-crush text-dept-crush">${totals.prep.toFixed(1)}</td>
+                            <td class="bg-light-crush text-dept-crush">${totals.crush.toFixed(1)}</td>
+                            <td class="bg-light-un text-dept-un">${totals.top.toFixed(2)}</td>
+                            <td class="bg-light-un text-dept-un">${totals.mid.toFixed(2)}</td>
+                            <td class="bg-light-un text-dept-un">${totals.bot.toFixed(2)}</td>
+                            <td class="bg-light-ki text-dept-ki">${totals.ki_count}</td>
                             <td></td>
                         </tr>
                     </tfoot>
