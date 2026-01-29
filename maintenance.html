@@ -787,10 +787,14 @@
                                 <tr>
                                     <th style="width: 40px;" class="admin-only"><input type="checkbox" id="selectAll"
                                             onchange="toggleSelectAll()"></th>
-                                    <th>بەروار</th>
-                                    <th>ساڵ</th>
-                                    <th>بەشی سەرەکی (Category)</th>
-                                    <th>ناوی پارچە (Part)</th>
+                                    <th onclick="sortMaintenanceTable('date')" style="cursor:pointer;">بەروار <i
+                                            class="bi bi-sort-alpha-down small opacity-50"></i></th>
+                                    <th onclick="sortMaintenanceTable('year')" style="cursor:pointer;">ساڵ <i
+                                            class="bi bi-sort-numeric-down small opacity-50"></i></th>
+                                    <th onclick="sortMaintenanceTable('partCategory')" style="cursor:pointer;">بەشی
+                                        سەرەکی (Category) <i class="bi bi-sort-alpha-down small opacity-50"></i></th>
+                                    <th onclick="sortMaintenanceTable('partName')" style="cursor:pointer;">ناوی پارچە
+                                        (Part) <i class="bi bi-sort-alpha-down small opacity-50"></i></th>
                                     <th>ساڵانە چەند جار؟</th>
                                     <th>تێبینی</th>
                                     <th>کردار</th>
@@ -836,7 +840,7 @@
 
         <div class="global-footer">
             <img src="teg_logo.png" alt="TEG Logo" class="teg-logo-footer">
-            <div class="copyright-text">&copy; 2026 Aso brick Factory System</div>
+            <div class="copyright-text">&copy; 2026 Asobrick Factory System</div>
         </div>
     </div>
 
@@ -923,8 +927,12 @@
                             </div>
                             <div class="col-md-6 maintenance-field">
                                 <label class="form-label fw-bold text-danger">ناوی پارچە (Part Name)</label>
-                                <select class="form-select" id="partName" disabled>
-                                    <option value="">سەرەتا بەشی سەرەکی هەڵبژێرە</option>
+                                <div id="partCheckboxes" class="border rounded p-2 bg-light"
+                                    style="max-height: 200px; overflow-y: auto;">
+                                    <div class="text-muted small">سەرەتا بەشی سەرەکی هەڵبژێرە</div>
+                                </div>
+                                <select class="form-select" id="partName" style="display:none;">
+                                    <option value="">هەڵبژێرە</option>
                                 </select>
                             </div>
                             <!-- Frequency removed here as it is managed in configuration -->
@@ -1419,7 +1427,8 @@
             const pivotData = {};
             const yearsSet = new Set();
             maintLogs.forEach(log => {
-                const y = log.date.substring(0, 4);
+                const dateVal = log.date || '';
+                const y = dateVal.substring(0, 4) || 'N/A';
                 yearsSet.add(y);
                 const part = log.partName || log.part || 'General';
                 if (!pivotData[part]) pivotData[part] = {};
@@ -1493,7 +1502,8 @@
             const yearsSet = new Set();
 
             dataLogs.forEach(log => {
-                const y = log.date.substring(0, 4);
+                const dateVal = log.date || '';
+                const y = dateVal.substring(0, 4) || 'N/A';
                 yearsSet.add(y);
 
                 let key = "";
@@ -1571,7 +1581,8 @@
 
             const downtimeByMonth = {};
             probLogs.forEach(l => {
-                const month = l.date.substring(0, 7);
+                const dateVal = l.date || '';
+                const month = dateVal.substring(0, 7) || 'N/A';
                 if (!downtimeByMonth[month]) downtimeByMonth[month] = 0;
                 downtimeByMonth[month] += parseFloat(l.downtime || 0);
             });
@@ -1652,7 +1663,8 @@
 
             const monthlyData = {};
             probLogs.forEach(l => {
-                const month = l.date.substring(0, 7);
+                const dateVal = l.date || '';
+                const month = dateVal.substring(0, 7) || 'N/A';
                 if (!monthlyData[month]) monthlyData[month] = { failures: 0, downtime: 0 };
                 monthlyData[month].failures++;
                 monthlyData[month].downtime += parseFloat(l.downtime || 0);
@@ -1755,8 +1767,8 @@
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <span class="fw-bold text-dark small">${isMaint ? log.partName : (log.problem || 'کێشە')}</span>
-                                <span class="text-muted" style="font-size: 0.7rem">${log.date}</span>
+                                <span class="fw-bold text-dark small">${isMaint ? (log.partName || log.part) : (log.problem || 'کێشە')}</span>
+                                <span class="text-muted" style="font-size: 0.7rem">${log.date || ''}</span>
                             </div>
                             <div class="text-secondary opacity-75" style="font-size: 0.75rem">${isMaint ? 'چاکسازی بۆ ئەنجامدرا' : 'تۆمارکرا وەکو کێشە'}</div>
                         </div>
@@ -1790,20 +1802,50 @@
             const tbody = document.getElementById('maintenanceLogBody');
             tbody.innerHTML = '';
             document.getElementById('selectAll').checked = false;
-            updateDeleteButton();
+            document.getElementById('selectedCount').innerText = 0;
+            document.getElementById('btnDeleteSelected').style.display = 'none';
 
             // Hide Select All if not Admin
             const canDelete = (currentUser.role === 'admin');
             if (!canDelete) document.getElementById('selectAll').style.display = 'none';
 
-            logs.forEach(log => {
-                const year = log.date.substring(0, 4);
+            // Apply Sorting
+            const sortedLogs = [...logs].sort((a, b) => {
+                let valA = a[currentSort.column] || '';
+                let valB = b[currentSort.column] || '';
+
+                if (currentSort.column === 'date') {
+                    valA = new Date(valA).getTime();
+                    valB = new Date(valB).getTime();
+                } else if (currentSort.column === 'year') {
+                    valA = parseInt(valA) || (a.date ? new Date(a.date).getFullYear() : 0);
+                    valB = parseInt(valB) || (b.date ? new Date(b.date).getFullYear() : 0);
+                } else {
+                    valA = valA.toString().toLowerCase();
+                    valB = valB.toString().toLowerCase();
+                }
+
+                if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            if (sortedLogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">هیچ لیستێک نییە</td></tr>';
+                return;
+            }
+
+            sortedLogs.forEach(log => {
+                const dateVal = log.date || '';
+                const year = dateVal.substring(0, 4) || '-';
                 const part = log.partName || log.part || '-';
                 const checkbox = canDelete ? `<input type="checkbox" class="log-checkbox" value="${log.id}" onchange="updateDeleteButton()">` : '';
                 const deleteBtn = canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>` : '';
                 // Edit button allowed for Admin & Supervisor (but not Manager)
                 const canEdit = currentUser.role !== 'manager';
                 const editBtn = canEdit ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>` : '';
+
+                const catLabel = (currentPartsConfig && currentPartsConfig[log.partCategory]) ? currentPartsConfig[log.partCategory].label : log.partCategory;
 
                 // Fetch current frequency from config for global synchronization
                 let freqDisplay = '-';
@@ -1812,7 +1854,7 @@
                     if (foundPart) freqDisplay = foundPart.freq || 1;
                 }
 
-                tbody.innerHTML += `<tr><td>${checkbox}</td><td>${log.date}</td><td>${year}</td><td><span class="badge-category">${log.partCategory}</span></td><td><span class="badge-part">${part}</span></td><td class="fw-bold text-primary">${freqDisplay}</td><td class="small text-muted">${log.note || ''}</td><td>${editBtn}${deleteBtn}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${checkbox}</td><td>${dateVal}</td><td>${year}</td><td><span class="badge-category">${catLabel}</span></td><td><span class="badge-part">${part}</span></td><td class="fw-bold text-primary">${freqDisplay}</td><td class="small text-muted">${log.note || ''}</td><td>${editBtn}${deleteBtn}</td></tr>`;
             });
         }
 
@@ -2105,30 +2147,80 @@
         document.getElementById('recordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editingLogId').value;
-            const data = {
-                machineId: currentMachineId,
-                type: document.getElementById('recordType').value,
-                date: document.getElementById('recDate').value,
-                note: document.getElementById('recNote').value,
-            };
-            if (data.type === 'maintenance') {
-                data.partCategory = document.getElementById('partCategory').value;
-                data.partName = document.getElementById('partName').value;
+            const type = document.getElementById('recordType').value;
+            const date = document.getElementById('recDate').value;
+            const note = document.getElementById('recNote').value;
+            const partCategory = document.getElementById('partCategory').value;
 
-                // Fetch frequency from currentPartsConfig
-                let freq = 1;
-                if (currentPartsConfig && currentPartsConfig[data.partCategory]) {
-                    const part = currentPartsConfig[data.partCategory].parts.find(p => (p.name || p) === data.partName);
-                    if (part && part.freq !== undefined) freq = part.freq === 'N/A' ? 'N/A' : (parseFloat(part.freq) || 1);
+            const baseData = {
+                machineId: currentMachineId,
+                type: type,
+                date: date,
+                note: note,
+            };
+
+            if (type === 'maintenance') {
+                const selectedParts = [];
+                if (id) {
+                    // Editing - just use the single partName select (or first checked)
+                    baseData.partCategory = partCategory;
+                    baseData.partName = document.getElementById('partName').value;
+                    selectedParts.push(baseData);
+                } else {
+                    // Adding new - can have multiple
+                    document.querySelectorAll('.part-checkbox:checked').forEach(cb => {
+                        const pName = cb.value;
+                        let freq = 1;
+                        if (currentPartsConfig && currentPartsConfig[partCategory]) {
+                            const part = currentPartsConfig[partCategory].parts.find(p => (p.name || p) === pName);
+                            if (part && part.freq !== undefined) freq = part.freq === 'N/A' ? 'N/A' : (parseFloat(part.freq) || 1);
+                        }
+                        const cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
+
+                        selectedParts.push({
+                            ...baseData,
+                            partCategory: partCategory,
+                            partName: pName,
+                            cycleDays: cycleDays,
+                            createdAt: new Date().toISOString()
+                        });
+                    });
                 }
-                data.cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
+
+                if (selectedParts.length === 0 && !id) {
+                    alert("تکایە لانی کەم پارچەیەک هەڵبژێرە");
+                    return;
+                }
+
+                if (id) {
+                    // Update single
+                    let freq = 1;
+                    if (currentPartsConfig && currentPartsConfig[partCategory]) {
+                        const part = currentPartsConfig[partCategory].parts.find(p => (p.name || p) === baseData.partName);
+                        if (part && part.freq !== undefined) freq = part.freq === 'N/A' ? 'N/A' : (parseFloat(part.freq) || 1);
+                    }
+                    baseData.cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
+                    await db.collection('machine_logs').doc(id).update(baseData);
+                } else {
+                    // Add multiple
+                    const batch = db.batch();
+                    selectedParts.forEach(p => {
+                        const docRef = db.collection('machine_logs').doc();
+                        batch.set(docRef, p);
+                    });
+                    await batch.commit();
+                    alert("بەسەرکەوتوویی تۆمارکرا");
+                    document.getElementById('recordForm').reset();
+                    document.getElementById('partCheckboxes').innerHTML = '<div class="text-muted small">هەڵبژێرە...</div>';
+                }
             } else {
-                data.problem = document.getElementById('recProblem').value;
-                data.downtime = timeToDecimal(document.getElementById('recDowntime').value);
-                data.solution = document.getElementById('recSolution').value;
+                baseData.problem = document.getElementById('recProblem').value;
+                baseData.downtime = timeToDecimal(document.getElementById('recDowntime').value);
+                baseData.solution = document.getElementById('recSolution').value;
+                baseData.rootCause = document.getElementById('recRootCause').value;
+                if (id) await db.collection('machine_logs').doc(id).update(baseData);
+                else { baseData.createdAt = new Date().toISOString(); await db.collection('machine_logs').add(baseData); }
             }
-            if (id) await db.collection('machine_logs').doc(id).update(data);
-            else { data.createdAt = new Date().toISOString(); await db.collection('machine_logs').add(data); }
             bootstrap.Modal.getInstance(document.getElementById('addRecordModal')).hide();
         });
 
@@ -2372,15 +2464,48 @@
         }
         function updateSubParts() {
             const k = document.getElementById('partCategory').value;
-            const s = document.getElementById('partName'); s.innerHTML = '<option value="">هەڵبژێرە...</option>'; s.disabled = !k;
+            const s = document.getElementById('partName');
+            const checkboxContainer = document.getElementById('partCheckboxes');
+
+            s.innerHTML = '<option value="">هەڵبژێرە</option>';
+            checkboxContainer.innerHTML = '<div class="text-muted small">هەڵبژێرە...</div>';
+            s.disabled = !k;
+
             if (k && currentPartsConfig[k]) {
-                currentPartsConfig[k].parts.forEach(p => {
+                checkboxContainer.innerHTML = `
+                    <div class="form-check mb-2 border-bottom pb-1">
+                        <input class="form-check-input" type="checkbox" id="selectAllParts" onchange="togglePartSelectAll(this)">
+                        <label class="form-check-label fw-bold" for="selectAllParts">دیاریکردنی هەمووی</label>
+                    </div>
+                `;
+                currentPartsConfig[k].parts.forEach((p, index) => {
                     const pName = p.name || p;
                     s.innerHTML += `<option value="${pName}">${pName}</option>`;
+                    checkboxContainer.innerHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input part-checkbox" type="checkbox" value="${pName}" id="partCheck_${index}">
+                            <label class="form-check-label" for="partCheck_${index}">${pName}</label>
+                        </div>
+                    `;
                 });
             }
-            // Auto update frequency display if needed (currently removed from modal)
-            s.onchange = () => { };
+        }
+
+        function togglePartSelectAll(el) {
+            document.querySelectorAll('.part-checkbox').forEach(cb => cb.checked = el.checked);
+        }
+
+        let currentSort = { column: 'date', direction: 'desc' };
+
+        function sortMaintenanceTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            // Update UI icons (optional but helpful)
+            updateDashboard();
         }
         function calculateKPIs(pLogs, mLogs) {
             const filterType = document.getElementById('dashboardDateFilter').value;
