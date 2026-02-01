@@ -269,6 +269,17 @@
                 cutting: ["ئەژوان", "سامی", "بادینان", "هاڕوون", "ئامانج", "محمد نعمان", "پەیڕەو ", "هۆشیمان", "نەهروان", "ئارا", "مەولود", "اسماعیل", "محمد ستار",]
             };
 
+            // --- FOLDER DISPLAY ORDER ---
+            // Reorder this list to change which folder appears first, second, etc.
+            const DEPARTMENT_ORDER = [
+                'crushing-prep', // هاڕین
+                'preparation',   // ئامادەکردن
+                'cutting',       // بڕین
+                'setting',       // بارکردن
+                'klin',      // فڕن
+                'unsetting'     // داگرتن
+            ];
+
             // --- ROLE BASED ACCESS CONTROL ---
             const USER_PERMISSIONS = {
                 'himat': ['cutting', 'setting'], // بڕین and بارکردن
@@ -810,7 +821,18 @@
 
                 // --- LEVEL 0: ROOT (DEPARTMENTS) ---
                 if (currentHistoryPath.length === 0) {
-                    const depts = [...new Set(allHistoryReports.map(r => r.department))];
+                    let depts = [...new Set(allHistoryReports.map(r => r.department))];
+
+                    // Sort based on defined order
+                    depts.sort((a, b) => {
+                        let indexA = DEPARTMENT_ORDER.indexOf(a);
+                        let indexB = DEPARTMENT_ORDER.indexOf(b);
+                        // If not found in list, put at the end
+                        if (indexA === -1) indexA = 999;
+                        if (indexB === -1) indexB = 999;
+                        return indexA - indexB;
+                    });
+
                     depts.forEach(dept => {
                         const count = allHistoryReports.filter(r => r.department === dept).length;
                         const html = `
@@ -2779,4 +2801,3 @@
 </body>
 
 </html>
-
