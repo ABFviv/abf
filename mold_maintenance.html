@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASOBRICK - چاکسازی قاڵب</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="maintenance.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-bar">
+        <div class="logo-container">
+            <div class="logo-image-container">
+                <img src="logo.png" alt="Logo"
+                    style="height: 40px; border-radius: 8px; background: white; padding: 4px;">
+            </div>
+            <div>
+                <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">چاکسازی قاڵب</h5>
+                <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">MOLD MAINTENANCE SYSTEM</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="user-badge" id="userInfo">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span>User</span>
+            </div>
+            <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-arrow-right-short fs-4"></i>
+                <span>گەڕانەوە</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="empty-state">
+            <i class="bi bi-grid-3x3 empty-icon"></i>
+            <h3>پەڕەی بەتاڵ</h3>
+            <p>ئەم بەشە هێشتا بەردەست نییە یان دیزاین نەکراوە.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check Login
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) window.location.href = 'index.html';
+        document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
+
+        // Permission Check for Direct Access
+        const allowedUsers = ['himat', 'shalaw', 'admin'];
+        // Also allow if role is admin (just in case)
+        if (!allowedUsers.includes(currentUser.username) && currentUser.role !== 'admin') {
+            alert('Access Denied');
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+
+</html>
