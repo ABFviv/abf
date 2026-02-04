@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -16,75 +16,1129 @@
 
     <link rel="stylesheet" href="maintenance.css">
     <style>
-        body {
-            background-color: #f8f9fa;
+        :root {
+            --bg-body: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --accent-primary: #5B7C99;
+            --accent-secondary: #3a5061;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --card-white: #ffffff;
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.12);
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .empty-state {
+        body {
+            background-color: var(--bg-body);
+            font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- Universal Premium Header --- */
+        .page-header {
+            background: rgba(91, 124, 153, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            padding: 24px 48px;
+            border-radius: 35px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-title h1 {
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #000000 0%, #3a5061 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.2rem;
+        }
+
+        /* --- Hero Section (Active Mold) --- */
+        .hero-section {
+            margin-bottom: 50px;
+            perspective: 1000px;
+        }
+
+        .active-mold-card {
+            background: var(--card-white);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.5s ease;
+        }
+
+        /* Aurora effect behind active card */
+        .active-mold-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            z-index: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 80vh;
-            text-align: center;
-            color: #6c757d;
         }
 
-        .empty-icon {
-            font-size: 5rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            width: fit-content;
+            margin-bottom: 20px;
+        }
+
+        .status-pill i {
+            font-size: 0.6rem;
+            animation: pulse 2s infinite;
+            color: var(--accent-primary);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .active-name {
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .active-meta {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+        }
+
+        .hero-stat-item h4 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .hero-stat-item span {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Circular Progress */
+        .hero-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-circle {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-primary) 0%, var(--accent-primary) 82%, #f3f4f6 82%, #f3f4f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(91, 124, 147, 0.2);
+            transition: background 1s ease;
+            cursor: pointer;
+        }
+
+        .progress-circle:hover {
+            transform: scale(1.02);
+        }
+
+        .progress-circle::after {
+            content: '';
+            position: absolute;
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .progress-text {
+            position: absolute;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .progress-days {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+            transition: font-size 0.2s;
+        }
+
+        .progress-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* --- Inventory Grid --- */
+        .inventory-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .inv-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #f3f4f6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .inv-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-soft);
+            border-color: #e5e7eb;
+        }
+
+        .inv-icon {
+            width: 50px;
+            height: 50px;
+            background: #f9fafb;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .inv-card:hover .inv-icon {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .inv-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .inv-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .inv-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d1d5db;
+        }
+
+        /* --- Mobile Responsive --- */
+        @media (max-width: 768px) {
+            .active-mold-card {
+                grid-template-columns: 1fr;
+                padding: 30px;
+            }
+
+            .hero-visual {
+                margin-top: 30px;
+            }
+        }
+
+        .history-row:hover {
+            background-color: rgba(91, 124, 153, 0.02) !important;
+            transition: all 0.2s ease;
+        }
+
+        .history-row {
+            transition: all 0.2s ease;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="header-bar">
-        <div class="logo-container">
-            <div class="logo-image-container">
-                <img src="logo.png" alt="Logo"
-                    style="height: 40px; border-radius: 8px; background: white; padding: 4px;">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="header-title">
+                <h1>Mold Maintenance</h1>
+                <small style="opacity: 0.9; font-weight: 600;">چاکسازی قاڵب</small>
             </div>
-            <div>
-                <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">چاکسازی قاڵب</h5>
-                <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">MOLD MAINTENANCE SYSTEM</div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="d-none d-md-flex align-items-center gap-2"
+                    style="background: rgba(255,255,255,0.8); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--glass-border);">
+                    <i class="bi bi-person-circle text-secondary"></i>
+                    <span id="userInfoDisplay" class="fw-bold" style="font-size: 0.9rem;">User</span>
+                </div>
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openAnalysis()"
+                    style="background: var(--accent-primary); border: none; box-shadow: 0 4px 12px rgba(91, 124, 153, 0.3);">
+                    <i class="bi bi-graph-up me-2"></i> شیکاری
+                </button>
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openHistory()"
+                    style="background: var(--accent-primary); border: none; box-shadow: 0 4px 12px rgba(91, 124, 153, 0.3);">
+                    <i class="bi bi-clock-history me-2"></i> مێژوو
+                </button>
+                <a href="dashboard.html" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm"
+                    style="border: 1px solid #e2e8f0;">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i> گەڕانەوە
+                </a>
             </div>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="user-badge" id="userInfo">
-                <i class="bi bi-person-circle fs-5"></i>
-                <span>User</span>
+
+        <!-- HERO: Active Mold -->
+        <div class="hero-section" id="heroSection">
+            <div class="active-mold-card">
+                <div class="hero-content">
+                    <div class="status-pill"><i class="bi bi-circle-fill"></i> قاڵبەکە چالاکە</div>
+                    <div class="active-name" id="activeName">چاوەڕوان...</div>
+                    <div class="active-meta">سووڕی چالاکی قاڵب</div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat-item">
+                            <h4 id="activeStarted">--</h4>
+                            <span>بەرواری دەستپێکردن</span>
+                        </div>
+                        <div class="hero-stat-item">
+                            <h4 id="activeHealth">--%</h4>
+                            <span>تەمەنی قاڵب</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-3" id="actionButtons">
+                        <!-- Buttons injected via JS -->
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="progress-circle" id="progressCircle" onclick="toggleTimeFormat()"
+                        title="Click to toggle details">
+                        <div class="progress-text">
+                            <div class="progress-days" id="daysRunning">0</div>
+                            <div class="progress-label">ژمارەی ڕۆژی کارکردن</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
-                <i class="bi bi-arrow-right-short fs-4"></i>
-                <span>گەڕانەوە</span>
-            </button>
+        </div>
+
+        <!-- Inventory Grid -->
+        <div class="inventory-section">
+            <h3>قاڵبە بەردەستەکان</h3>
+            <div class="inventory-grid" id="inventoryGrid">
+                <!-- Grid Items Injected via JS -->
+            </div>
         </div>
     </div>
 
-    <div class="container-fluid">
-        <div class="empty-state">
-            <i class="bi bi-grid-3x3 empty-icon"></i>
-            <h3>پەڕەی بەتاڵ</h3>
-            <p>ئەم بەشە هێشتا بەردەست نییە یان دیزاین نەکراوە.</p>
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;">
+                <div class="modal-header"
+                    style="background: rgba(91, 124, 153, 0.1); border-bottom: 1px solid rgba(91, 124, 153, 0.2); padding: 20px 30px;">
+                    <div>
+                        <h5 class="modal-title fw-bold" style="color: var(--text-main);">
+                            <i class="bi bi-clock-history me-2" style="color: var(--accent-primary);"></i> مێژووی
+                            چاکسازی
+                        </h5>
+                        <div class="text-muted" style="font-size: 0.85rem;">ئاماری چاکسازی قاڵپ</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive" style="max-height: 500px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background: rgba(91, 124, 153, 0.05); position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th class="ps-4 py-3 text-secondary text-uppercase border-end-0"
+                                        style="font-size: 0.7rem; font-weight: 700; width: 220px;">بەروار و کات</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.7rem; font-weight: 700; width: 140px;">قاڵب</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.7rem; font-weight: 700;">گۆڕینی پارچە</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.7rem; font-weight: 700; width: 180px;">لەلایەن</th>
+                                    <th class="pe-4 py-3 text-secondary text-uppercase text-end border-start-0"
+                                        style="font-size: 0.7rem; font-weight: 700; width: 100px;">کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Log items injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="noHistoryMsg" class="text-center py-5 d-none">
+                        <i class="bi bi-journal-x" style="font-size: 3rem; color: #e2e8f0;"></i>
+                        <p class="text-muted mt-3">هیچ چاکسازییەک نەدۆزرایەوە.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background: #f8fafc;">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearHistoryLog()">سڕینەوەی
+                        سەرجەم </button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">داخستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Modal -->
+    <div class="modal fade" id="analysisModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
+                <div class="modal-header"
+                    style="background: rgba(91, 124, 153, 0.1); border-bottom: 1px solid rgba(91, 124, 153, 0.2); padding: 20px 30px;">
+                    <h5 class="modal-title fw-bold" style="color: var(--text-main); font-size: 1.25rem;">
+                        <i class="bi bi-activity me-2" style="color: var(--accent-primary);"></i> شیکاریی قاڵب
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background: #f1f5f9;">
+                                <tr>
+                                    <th class="ps-4 py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.75rem; font-weight: 700;">ناوی قاڵب</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.75rem; font-weight: 700;">بارودۆخ</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.75rem; font-weight: 700;">ماوەی کارکردن</th>
+                                    <th class="py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.75rem; font-weight: 700;">تەمەنی قاڵب</th>
+                                    <th class="pe-4 py-3 text-secondary text-uppercase"
+                                        style="font-size: 0.75rem; font-weight: 700; text-align: right;">کردار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analysisTableBody" style="font-family: 'Inter', sans-serif;">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background: #f8fafc;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">داخستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parts Details Modal -->
+    <div class="modal fade" id="partsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none;">
+                <div class="modal-header"
+                    style="background: rgba(91, 124, 153, 0.1); border-bottom: 1px solid rgba(91, 124, 153, 0.2); padding: 20px 30px;">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="partsModalTitle" style="color: var(--text-main);">
+                                وردەکاری قاڵب</h5>
+                            <div class="text-muted" style="font-size: 0.85rem;">ئەو پارچانە هەڵبژێرە کە چاکسازی تیایدا
+                                کراوە
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 align-items-center">
+                            <div class="d-flex align-items-center gap-1">
+                                <a id="manualLinkDisplay" href="#" target="_blank"
+                                    class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 35px; height: 35px;" title="تەماشای وێنەکە بکە">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </a>
+                                <button id="editManualLinkBtn" class="btn btn-sm btn-link text-secondary p-0 d-none"
+                                    onclick="updateManualLink()" title="دەستکاری لینکەکە مەکە">
+                                    <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small text-uppercase">بەروار و کاتی
+                            چاکسازی</label>
+                        <input type="datetime-local" id="maintenanceDateInput"
+                            class="form-control form-control-lg rounded-3 border-2" style="border-color: #e2e8f0;">
+                    </div>
+
+                    <div class="parts-grid" id="partsGrid"
+                        style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                        <!-- 20 parts injected here -->
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between" style="background: #f8fafc;">
+                    <button type="button" class="btn btn-outline-danger rounded-pill px-4" id="resetHistoryBtn"
+                        onclick="resetMoldHistoryInModal()">قاڵبەکە بهێنەوە سەرەتا</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">پاشتگەستبوونەوە</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="savePartsBtn"
+                            onclick="savePartsState()">پاشەکەوتکردن</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Check Login
+        // --- 1. State Management ---
+        const ALL_MOLDS = ['155 FIL', '154 FIL', '153 FIL', '10 Q', '15 Q', '678 FIL', '535 FIL', '445 FIL'];
+        const MAX_RUN_MS = 55 * 24 * 60 * 60 * 1000; // 55 Days
+
+        const DEFAULT_STATE = {
+            activeMold: '155 FIL',
+            currentSessionStart: new Date().toISOString(),
+            isRunning: true,
+            history: {
+                '155 FIL': 0, '154 FIL': 0, '153 FIL': 0, '10 Q': 0, '15 Q': 0, '678 FIL': 0, '535 FIL': 0, '445 FIL': 0
+            },
+            parts: {},
+            maintenanceLogs: [], // New: Log of all maintenance actions
+            manualLink: "https://drive.google.com", // New: Global link for parts manual
+            partNames: {} // New: Custom names for parts per mold
+        };
+
+        let systemState = JSON.parse(localStorage.getItem('moldSystemState')) || DEFAULT_STATE;
+
+        // Ensure new properties exist
+        if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
+        if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
+        if (!systemState.partNames) systemState.partNames = {};
+
+        // This variable tracks what is currently shown on the Hero screen
+        let viewingMold = systemState.activeMold;
+
+        // Temporary variable to track part changes before saving
+        let partStateSnapshot = null;
+        let editingLogIdx = null; // New: Track if we are editing an existing log entry
+
+        // Initialize parts and names for all molds
+        ALL_MOLDS.forEach(m => {
+            if (!systemState.parts[m] || !Array.isArray(systemState.parts[m]) || systemState.parts[m].length !== 20) {
+                // Migration/Initialization for 20 parts
+                const oldParts = systemState.parts[m] || [];
+                systemState.parts[m] = Array(20).fill(false);
+                for (let i = 0; i < Math.min(oldParts.length, 20); i++) systemState.parts[m][i] = oldParts[i];
+            }
+            if (!systemState.partNames[m] || !Array.isArray(systemState.partNames[m]) || systemState.partNames[m].length !== 20) {
+                const oldNames = systemState.partNames[m] || [];
+                systemState.partNames[m] = Array(20).fill(null).map((_, i) => oldNames[i] || `PART ${i + 1}`);
+
+                // Specific names for requested molds
+                if (m === '155 FIL') {
+                    const specificNames = [
+                        "155-FIL-03", "155-FIL-2", "155-FIL-3", "155-FIL-4", "155-FIL-5",
+                        "155-FIL-5A", "155-FIL-5B", "155-FIL-7D", "155-FIL-3F", "155-FIL-5D-OPT",
+                        "155-FIL-6A", "155-FIL-5C", "155-FIL-9B", "155-FIL-1A"
+                    ];
+                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                } else if (m === '153 FIL') {
+                    const specificNames = [
+                        "153-FIL-03", "153-FIL-1A", "153-FIL-2", "153-FIL-3", "153-FIL-30D-OPT",
+                        "153-FIL-30E-OPT", "153-FIL-3E", "153-FIL-5", "153-FIL-51-OPT", "153-FIL-52",
+                        "153-FIL-55-OPT", "153-FIL-5A", "153-FIL-5C", "153-FIL-5C-OPT", "153-FIL-5D",
+                        "153-FIL-6", "153-FIL-7A", "153-FIL-8A", "153-FIL-9A"
+                    ];
+                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                } else if (m === '154 FIL') {
+                    const specificNames = [
+                        "154-FIL-9A-T", "154-FIL-30AA", "154-FIL-1A", "154-FIL-2", "154-FIL-7A",
+                        "154-FIL-03", "154-FIL-5", "154-FIL-5C-OPT", "154-FIL-52-OPT", "154-FIL-5D",
+                        "154-FIL-54", "154-FIL-5C", "154-FIL-3E", "154-FIL-3", "154-FIL-8A",
+                        "154-FIL-2E", "154-FIL-2D", "154-FIL-6B"
+                    ];
+                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                }
+            }
+        });
+
+        if (!systemState.history) {
+            systemState.history = DEFAULT_STATE.history;
+            systemState.currentSessionStart = new Date().toISOString();
+        }
+
+        let showDetailedTime = false;
+
+        // --- 2. Auth ---
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser) window.location.href = 'index.html';
-        document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
+        document.getElementById('userInfoDisplay').innerText = currentUser.username;
 
-        // Permission Check for Direct Access
         const allowedUsers = ['himat', 'shalaw', 'admin'];
-        // Also allow if role is admin (just in case)
-        if (!allowedUsers.includes(currentUser.username) && currentUser.role !== 'admin') {
-            alert('Access Denied');
-            window.location.href = 'dashboard.html';
+        const canSwitch = allowedUsers.includes(currentUser.username) || currentUser.role === 'admin' || currentUser.role === 'supervisor';
+
+        // --- 3. Logic ---
+        function getMoldStats(moldName) {
+            let totalMs = systemState.history[moldName] || 0;
+            // Only add live session time if THIS mold is the globally active one and it is running
+            if (systemState.isRunning && moldName === systemState.activeMold) {
+                const sessionStart = new Date(systemState.currentSessionStart).getTime();
+                const now = new Date().getTime();
+                totalMs += Math.max(0, now - sessionStart);
+            }
+
+            const days = Math.floor(totalMs / (1000 * 60 * 60 * 24));
+            let health = Math.round(100 - ((totalMs / MAX_RUN_MS) * 100));
+            health = Math.min(100, Math.max(0, health));
+
+            const startedDate = systemState.currentSessionStart ? new Date(systemState.currentSessionStart).toLocaleDateString('en-GB') : 'Paused';
+
+            return { days, health, startDateFormatted: startedDate, totalMs };
         }
+
+        function toggleTimeFormat() {
+            showDetailedTime = !showDetailedTime;
+            renderDashboard();
+        }
+
+        // --- 4. Render UI ---
+        function renderDashboard() {
+            const stats = getMoldStats(viewingMold);
+            const isActiveSystem = (viewingMold === systemState.activeMold);
+
+            document.getElementById('activeName').innerText = viewingMold;
+            document.getElementById('activeName').style.cursor = "pointer";
+            document.getElementById('activeName').onclick = () => openPartsDetails(viewingMold);
+
+            // Update Status Pill
+            const statusPill = document.querySelector('.status-pill');
+            if (isActiveSystem && systemState.isRunning) {
+                statusPill.innerHTML = '<i class="bi bi-circle-fill"></i>  چالاکە';
+                statusPill.style.background = 'rgba(16, 185, 129, 0.1)';
+                statusPill.style.color = 'var(--success-color)';
+            } else if (isActiveSystem && !systemState.isRunning) {
+                statusPill.innerHTML = '<i class="bi bi-pause-circle"></i> وەستاوە ';
+                statusPill.style.background = 'rgba(245, 158, 11, 0.1)';
+                statusPill.style.color = '#f59e0b';
+            } else {
+                statusPill.innerHTML = '<i class="bi bi-eye"></i> سەیرکردن';
+                statusPill.style.background = 'rgba(59, 130, 246, 0.1)';
+                statusPill.style.color = '#3b82f6';
+            }
+
+            document.getElementById('activeStarted').innerText = (isActiveSystem && systemState.isRunning) ? stats.startDateFormatted : '---';
+            document.getElementById('activeHealth').innerText = stats.health + '%';
+
+            let displayValue = stats.days;
+            let displayLabel = "Days Running";
+
+            if (showDetailedTime) {
+                const totalSeconds = Math.floor(stats.totalMs / 1000);
+                const d = Math.floor(totalSeconds / (3600 * 24));
+                const h = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = Math.floor(totalSeconds % 60);
+                const pad = (n) => n.toString().padStart(2, '0');
+                displayValue = `${pad(d)}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+                displayLabel = "Total Runtime";
+                document.getElementById('daysRunning').style.fontSize = "1.8rem";
+            } else {
+                document.getElementById('daysRunning').style.fontSize = "4rem";
+            }
+
+            document.getElementById('daysRunning').innerText = displayValue;
+            document.querySelector('.progress-label').innerText = displayLabel;
+
+            // Remove Action Buttons from Hero as requested ("only in analysis")
+            const btnContainer = document.getElementById('actionButtons');
+            if (btnContainer) {
+                btnContainer.innerHTML = `<button class="btn btn-outline-dark rounded-pill px-4" onclick="openPartsDetails('${viewingMold}')">
+                    <i class="bi bi-wrench me-2"></i> Maintenance Details
+                </button>`;
+            }
+
+            const circle = document.getElementById('progressCircle');
+            let color = '#10b981';
+            if (stats.health < 50) color = '#f59e0b';
+            if (stats.health < 20) color = '#ef4444';
+            circle.style.background = `conic-gradient(${color} 0%, ${color} ${stats.health}%, #f1f5f9 ${stats.health}%, #f1f5f9 100%)`;
+
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+            ALL_MOLDS.forEach(mold => {
+                const moldStats = getMoldStats(mold);
+                const card = document.createElement('div');
+                card.className = 'inv-card';
+                if (mold === viewingMold) card.style.borderColor = "var(--text-main)";
+
+                card.onclick = () => {
+                    viewingMold = mold;
+                    renderDashboard();
+                };
+
+                let statusText = moldStats.days > 0 ? `Day ${moldStats.days}` : "New";
+                let statusColor = moldStats.days > 0 ? "text-secondary" : "text-success";
+                if (mold === systemState.activeMold && systemState.isRunning) {
+                    statusText = "RUNNING";
+                    statusColor = "text-success fw-bold";
+                }
+
+                card.innerHTML = `
+                    <div class="inv-icon"><i class="bi bi-box-seam"></i></div>
+                    <div class="inv-name">${mold}</div>
+                    <div class="inv-status ${statusColor}">${statusText}</div>
+                    <div style="font-size: 0.7rem; color: #9ca3af; margin-top: 4px;">Health: ${moldStats.health}%</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- 5. Actions ---
+        function switchMold(newMoldName) {
+            if (!canSwitch) return alert("Access Denied");
+
+            // Save current progress if running
+            if (systemState.isRunning) {
+                const sessionStart = new Date(systemState.currentSessionStart).getTime();
+                const duration = Math.max(0, new Date().getTime() - sessionStart);
+                systemState.history[systemState.activeMold] += duration;
+            }
+
+            systemState.activeMold = newMoldName;
+            systemState.currentSessionStart = new Date().toISOString();
+            systemState.isRunning = true;
+            saveState();
+            renderDashboard();
+            renderAnalysisTable();
+        }
+
+        function stopActiveMold() {
+            if (!canSwitch) return alert("Access Denied");
+            if (systemState.isRunning) {
+                const sessionStart = new Date(systemState.currentSessionStart).getTime();
+                systemState.history[systemState.activeMold] += Math.max(0, new Date().getTime() - sessionStart);
+            }
+            systemState.isRunning = false;
+            saveState();
+            renderDashboard();
+            renderAnalysisTable();
+        }
+
+        function restartActiveMold(moldName) {
+            if (!canSwitch) return alert("Access Denied");
+            if (confirm(`RESTART CYCLE for [${moldName}]? This resets history to zero.`)) {
+                systemState.history[moldName] = 0;
+                // If restarting the active one, also reset session start
+                if (moldName === systemState.activeMold) {
+                    systemState.currentSessionStart = new Date().toISOString();
+                }
+                saveState();
+                renderDashboard();
+                renderAnalysisTable();
+            }
+        }
+
+        function startSpecificMold(moldName) {
+            if (!canSwitch) return alert("Access Denied");
+            if (moldName === systemState.activeMold) {
+                systemState.currentSessionStart = new Date().toISOString();
+                systemState.isRunning = true;
+            } else {
+                switchMold(moldName);
+            }
+            saveState();
+            renderDashboard();
+            renderAnalysisTable();
+        }
+
+        function openAnalysis() {
+            new bootstrap.Modal(document.getElementById('analysisModal')).show();
+            renderAnalysisTable();
+        }
+
+        function renderAnalysisTable() {
+            const tbody = document.getElementById('analysisTableBody');
+            tbody.innerHTML = '';
+            ALL_MOLDS.forEach(mold => {
+                const stats = getMoldStats(mold);
+                const isActive = (mold === systemState.activeMold && systemState.isRunning);
+                const isPaused = (mold === systemState.activeMold && !systemState.isRunning);
+
+                const totalSeconds = Math.floor(stats.totalMs / 1000);
+                const d = Math.floor(totalSeconds / (3600 * 24));
+                const h = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = Math.floor(totalSeconds % 60);
+                const pad = (n) => n.toString().padStart(2, '0');
+
+                let statusBadge = '<span class="badge bg-secondary">ناچالاک</span>';
+                if (isActive) statusBadge = '<span class="badge bg-success">چالاک</span>';
+                if (isPaused) statusBadge = '<span class="badge bg-warning text-dark">وەستاوە</span>';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-4">
+                        <a href="#" class="fw-bold text-decoration-none text-dark" onclick="viewOnDashboard('${mold}'); return false;">${mold}</a>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td class="font-monospace">${d}d ${pad(h)}:${pad(m)}:${pad(s)}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
+                                <div class="progress-bar ${stats.health < 20 ? 'bg-danger' : 'bg-success'}" style="width: ${stats.health}%"></div>
+                            </div>
+                            <span style="font-size: 0.8rem">${stats.health}%</span>
+                        </div>
+                    </td>
+                    <td class="pe-4 text-end">
+                        <div class="btn-group">
+                            ${isActive ?
+                        `<button class="btn btn-sm btn-danger" onclick="stopActiveMold()"><i class="bi bi-pause-fill"></i></button>` :
+                        `<button class="btn btn-sm btn-success" onclick="startSpecificMold('${mold}')"><i class="bi bi-play-fill"></i></button>`
+                    }
+                            <button class="btn btn-sm" style="border: 1px solid var(--accent-primary); color: var(--accent-primary);" onclick="openPartsDetails('${mold}')"><i class="bi bi-wrench"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="restartActiveMold('${mold}')"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function viewOnDashboard(mold) {
+            viewingMold = mold;
+            renderDashboard();
+            bootstrap.Modal.getInstance(document.getElementById('analysisModal')).hide();
+        }
+
+        function openHistory() {
+            new bootstrap.Modal(document.getElementById('historyModal')).show();
+            renderHistoryTable();
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            const noMsg = document.getElementById('noHistoryMsg');
+            tbody.innerHTML = '';
+
+            const logs = [...systemState.maintenanceLogs].reverse(); // Show newest first
+
+            if (logs.length === 0) {
+                noMsg.classList.remove('d-none');
+            } else {
+                noMsg.classList.add('d-none');
+                logs.forEach((log, reversedIdx) => {
+                    const originalIdx = (systemState.maintenanceLogs.length - 1) - reversedIdx;
+                    const dateObj = new Date(log.timestamp);
+                    const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+                    let changesBadge = '';
+                    if (log.type === 'RESET') {
+                        changesBadge = '<span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> MOLD RESET (ALL)</span>';
+                    } else if (log.changes && log.changes.length > 0) {
+                        changesBadge = log.changes.map(c => `
+                            <span class="badge bg-white text-dark border-0 shadow-sm px-3 py-2 me-1 mb-1" style="border-radius: 8px;">
+                                <i class="bi bi-cpu text-secondary me-1" style="font-size: 0.7rem;"></i> ${c}
+                            </span>
+                        `).join('');
+                    } else {
+                        changesBadge = '<span class="badge bg-secondary rounded-pill px-3 py-2">Checked (No changes)</span>';
+                    }
+
+                    const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
+
+                    const tr = document.createElement('tr');
+                    tr.className = "history-row";
+                    tr.innerHTML = `
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-light rounded-3 p-2 text-center" style="min-width: 60px;">
+                                    <div class="fw-bold" style="font-size: 0.9rem;">${dateStr.split(' ')[0]}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">${dateStr.split(' ')[1]}</div>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem; font-family: monospace;">${timeStr}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold" style="color: var(--accent-primary);">${log.mold}</div>
+                            <div class="small text-muted">Mold ID</div>
+                        </td>
+                        <td style="max-width: 400px;">
+                            <div class="d-flex flex-wrap gap-1 py-2">${changesBadge}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
+                                     style="width: 28px; height: 28px; font-size: 0.7rem; background: var(--accent-secondary) !important;">
+                                    ${log.user[0].toUpperCase()}
+                                </div>
+                                <div class="small">
+                                    <div class="fw-bold">${log.user}</div>
+                                    ${log.lastEditedBy ? `<div class="text-muted" style="font-size: 0.65rem;">Updated by ${log.lastEditedBy}</div>` : '<div class="text-muted" style="font-size: 0.65rem;">تۆمارکراوە</div>'}
+                                </div>
+                            </div>
+                        </td>
+                         <td class="pe-4 text-end">
+                             <div class="d-flex justify-content-end gap-2">
+                                 ${isAdmin ?
+                            `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm border-0 bg-white" 
+                                             onclick="openPartsDetails('${log.mold}', ${originalIdx})" style="font-size: 0.75rem;">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                     </button>
+                                     <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm border-0 bg-white" 
+                                             onclick="deleteHistoryLogEntry(${originalIdx})" style="font-size: 0.75rem;">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                     </button>` : ''
+                        }
+                             </div>
+                         </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+
+        function clearHistoryLog() {
+            if (confirm("Permanently delete ALL maintenance logs? This cannot be undone.")) {
+                systemState.maintenanceLogs = [];
+                saveState();
+                renderHistoryTable();
+            }
+        }
+
+        function deleteHistoryLogEntry(idx) {
+            if (confirm("Delete this maintenance record?")) {
+                systemState.maintenanceLogs.splice(idx, 1);
+                saveState();
+                renderHistoryTable();
+            }
+        }
+
+        function openPartsDetails(moldName, logIdx = null) {
+            currentEditingMold = moldName;
+            editingLogIdx = logIdx;
+
+            document.getElementById('partsModalTitle').innerText = logIdx !== null ? `Edit Maintenance - ${moldName}` : `${moldName} - Selection`;
+            document.getElementById('savePartsBtn').innerText = logIdx !== null ? "Update Log" : "Save Changes";
+
+            // Manual Link Handling
+            const manualDisplay = document.getElementById('manualLinkDisplay');
+            manualDisplay.href = systemState.manualLink;
+
+            const editBtn = document.getElementById('editManualLinkBtn');
+            const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
+            if (isAdmin) {
+                editBtn.classList.remove('d-none');
+            } else {
+                editBtn.classList.add('d-none');
+            }
+
+            // Default date input
+            if (logIdx !== null) {
+                const log = systemState.maintenanceLogs[logIdx];
+                const date = new Date(log.timestamp);
+                const offset = date.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(date - offset)).toISOString().slice(0, 16);
+                document.getElementById('maintenanceDateInput').value = localISOTime;
+
+                // Pre-select parts from log
+                const names = systemState.partNames[moldName];
+                systemState.parts[moldName] = names.map(name => log.changes.includes(name));
+            } else {
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+                document.getElementById('maintenanceDateInput').value = localISOTime;
+
+                // Enforce empty selection on open for new maintenance
+                systemState.parts[moldName] = Array(20).fill(false);
+            }
+
+            renderPartsGrid();
+            new bootstrap.Modal(document.getElementById('partsModal')).show();
+        }
+
+        function updateManualLink() {
+            const newLink = prompt("Enter new Google Drive link for Parts Manual:", systemState.manualLink);
+            if (newLink !== null && newLink.trim() !== "") {
+                systemState.manualLink = newLink.trim();
+                saveState();
+                document.getElementById('manualLinkDisplay').href = systemState.manualLink;
+                alert("Manual link updated successfully.");
+            }
+        }
+
+        function renderPartsGrid() {
+            const grid = document.getElementById('partsGrid');
+            const status = systemState.parts[currentEditingMold];
+            const names = systemState.partNames[currentEditingMold];
+            const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
+
+            grid.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const isSelected = status[i];
+                const partName = names[i];
+                const div = document.createElement('div');
+                div.className = "p-2 border rounded text-center position-relative";
+                div.style.background = isSelected ? "rgba(31, 41, 55, 0.05)" : "white";
+                div.style.borderColor = isSelected ? "var(--text-main)" : "#e2e8f0";
+                div.style.borderWidth = isSelected ? "2px" : "1px";
+                div.style.cursor = "pointer";
+                div.style.minHeight = "80px";
+                div.style.display = "flex";
+                div.style.flexDirection = "column";
+                div.style.justifyContent = "center";
+
+                div.innerHTML = `
+                    <div class="fw-bold" style="font-size: 0.8rem; ${isSelected ? 'color: var(--text-main)' : ''}">${partName}</div>
+                    <div class="mt-1 text-muted small" style="font-size: 0.7rem;"><i class="bi bi-${isSelected ? 'check-square-fill text-dark' : 'square'}"></i></div>
+                    ${isAdmin ? `<button class="btn btn-sm btn-link text-secondary p-0 position-absolute" style="top: 2px; right: 5px;" onclick="event.stopPropagation(); renamePart(${i})"><i class="bi bi-pencil" style="font-size: 0.7rem;"></i></button>` : ''}
+                `;
+                div.onclick = () => { status[i] = !status[i]; renderPartsGrid(); };
+                grid.appendChild(div);
+            }
+        }
+
+        function renamePart(index) {
+            const currentName = systemState.partNames[currentEditingMold][index];
+            const newName = prompt(`Rename ${currentName} for ${currentEditingMold}:`, currentName);
+            if (newName !== null && newName.trim() !== "") {
+                systemState.partNames[currentEditingMold][index] = newName.trim();
+                saveState();
+                renderPartsGrid();
+            }
+        }
+
+        function savePartsState() {
+            const currentParts = systemState.parts[currentEditingMold];
+            const partNames = systemState.partNames[currentEditingMold];
+            const changedParts = [];
+            const selectedDate = document.getElementById('maintenanceDateInput').value;
+            const finalTimestamp = selectedDate ? new Date(selectedDate).toISOString() : new Date().toISOString();
+
+            for (let i = 0; i < 20; i++) {
+                if (currentParts[i]) {
+                    changedParts.push(partNames[i]);
+                }
+            }
+
+            if (changedParts.length > 0) {
+                if (editingLogIdx !== null) {
+                    // Updating an existing log
+                    const log = systemState.maintenanceLogs[editingLogIdx];
+                    log.timestamp = finalTimestamp;
+                    log.changes = changedParts;
+                    log.lastEditedBy = currentUser.username;
+                    editingLogIdx = null; // Reset
+                } else {
+                    // New log entry
+                    systemState.maintenanceLogs.push({
+                        timestamp: finalTimestamp,
+                        mold: currentEditingMold,
+                        type: 'UPDATE',
+                        changes: changedParts,
+                        user: currentUser.username
+                    });
+                }
+
+                // Reset the selection for this mold after saving
+                systemState.parts[currentEditingMold] = Array(20).fill(false);
+            } else {
+                alert("No parts selected to save.");
+                return;
+            }
+
+            saveState();
+            renderDashboard();
+            bootstrap.Modal.getInstance(document.getElementById('partsModal')).hide();
+        }
+
+        function resetMoldHistoryInModal() {
+            if (confirm("Reset everything for this mold? This resets its timer and clears any pending parts.")) {
+                systemState.history[currentEditingMold] = 0;
+                systemState.parts[currentEditingMold] = Array(12).fill(false);
+
+                // Log reset
+                systemState.maintenanceLogs.push({
+                    timestamp: new Date().toISOString(),
+                    mold: currentEditingMold,
+                    type: 'RESET',
+                    changes: ['Full System Cycles Reset'],
+                    user: currentUser.username
+                });
+
+                saveState();
+                renderDashboard();
+                renderHistoryTable(); // Always refresh history table
+                bootstrap.Modal.getInstance(document.getElementById('partsModal')).hide();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('moldSystemState', JSON.stringify(systemState));
+        }
+
+        setInterval(renderDashboard, 1000);
+        document.addEventListener('DOMContentLoaded', renderDashboard);
     </script>
 </body>
 
