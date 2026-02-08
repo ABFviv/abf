@@ -332,6 +332,18 @@
                 return USER_FULL_NAMES[username] || username;
             }
 
+            function formatDept(dept) {
+                const names = {
+                    'unsetting': 'داگرتن (Unsetting)',
+                    'setting': 'بارکردن (Setting)',
+                    'crushing-prep': 'هاڕین (Crushing)',
+                    'preparation': 'ئامادەکردن (Preparation)',
+                    'klin': 'فڕن (Kiln)',
+                    'cutting': 'بڕین (Cutting)'
+                };
+                return names[dept] || dept;
+            }
+
             let currentUser = null;
             let employees = [];
             let currentReportId = null;
@@ -412,6 +424,18 @@
                 };
                 deptSelect.addEventListener('change', toggleCtrls);
                 toggleCtrls();
+
+                // DYNAMIC DATE UPDATE FOR ADMINS
+                const dateInput = document.getElementById('reportDate');
+                if (dateInput) {
+                    dateInput.addEventListener('change', (e) => {
+                        const newDate = e.target.value;
+                        const headerDateEl = document.getElementById('reportHeaderDate');
+                        if (headerDateEl) {
+                            headerDateEl.innerText = `بەروار: ${newDate}`;
+                        }
+                    });
+                }
 
                 const snap = await db.collection('employees').get();
                 snap.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
@@ -659,7 +683,7 @@
                         ${deptName}
                     </h1>
                      <div class="fw-bold" style="font-size: 1.1rem; color: #000;">ڕاپۆڕتی ڕۆژانە</div>
-                     ${dateValue ? `<div class="fw-bold mt-1" style="font-size: 1rem; color: #000;">بەروار: ${dateValue}</div>` : ''}
+                     ${dateValue ? `<div id="reportHeaderDate" class="fw-bold mt-1" style="font-size: 1rem; color: #000;">بەروار: ${dateValue}</div>` : ''}
                 </div>
 
                 <!-- Right Logo: Medium-Large -->
@@ -1021,11 +1045,30 @@
                 const genBtn = document.getElementById('btnGenerateReport');
                 if (genBtn) genBtn.style.display = 'none';
 
-                // Hide Control Panel in History View
+                // CONTROL PANEL VISIBILITY LOGIC
                 const cp = document.getElementById('reportControlPanel');
-                if (cp) cp.style.display = 'none';
+                if (cp) {
+                    const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin');
 
-                document.getElementById('departmentSelect').value = data.department;
+                    if (isAdmin) {
+                        // For Admin: Show panel but restrict Department
+                        cp.style.display = 'block';
+                        const deptSelect = document.getElementById('departmentSelect');
+                        if (deptSelect) {
+                            deptSelect.value = data.department;
+                            deptSelect.disabled = true; // Lock department to avoid layout breaks
+                        }
+                    } else {
+                        // For others: Hide completely (Original Behavior)
+                        cp.style.display = 'none';
+                    }
+                }
+
+                if (!cp || cp.style.display === 'none') {
+                    // Fallback if panel is hidden: ensure correct value is set anyway
+                    document.getElementById('departmentSelect').value = data.department;
+                }
+
                 document.getElementById('reportDate').value = data.date;
 
                 // 1. Generate HTML (Default Layout)
@@ -2467,6 +2510,23 @@
                     }
                 }
 
+                // DOUBLE CHECK FOR NEW REPORTS (IF NOT UPDATING EXISTING)
+                if (!currentReportId) {
+                    try {
+                        const snap = await db.collection('dailyReports')
+                            .where('date', '==', date)
+                            .where('department', '==', dept)
+                            .get();
+
+                        if (!snap.empty) {
+                            alert(`Error: A report already exists for ${formatDept(dept)} on ${date}.`);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error("Error in save existence check:", e);
+                    }
+                }
+
                 const finalReportId = currentReportId || reportId;
 
                 // Handle Rejection
@@ -2552,12 +2612,35 @@
             }
 
 
-            function startNewReport() {
+            async function startNewReport() {
                 const dateInput = document.getElementById('reportDate');
+                const deptSelect = document.getElementById('departmentSelect');
                 if (!dateInput.value) {
                     alert("Please select a date first / تکایە سەرەتا بەروار دیاری بکە");
                     dateInput.focus();
                     return;
+                }
+
+                const date = dateInput.value;
+                const dept = deptSelect.value;
+
+                // CHECK IF REPORT ALREADY EXISTS FOR THIS DEPT + DATE
+                try {
+                    const snap = await db.collection('dailyReports')
+                        .where('date', '==', date)
+                        .where('department', '==', dept)
+                        .get();
+
+                    if (!snap.empty) {
+                        const existingReport = snap.docs[0].data();
+                        // If it's the same date and dept, don't allow creating a new one
+                        if (confirm(`ئەم ڕاپۆرتە پێشتر دروستکراوە بۆ ئەم بەشە و ئەم بەروارە.\nReport already exists for ${formatDept(dept)} on ${date}.\n\nWould you like to view/edit the existing report instead?`)) {
+                            loadReportForView(existingReport, snap.docs[0].id);
+                        }
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Error checking existing reports:", e);
                 }
 
                 currentReportId = null;
