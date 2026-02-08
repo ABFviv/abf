@@ -548,7 +548,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- 1. State Management ---
+        // --- 1. Firebase Initialization ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+            authDomain: "abf6-96dcf.firebaseapp.com",
+            projectId: "abf6-96dcf",
+            storageBucket: "abf6-96dcf.firebasestorage.app",
+            messagingSenderId: "405357996484",
+            appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const moldStateDoc = db.collection('settings').doc('moldMaintenance');
+
+        // --- 2. State Management ---
         const ALL_MOLDS = ['155 FIL', '154 FIL', '153 FIL', '10 Q', '15 Q', '678 FIL', '535 FIL', '445 FIL'];
         const MAX_RUN_MS = 55 * 24 * 60 * 60 * 1000; // 55 Days
 
@@ -560,73 +573,72 @@
                 '155 FIL': 0, '154 FIL': 0, '153 FIL': 0, '10 Q': 0, '15 Q': 0, '678 FIL': 0, '535 FIL': 0, '445 FIL': 0
             },
             parts: {},
-            maintenanceLogs: [], // New: Log of all maintenance actions
-            manualLink: "https://drive.google.com", // New: Global link for parts manual
-            partNames: {} // New: Custom names for parts per mold
+            maintenanceLogs: [],
+            manualLink: "https://drive.google.com",
+            partNames: {}
         };
 
-        let systemState = JSON.parse(localStorage.getItem('moldSystemState')) || DEFAULT_STATE;
-
-        // Ensure new properties exist
-        if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
-        if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
-        if (!systemState.partNames) systemState.partNames = {};
-
-        // This variable tracks what is currently shown on the Hero screen
+        let systemState = DEFAULT_STATE;
         let viewingMold = systemState.activeMold;
-
-        // Temporary variable to track part changes before saving
         let partStateSnapshot = null;
-        let editingLogIdx = null; // New: Track if we are editing an existing log entry
-
-        // Initialize parts and names for all molds
-        ALL_MOLDS.forEach(m => {
-            if (!systemState.parts[m] || !Array.isArray(systemState.parts[m]) || systemState.parts[m].length !== 20) {
-                // Migration/Initialization for 20 parts
-                const oldParts = systemState.parts[m] || [];
-                systemState.parts[m] = Array(20).fill(false);
-                for (let i = 0; i < Math.min(oldParts.length, 20); i++) systemState.parts[m][i] = oldParts[i];
-            }
-            if (!systemState.partNames[m] || !Array.isArray(systemState.partNames[m]) || systemState.partNames[m].length !== 20) {
-                const oldNames = systemState.partNames[m] || [];
-                systemState.partNames[m] = Array(20).fill(null).map((_, i) => oldNames[i] || `PART ${i + 1}`);
-
-                // Specific names for requested molds
-                if (m === '155 FIL') {
-                    const specificNames = [
-                        "155-FIL-03", "155-FIL-2", "155-FIL-3", "155-FIL-4", "155-FIL-5",
-                        "155-FIL-5A", "155-FIL-5B", "155-FIL-7D", "155-FIL-3F", "155-FIL-5D-OPT",
-                        "155-FIL-6A", "155-FIL-5C", "155-FIL-9B", "155-FIL-1A"
-                    ];
-                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
-                } else if (m === '153 FIL') {
-                    const specificNames = [
-                        "153-FIL-03", "153-FIL-1A", "153-FIL-2", "153-FIL-3", "153-FIL-30D-OPT",
-                        "153-FIL-30E-OPT", "153-FIL-3E", "153-FIL-5", "153-FIL-51-OPT", "153-FIL-52",
-                        "153-FIL-55-OPT", "153-FIL-5A", "153-FIL-5C", "153-FIL-5C-OPT", "153-FIL-5D",
-                        "153-FIL-6", "153-FIL-7A", "153-FIL-8A", "153-FIL-9A"
-                    ];
-                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
-                } else if (m === '154 FIL') {
-                    const specificNames = [
-                        "154-FIL-9A-T", "154-FIL-30AA", "154-FIL-1A", "154-FIL-2", "154-FIL-7A",
-                        "154-FIL-03", "154-FIL-5", "154-FIL-5C-OPT", "154-FIL-52-OPT", "154-FIL-5D",
-                        "154-FIL-54", "154-FIL-5C", "154-FIL-3E", "154-FIL-3", "154-FIL-8A",
-                        "154-FIL-2E", "154-FIL-2D", "154-FIL-6B"
-                    ];
-                    specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
-                }
-            }
-        });
-
-        if (!systemState.history) {
-            systemState.history = DEFAULT_STATE.history;
-            systemState.currentSessionStart = new Date().toISOString();
-        }
-
+        let editingLogIdx = null;
         let showDetailedTime = false;
 
-        // --- 2. Auth ---
+        // --- 3. Initialize/Sync State from Firestore ---
+        async function initSystemState() {
+            moldStateDoc.onSnapshot((doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    systemState = { ...DEFAULT_STATE, ...data };
+                    ensureStateIntegrity();
+                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) {
+                        viewingMold = systemState.activeMold;
+                    }
+                    renderDashboard();
+                    if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
+                    if (document.getElementById('historyModal').classList.contains('show')) renderHistoryTable();
+                } else {
+                    console.log("No state found in Firestore, initializing...");
+                    systemState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+                    ensureStateIntegrity();
+                    saveState();
+                }
+            }, (error) => {
+                console.error("Error listening to state changes: ", error);
+            });
+        }
+
+        function ensureStateIntegrity() {
+            ALL_MOLDS.forEach(m => {
+                if (!systemState.parts[m] || !Array.isArray(systemState.parts[m]) || systemState.parts[m].length !== 20) {
+                    const oldParts = systemState.parts[m] || [];
+                    systemState.parts[m] = Array(20).fill(false);
+                    for (let i = 0; i < Math.min(oldParts.length, 20); i++) systemState.parts[m][i] = oldParts[i];
+                }
+                if (!systemState.partNames[m] || !Array.isArray(systemState.partNames[m]) || systemState.partNames[m].length !== 20) {
+                    const oldNames = systemState.partNames[m] || [];
+                    systemState.partNames[m] = Array(20).fill(null).map((_, i) => oldNames[i] || `PART ${i + 1}`);
+
+                    if (m === '155 FIL') {
+                        const specificNames = ["155-FIL-03", "155-FIL-2", "155-FIL-3", "155-FIL-4", "155-FIL-5", "155-FIL-5A", "155-FIL-5B", "155-FIL-7D", "155-FIL-3F", "155-FIL-5D-OPT", "155-FIL-6A", "155-FIL-5C", "155-FIL-9B", "155-FIL-1A"];
+                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                    } else if (m === '153 FIL') {
+                        const specificNames = ["153-FIL-03", "153-FIL-1A", "153-FIL-2", "153-FIL-3", "153-FIL-30D-OPT", "153-FIL-30E-OPT", "153-FIL-3E", "153-FIL-5", "153-FIL-51-OPT", "153-FIL-52", "153-FIL-55-OPT", "153-FIL-5A", "153-FIL-5C", "153-FIL-5C-OPT", "153-FIL-5D", "153-FIL-6", "153-FIL-7A", "153-FIL-8A", "153-FIL-9A"];
+                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                    } else if (m === '154 FIL') {
+                        const specificNames = ["154-FIL-9A-T", "154-FIL-30AA", "154-FIL-1A", "154-FIL-2", "154-FIL-7A", "154-FIL-03", "154-FIL-5", "154-FIL-5C-OPT", "154-FIL-52-OPT", "154-FIL-5D", "154-FIL-54", "154-FIL-5C", "154-FIL-3E", "154-FIL-3", "154-FIL-8A", "154-FIL-2E", "154-FIL-2D", "154-FIL-6B"];
+                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                    }
+                }
+            });
+
+            if (!systemState.history) systemState.history = { ...DEFAULT_STATE.history };
+            if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
+            if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
+            if (!systemState.partNames) systemState.partNames = {};
+        }
+
+        // --- 4. Auth ---
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser) window.location.href = 'index.html';
         document.getElementById('userInfoDisplay').innerText = currentUser.username;
@@ -634,10 +646,9 @@
         const allowedUsers = ['himat', 'shalaw', 'admin'];
         const canSwitch = allowedUsers.includes(currentUser.username) || currentUser.role === 'admin' || currentUser.role === 'supervisor';
 
-        // --- 3. Logic ---
+        // --- 5. Logic ---
         function getMoldStats(moldName) {
             let totalMs = systemState.history[moldName] || 0;
-            // Only add live session time if THIS mold is the globally active one and it is running
             if (systemState.isRunning && moldName === systemState.activeMold) {
                 const sessionStart = new Date(systemState.currentSessionStart).getTime();
                 const now = new Date().getTime();
@@ -658,7 +669,7 @@
             renderDashboard();
         }
 
-        // --- 4. Render UI ---
+        // --- 6. Render UI ---
         function renderDashboard() {
             const stats = getMoldStats(viewingMold);
             const isActiveSystem = (viewingMold === systemState.activeMold);
@@ -667,7 +678,6 @@
             document.getElementById('activeName').style.cursor = "pointer";
             document.getElementById('activeName').onclick = () => openPartsDetails(viewingMold);
 
-            // Update Status Pill
             const statusPill = document.querySelector('.status-pill');
             if (isActiveSystem && systemState.isRunning) {
                 statusPill.innerHTML = '<i class="bi bi-circle-fill"></i>  چالاکە';
@@ -706,7 +716,6 @@
             document.getElementById('daysRunning').innerText = displayValue;
             document.querySelector('.progress-label').innerText = displayLabel;
 
-            // Remove Action Buttons from Hero as requested ("only in analysis")
             const btnContainer = document.getElementById('actionButtons');
             if (btnContainer) {
                 btnContainer.innerHTML = `<button class="btn btn-outline-dark rounded-pill px-4" onclick="openPartsDetails('${viewingMold}')">
@@ -750,23 +759,18 @@
             });
         }
 
-        // --- 5. Actions ---
+        // --- 7. Actions ---
         function switchMold(newMoldName) {
             if (!canSwitch) return alert("Access Denied");
-
-            // Save current progress if running
             if (systemState.isRunning) {
                 const sessionStart = new Date(systemState.currentSessionStart).getTime();
                 const duration = Math.max(0, new Date().getTime() - sessionStart);
                 systemState.history[systemState.activeMold] += duration;
             }
-
             systemState.activeMold = newMoldName;
             systemState.currentSessionStart = new Date().toISOString();
             systemState.isRunning = true;
             saveState();
-            renderDashboard();
-            renderAnalysisTable();
         }
 
         function stopActiveMold() {
@@ -777,21 +781,16 @@
             }
             systemState.isRunning = false;
             saveState();
-            renderDashboard();
-            renderAnalysisTable();
         }
 
         function restartActiveMold(moldName) {
             if (!canSwitch) return alert("Access Denied");
             if (confirm(`RESTART CYCLE for [${moldName}]? This resets history to zero.`)) {
                 systemState.history[moldName] = 0;
-                // If restarting the active one, also reset session start
                 if (moldName === systemState.activeMold) {
                     systemState.currentSessionStart = new Date().toISOString();
                 }
                 saveState();
-                renderDashboard();
-                renderAnalysisTable();
             }
         }
 
@@ -804,8 +803,6 @@
                 switchMold(moldName);
             }
             saveState();
-            renderDashboard();
-            renderAnalysisTable();
         }
 
         function openAnalysis() {
@@ -877,9 +874,7 @@
             const tbody = document.getElementById('historyTableBody');
             const noMsg = document.getElementById('noHistoryMsg');
             tbody.innerHTML = '';
-
-            const logs = [...systemState.maintenanceLogs].reverse(); // Show newest first
-
+            const logs = [...systemState.maintenanceLogs].reverse();
             if (logs.length === 0) {
                 noMsg.classList.remove('d-none');
             } else {
@@ -904,7 +899,6 @@
                     }
 
                     const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
-
                     const tr = document.createElement('tr');
                     tr.className = "history-row";
                     tr.innerHTML = `
@@ -940,11 +934,11 @@
                              <div class="d-flex justify-content-end gap-2">
                                  ${isAdmin ?
                             `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm border-0 bg-white" 
-                                             onclick="openPartsDetails('${log.mold}', ${originalIdx})" style="font-size: 0.75rem;">
+                                              onclick="openPartsDetails('${log.mold}', ${originalIdx})" style="font-size: 0.75rem;">
                                         <i class="bi bi-pencil-square me-1"></i> Edit
                                      </button>
                                      <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm border-0 bg-white" 
-                                             onclick="deleteHistoryLogEntry(${originalIdx})" style="font-size: 0.75rem;">
+                                              onclick="deleteHistoryLogEntry(${originalIdx})" style="font-size: 0.75rem;">
                                         <i class="bi bi-trash me-1"></i> Delete
                                      </button>` : ''
                         }
@@ -956,12 +950,10 @@
             }
         }
 
-
         function clearHistoryLog() {
             if (confirm("Permanently delete ALL maintenance logs? This cannot be undone.")) {
                 systemState.maintenanceLogs = [];
                 saveState();
-                renderHistoryTable();
             }
         }
 
@@ -969,38 +961,26 @@
             if (confirm("Delete this maintenance record?")) {
                 systemState.maintenanceLogs.splice(idx, 1);
                 saveState();
-                renderHistoryTable();
             }
         }
 
+        let currentEditingMold = '';
         function openPartsDetails(moldName, logIdx = null) {
             currentEditingMold = moldName;
             editingLogIdx = logIdx;
-
             document.getElementById('partsModalTitle').innerText = logIdx !== null ? `Edit Maintenance - ${moldName}` : `${moldName} - Selection`;
             document.getElementById('savePartsBtn').innerText = logIdx !== null ? "Update Log" : "Save Changes";
-
-            // Manual Link Handling
-            const manualDisplay = document.getElementById('manualLinkDisplay');
-            manualDisplay.href = systemState.manualLink;
-
+            document.getElementById('manualLinkDisplay').href = systemState.manualLink;
             const editBtn = document.getElementById('editManualLinkBtn');
             const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
-            if (isAdmin) {
-                editBtn.classList.remove('d-none');
-            } else {
-                editBtn.classList.add('d-none');
-            }
+            if (isAdmin) editBtn.classList.remove('d-none'); else editBtn.classList.add('d-none');
 
-            // Default date input
             if (logIdx !== null) {
                 const log = systemState.maintenanceLogs[logIdx];
                 const date = new Date(log.timestamp);
                 const offset = date.getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(date - offset)).toISOString().slice(0, 16);
                 document.getElementById('maintenanceDateInput').value = localISOTime;
-
-                // Pre-select parts from log
                 const names = systemState.partNames[moldName];
                 systemState.parts[moldName] = names.map(name => log.changes.includes(name));
             } else {
@@ -1008,11 +988,8 @@
                 const offset = now.getTimezoneOffset() * 60000;
                 const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
                 document.getElementById('maintenanceDateInput').value = localISOTime;
-
-                // Enforce empty selection on open for new maintenance
                 systemState.parts[moldName] = Array(20).fill(false);
             }
-
             renderPartsGrid();
             new bootstrap.Modal(document.getElementById('partsModal')).show();
         }
@@ -1032,7 +1009,6 @@
             const status = systemState.parts[currentEditingMold];
             const names = systemState.partNames[currentEditingMold];
             const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
-
             grid.innerHTML = '';
             for (let i = 0; i < 20; i++) {
                 const isSelected = status[i];
@@ -1047,7 +1023,6 @@
                 div.style.display = "flex";
                 div.style.flexDirection = "column";
                 div.style.justifyContent = "center";
-
                 div.innerHTML = `
                     <div class="fw-bold" style="font-size: 0.8rem; ${isSelected ? 'color: var(--text-main)' : ''}">${partName}</div>
                     <div class="mt-1 text-muted small" style="font-size: 0.7rem;"><i class="bi bi-${isSelected ? 'check-square-fill text-dark' : 'square'}"></i></div>
@@ -1064,7 +1039,6 @@
             if (newName !== null && newName.trim() !== "") {
                 systemState.partNames[currentEditingMold][index] = newName.trim();
                 saveState();
-                renderPartsGrid();
             }
         }
 
@@ -1074,23 +1048,15 @@
             const changedParts = [];
             const selectedDate = document.getElementById('maintenanceDateInput').value;
             const finalTimestamp = selectedDate ? new Date(selectedDate).toISOString() : new Date().toISOString();
-
-            for (let i = 0; i < 20; i++) {
-                if (currentParts[i]) {
-                    changedParts.push(partNames[i]);
-                }
-            }
-
+            for (let i = 0; i < 20; i++) if (currentParts[i]) changedParts.push(partNames[i]);
             if (changedParts.length > 0) {
                 if (editingLogIdx !== null) {
-                    // Updating an existing log
                     const log = systemState.maintenanceLogs[editingLogIdx];
                     log.timestamp = finalTimestamp;
                     log.changes = changedParts;
                     log.lastEditedBy = currentUser.username;
-                    editingLogIdx = null; // Reset
+                    editingLogIdx = null;
                 } else {
-                    // New log entry
                     systemState.maintenanceLogs.push({
                         timestamp: finalTimestamp,
                         mold: currentEditingMold,
@@ -1099,25 +1065,19 @@
                         user: currentUser.username
                     });
                 }
-
-                // Reset the selection for this mold after saving
                 systemState.parts[currentEditingMold] = Array(20).fill(false);
             } else {
                 alert("No parts selected to save.");
                 return;
             }
-
             saveState();
-            renderDashboard();
             bootstrap.Modal.getInstance(document.getElementById('partsModal')).hide();
         }
 
         function resetMoldHistoryInModal() {
             if (confirm("Reset everything for this mold? This resets its timer and clears any pending parts.")) {
                 systemState.history[currentEditingMold] = 0;
-                systemState.parts[currentEditingMold] = Array(12).fill(false);
-
-                // Log reset
+                systemState.parts[currentEditingMold] = Array(20).fill(false);
                 systemState.maintenanceLogs.push({
                     timestamp: new Date().toISOString(),
                     mold: currentEditingMold,
@@ -1125,20 +1085,25 @@
                     changes: ['Full System Cycles Reset'],
                     user: currentUser.username
                 });
-
                 saveState();
-                renderDashboard();
-                renderHistoryTable(); // Always refresh history table
                 bootstrap.Modal.getInstance(document.getElementById('partsModal')).hide();
             }
         }
 
-        function saveState() {
-            localStorage.setItem('moldSystemState', JSON.stringify(systemState));
+        async function saveState() {
+            try {
+                const stateToSave = { ...systemState };
+                await moldStateDoc.set(stateToSave);
+            } catch (error) {
+                console.error("Error saving state to Firestore: ", error);
+            }
         }
 
         setInterval(renderDashboard, 1000);
-        document.addEventListener('DOMContentLoaded', renderDashboard);
+        document.addEventListener('DOMContentLoaded', () => {
+            initSystemState();
+        });
+
     </script>
 </body>
 
