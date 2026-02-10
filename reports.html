@@ -437,7 +437,17 @@
                     });
                 }
 
-                const snap = await db.collection('employees').get();
+                let employeesQuery = db.collection('employees');
+                // Role-Based Filtering to reduce reads
+                if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin' && currentUser.role !== 'manager') {
+                    const allowedDepts = USER_PERMISSIONS[currentUser.username];
+                    if (allowedDepts && allowedDepts.length > 0) {
+                        employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
+                    } else if (currentUser.department) {
+                        employeesQuery = employeesQuery.where('department', '==', currentUser.department);
+                    }
+                }
+                const snap = await employeesQuery.get();
                 snap.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
 
                 // Apply Permissions
@@ -1583,10 +1593,15 @@
                                                 <td>
                                                     <select id="cut_${shift.id}_type" style="font-size:0.65rem">
                                                         <option value="">-</option>
-                                                        <option value="20x40" selected>20x40</option>
-                                                        <option value="15x40">15x40</option>
-                                                        <option value="10x40">10x40</option>
-                                                        <option value="24x40">24x40</option>
+                                                        <option value="بلۆکی 20" selected>بلۆکی 20</option>
+                                                        <option value="بلۆکی 10">بلۆکی 10</option>
+                                                        <option value="بلۆکی 15">بلۆکی 15</option>
+                                                        <option value="بلۆکی 20">بلۆکی 20</option>
+                                                        <option value="بلۆکی 24">بلۆکی 24</option>
+                                                        <option value="10 قواطع">10 قواطع</option>
+                                        <option value="15 قواطع">15 قواطع</option>
+                                        <option value="20 قواطع">15 قواطع</option>
+                                        <option value="24 قواطع">24 قواطع</option>
                                                     </select>
                                                 </td>
                                             </tr>
@@ -2922,4 +2937,3 @@
 </body>
 
 </html>
-
