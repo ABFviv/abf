@@ -757,8 +757,8 @@
                                         <option value="mechanical">سازنگە (General)</option>
                                         <option value="electrical-ac">کارەبا (General)</option>
                                         <option value="dryer">درایەر</option>
-                                        <option value="dryer">گشتی هێڵی دوو</option>
-                                        <option value="dryer">گشتی هێڵی یەک</option>
+                                        <option value="line-two-general">گشتی هێڵی دوو</option>
+                                        <option value="line-one">گشتی هێڵی یەک</option>
                                     </select>
                                 </div>
                                 <div class="col-6">
@@ -3450,9 +3450,40 @@
                 record.name = document.getElementById('editWorkName').value;
             }
 
-            const success = await saveEmployeeToFirebase(employee);
+            try {
+                // If record has an ID, it's from the subcollection - update it there
+                if (record.id) {
+                    const updateData = {
+                        date: record.date,
+                        rate: record.rate,
+                        note: record.note,
+                        lastEditedAt: record.lastEditedAt,
+                        lastEditedBy: record.lastEditedBy
+                    };
 
-            if (success) {
+                    // Add type-specific fields
+                    if (record.carts !== undefined) updateData.carts = record.carts;
+                    if (record.clayTons !== undefined) updateData.clayTons = record.clayTons;
+                    if (record.name !== undefined) updateData.name = record.name;
+                    if (record.isSpecial) {
+                        updateData.isSpecial = true;
+                        if (record.workDepartment) updateData.workDepartment = record.workDepartment;
+                        if (record.totalHours !== undefined) updateData.totalHours = record.totalHours;
+                        if (record.totalMinutes !== undefined) updateData.totalMinutes = record.totalMinutes;
+                        if (record.startTime) updateData.startTime = record.startTime;
+                        if (record.endTime) updateData.endTime = record.endTime;
+                    }
+
+                    await db.collection('employees').doc(employee.id).collection('workRecords').doc(record.id).update(updateData);
+                    console.log('✅ Work record updated in subcollection:', record.id);
+                } else {
+                    // Legacy record - update the main employee document
+                    await db.collection('employees').doc(employee.id).update({
+                        [type === 'daily' ? 'dailyWork' : 'otherWork']: workRecords
+                    });
+                    console.log('✅ Legacy work record updated in main document');
+                }
+
                 loadWorkRecords(employee);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editWorkRecordModal'));
                 modal.hide();
@@ -3461,7 +3492,8 @@
                 // Update totals if needed
                 updateDailyWorkTotals();
                 updateElectricalMechanicalTotals();
-            } else {
+            } catch (error) {
+                console.error('❌ Error updating work record:', error);
                 showNotification('هەڵە لە نوێکردنەوەی تۆماری کار', 'danger');
             }
         }
@@ -3480,15 +3512,31 @@
 
             if (!record) return;
 
-            // Remove the record
-            workRecords.splice(index, 1);
+            try {
+                // If record has an ID, it's from the subcollection - delete it there
+                if (record.id) {
+                    await db.collection('employees').doc(employee.id).collection('workRecords').doc(record.id).delete();
+                    console.log('✅ Work record deleted from subcollection:', record.id);
+                } else {
+                    // Legacy record - remove from main employee document
+                    workRecords.splice(index, 1);
+                    await db.collection('employees').doc(employee.id).update({
+                        [type === 'daily' ? 'dailyWork' : 'otherWork']: workRecords
+                    });
+                    console.log('✅ Legacy work record deleted from main document');
+                }
 
-            const success = await saveEmployeeToFirebase(employee);
+                // Remove from local array
+                workRecords.splice(index, 1);
 
-            if (success) {
                 loadWorkRecords(employee);
-                showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
-            } else {
+                showNotification('تۆماری کار بەسەرکەوتووی سڕدرایەوە', 'success');
+
+                // Update totals
+                updateDailyWorkTotals();
+                updateElectricalMechanicalTotals();
+            } catch (error) {
+                console.error('❌ Error deleting work record:', error);
                 showNotification('هەڵە لە سڕینەوەی تۆماری کار', 'danger');
             }
         }
@@ -5083,8 +5131,8 @@
                 createdAt: new Date().toISOString()
             };
 
-            // Add project record to each employee's other work
-            selectedEmployees.forEach(employeeId => {
+            // Add project record to each employee's work records subcollection
+            for (const employeeId of selectedEmployees) {
                 const employee = employees.find(emp => emp.id === employeeId);
                 if (employee) {
                     if (!employee.otherWork) {
@@ -5097,15 +5145,18 @@
                         rate: employeeRatings[employeeId],
                         note: details,
                         createdAt: new Date().toISOString(),
-                        projectId: projectId
+                        projectId: projectId,
+                        type: 'other'
                     };
 
                     employee.otherWork.push(projectRecord);
 
-                    // Save employee with new project record
-                    saveEmployeeToFirebase(employee);
+                    // Save to subcollection
+                    await db.collection('employees').doc(employee.id).collection('workRecords').add(projectRecord);
+                    console.log('✅ Project record added to subcollection for employee:', employeeId);
                 }
-            });
+            }
+
 
             const success = await saveProjectToFirebase(projectData);
 
@@ -5286,19 +5337,33 @@
 
             // Remove project records from employees that are no longer in the project
             const removedEmployees = project.employeeIds.filter(id => !selectedEmployees.includes(id));
-            removedEmployees.forEach(employeeId => {
+            for (const employeeId of removedEmployees) {
                 const employee = employees.find(emp => emp.id === employeeId);
-                if (employee && employee.otherWork) {
-                    employee.otherWork = employee.otherWork.filter(work =>
-                        !work.projectId || work.projectId !== projectId
-                    );
-                    saveEmployeeToFirebase(employee);
+                if (employee) {
+                    // Query subcollection for project records
+                    const snapshot = await db.collection('employees').doc(employee.id).collection('workRecords')
+                        .where('projectId', '==', projectId).get();
+
+                    // Delete all matching records
+                    const deletePromises = [];
+                    snapshot.forEach(doc => {
+                        deletePromises.push(doc.ref.delete());
+                    });
+                    await Promise.all(deletePromises);
+
+                    // Also remove from local array
+                    if (employee.otherWork) {
+                        employee.otherWork = employee.otherWork.filter(work =>
+                            !work.projectId || work.projectId !== projectId
+                        );
+                    }
+                    console.log('✅ Project records removed for employee:', employeeId);
                 }
-            });
+            }
 
             // Add project records to new employees
             const newEmployees = selectedEmployees.filter(id => !project.employeeIds.includes(id));
-            newEmployees.forEach(employeeId => {
+            for (const employeeId of newEmployees) {
                 const employee = employees.find(emp => emp.id === employeeId);
                 if (employee) {
                     if (!employee.otherWork) {
@@ -5311,27 +5376,53 @@
                         rate: employeeRatings[employeeId],
                         note: details,
                         createdAt: new Date().toISOString(),
-                        projectId: projectId
+                        projectId: projectId,
+                        type: 'other'
                     };
 
                     employee.otherWork.push(projectRecord);
-                    saveEmployeeToFirebase(employee);
+
+                    // Add to subcollection
+                    await db.collection('employees').doc(employee.id).collection('workRecords').add(projectRecord);
+                    console.log('✅ Project record added for new employee:', employeeId);
                 }
-            });
+            }
 
             // Update project record for existing employees
-            selectedEmployees.forEach(employeeId => {
+            for (const employeeId of selectedEmployees) {
+                // Skip new employees (already handled above)
+                if (newEmployees.includes(employeeId)) continue;
+
                 const employee = employees.find(emp => emp.id === employeeId);
-                if (employee && employee.otherWork) {
-                    const projectRecord = employee.otherWork.find(work => work.projectId === projectId);
-                    if (projectRecord) {
-                        projectRecord.name = `پڕۆژە: ${name}`;
-                        projectRecord.rate = employeeRatings[employeeId];
-                        projectRecord.note = details;
-                        saveEmployeeToFirebase(employee);
+                if (employee) {
+                    // Query subcollection for this project's record
+                    const snapshot = await db.collection('employees').doc(employee.id).collection('workRecords')
+                        .where('projectId', '==', projectId).get();
+
+                    // Update all matching records (should be only one)
+                    const updatePromises = [];
+                    snapshot.forEach(doc => {
+                        updatePromises.push(doc.ref.update({
+                            name: `پڕۆژە: ${name}`,
+                            rate: employeeRatings[employeeId],
+                            note: details,
+                            updatedAt: new Date().toISOString()
+                        }));
+                    });
+                    await Promise.all(updatePromises);
+
+                    // Also update local array
+                    if (employee.otherWork) {
+                        const projectRecord = employee.otherWork.find(work => work.projectId === projectId);
+                        if (projectRecord) {
+                            projectRecord.name = `پڕۆژە: ${name}`;
+                            projectRecord.rate = employeeRatings[employeeId];
+                            projectRecord.note = details;
+                        }
                     }
+                    console.log('✅ Project record updated for employee:', employeeId);
                 }
-            });
+            }
 
             const projectData = {
                 id: projectId,
@@ -5370,19 +5461,31 @@
             const project = projects.find(proj => proj.id === projectId);
             if (!project) return;
 
-            // Remove project records from employees' other work
-            project.employeeIds.forEach(employeeId => {
+            // Remove project records from employees' work records subcollection
+            for (const employeeId of project.employeeIds) {
                 const employee = employees.find(emp => emp.id === employeeId);
-                if (employee && employee.otherWork) {
-                    // Filter out project records
-                    employee.otherWork = employee.otherWork.filter(work =>
-                        !work.projectId || work.projectId !== projectId
-                    );
+                if (employee) {
+                    // Query subcollection for project records
+                    const snapshot = await db.collection('employees').doc(employee.id).collection('workRecords')
+                        .where('projectId', '==', projectId).get();
 
-                    // Save updated employee
-                    saveEmployeeToFirebase(employee);
+                    // Delete all matching records
+                    const deletePromises = [];
+                    snapshot.forEach(doc => {
+                        deletePromises.push(doc.ref.delete());
+                    });
+                    await Promise.all(deletePromises);
+
+                    // Also remove from local array
+                    if (employee.otherWork) {
+                        employee.otherWork = employee.otherWork.filter(work =>
+                            !work.projectId || work.projectId !== projectId
+                        );
+                    }
+                    console.log('✅ Project records deleted for employee:', employeeId);
                 }
-            });
+            }
+
 
             const success = await deleteProjectFromFirebase(projectId);
 
