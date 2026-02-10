@@ -16,6 +16,17 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="maintenance.css">
+    <style>
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
 </head>
 
 <body>
@@ -36,6 +47,11 @@
                 <i class="bi bi-person-circle fs-5"></i>
                 <span>User</span>
             </div>
+            <button id="btnSync" class="btn btn-header" onclick="loadLogs(currentMachineId)"
+                style="color: var(--bs-primary);">
+                <i class="bi bi-cloud-arrow-down-fill fs-4"></i>
+                <span class="ms-2">Sync</span>
+            </button>
             <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
                 <i class="bi bi-arrow-right-short fs-4"></i>
                 <span>گەڕانەوە</span>
@@ -941,22 +957,41 @@
                 currentPartsConfig = JSON.parse(JSON.stringify(defaultPartsConfig));
             }
 
-            subscribeToLogs(id);
+            // Load logs for the selected machine
+            loadLogs(id);
         }
 
-        // --- DATA LOGIC ---
-        function subscribeToLogs(machineId) {
-            if (unsubscribeLogs) unsubscribeLogs();
 
-            unsubscribeLogs = db.collection('machine_logs')
-                .where('machineId', '==', machineId)
-                .orderBy('date', 'desc')
-                .onSnapshot(snap => {
-                    const logs = [];
-                    snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
-                    globalLogsCache = logs;
-                    updateDashboard();
-                }, err => { console.error("Error:", err); });
+        // --- DATA LOGIC ---
+        async function loadLogs(machineId) {
+            if (!machineId) return;
+
+            const btn = document.getElementById('btnSync');
+            if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin fs-4"></i><span class="ms-2">Syncing...</span>'; btn.disabled = true; }
+
+            try {
+                const snap = await db.collection('machine_logs')
+                    .where('machineId', '==', machineId)
+                    .orderBy('date', 'desc')
+                    .get();
+
+                const logs = [];
+                snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+                globalLogsCache = logs;
+                updateDashboard();
+            } catch (error) {
+                console.error("Error loading logs:", error);
+
+                // Check if it's a "Missing Index" error which is common after structural changes
+                if (error.message && error.message.includes('index')) {
+                    console.error("🚨 FIRESTORE INDEX REQUIRED: Click the link above in the console to create it.");
+                    alert("بۆ پیشاندانی داتاکان پێویستە 'Index' دروست بکرێت لە Firestore. تکایە سەیری Console بکە بۆ تێپەڕە (Link).");
+                } else {
+                    alert("هەڵە لە بارکردنی داتا: " + error.message);
+                }
+            } finally {
+                if (btn) { btn.innerHTML = '<i class="bi bi-cloud-arrow-down-fill fs-4"></i><span class="ms-2">Sync</span>'; btn.disabled = false; }
+            }
         }
 
         function updateDashboard() {
@@ -1695,6 +1730,7 @@
             });
             await batch.commit();
             alert("Done!");
+            loadLogs(currentMachineId); // Refresh
             bootstrap.Modal.getInstance(document.getElementById('bulkImportModal')).hide();
             btn.disabled = false; btn.textContent = "Save";
         }
@@ -1718,6 +1754,7 @@
             chks.forEach(c => batch.delete(db.collection('machine_logs').doc(c.value)));
             await batch.commit();
             alert("Deleted.");
+            loadLogs(currentMachineId); // Refresh
         }
 
         // --- SUBMITS ---
@@ -1778,6 +1815,7 @@
                     }
                     baseData.cycleDays = freq === 'N/A' ? null : Math.round(365 / (parseFloat(freq) || 1));
                     await db.collection('machine_logs').doc(id).update(baseData);
+                    loadLogs(currentMachineId); // Refresh
                 } else {
                     // Add multiple
                     const batch = db.batch();
@@ -1787,6 +1825,7 @@
                     });
                     await batch.commit();
                     alert("بەسەرکەوتوویی تۆمارکرا");
+                    loadLogs(currentMachineId); // Refresh
                     document.getElementById('recordForm').reset();
                     document.getElementById('partCheckboxes').innerHTML = '<div class="text-muted small">هەڵبژێرە...</div>';
                 }
@@ -1797,6 +1836,7 @@
                 baseData.rootCause = document.getElementById('recRootCause').value;
                 if (id) await db.collection('machine_logs').doc(id).update(baseData);
                 else { baseData.createdAt = new Date().toISOString(); await db.collection('machine_logs').add(baseData); }
+                loadLogs(currentMachineId); // Refresh
             }
             bootstrap.Modal.getInstance(document.getElementById('addRecordModal')).hide();
         });
@@ -1830,6 +1870,7 @@
                 createdAt: new Date().toISOString()
             };
             await db.collection('machine_logs').add(data);
+            loadLogs(currentMachineId); // Refresh
             bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
         });
 
@@ -1900,7 +1941,7 @@
         }
 
         async function deleteMachine(id) { if (confirm("Delete this machine and all its logs?")) { await db.collection('machines').doc(id).delete(); openManageMachinesModal(); loadMachines(); } }
-        async function deleteLog(id) { if (confirm("Delete record?")) await db.collection('machine_logs').doc(id).delete(); }
+        async function deleteLog(id) { if (confirm("Delete record?")) { await db.collection('machine_logs').doc(id).delete(); loadLogs(currentMachineId); } }
 
         // --- NEW: DEPARTMENT TOTALS LOGIC ---
         function openDeptTotalsModal() {
