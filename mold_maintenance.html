@@ -238,17 +238,42 @@
 
         .inventory-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+
+        .grid-header {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .grid-category-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-size-title {
+            display: none;
+            /* Sizes will be shown in cards */
         }
 
         .inv-card {
             background: white;
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 8px 12px;
             border: 1px solid #f3f4f6;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             position: relative;
         }
 
@@ -259,17 +284,17 @@
         }
 
         .inv-icon {
-            width: 50px;
-            height: 50px;
+            width: 28px;
+            height: 28px;
             background: #f9fafb;
-            border-radius: 12px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-muted);
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            transition: all 0.3s;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
         }
 
         .inv-card:hover .inv-icon {
@@ -277,26 +302,66 @@
             color: white;
         }
 
+        .inv-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .inv-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
         .inv-name {
             font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .inv-size-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 1px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .inv-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2px;
         }
 
         .inv-status {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
 
         .inv-status::before {
             content: '';
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
             background: #d1d5db;
+        }
+
+        .inv-health-mini {
+            font-size: 0.65rem;
+            color: #9ca3af;
         }
 
         /* --- Mobile Responsive --- */
@@ -541,9 +606,19 @@
                             class="form-control form-control-lg rounded-3 border-2" style="border-color: #e2e8f0;">
                     </div>
 
-                    <div class="parts-grid" id="partsGrid"
+                    <div class="parts-grid mb-4" id="partsGrid"
                         style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
                         <!-- 20 parts injected here -->
+                    </div>
+
+                    <div class="specific-history-section border-top pt-4">
+                        <h6 class="fw-bold text-secondary small text-uppercase mb-3">
+                            <i class="bi bi-clock-history me-1"></i> مێژووی چاکسازی ئەم قاڵبە
+                        </h6>
+                        <div id="specificMoldHistoryList" class="bg-light rounded-3 p-2"
+                            style="max-height: 250px; overflow-y: auto;">
+                            <!-- Filtered logs will be injected here -->
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-between" style="background: #f8fafc;">
@@ -576,15 +651,57 @@
         const moldStateDoc = db.collection('settings').doc('moldMaintenance');
 
         // --- 2. State Management ---
-        const ALL_MOLDS = ['155 FIL', '154 FIL', '153 FIL', '10 Q', '15 Q', '678 FIL', '535 FIL', '445 FIL'];
+        // Mold Categories
+        const MOLD_CATEGORIES = {
+            'بلۆک': {
+                '15cm': ['FIL 535'],
+                '20cm': ['FIL 444', 'FIL 445', 'FIL 726', 'FIL 648', 'SF 00']
+            },
+            'قواتع': {
+                '10cm': ['FIL 152', 'SF 79'],
+                '15cm': ['FIL 153', 'SF 079'],
+                '20cm': ['FIL 154'],
+                '24cm': ['FIL 678']
+            }
+        };
+
+        // Flatten all molds into a single array
+        const ALL_MOLDS = [
+            // BLOCK - 15cm
+            'FIL 535',
+            // BLOCK - 20cm
+            'FIL 444', 'FIL 445', 'FIL 726', 'FIL 648', 'SF 00',
+            // QUATE - 10cm
+            'FIL 152', 'SF 79',
+            // QUATE - 15cm
+            'FIL 153', 'SF 079',
+            // QUATE - 20cm
+            'FIL 154',
+            // QUATE - 24cm
+            'FIL 678'
+        ];
+
         const MAX_RUN_MS = 55 * 24 * 60 * 60 * 1000; // 55 Days
 
+        // Helper function to get category info for a mold
+        function getMoldCategory(moldName) {
+            for (const [productType, sizes] of Object.entries(MOLD_CATEGORIES)) {
+                for (const [size, molds] of Object.entries(sizes)) {
+                    if (molds.includes(moldName)) {
+                        return { productType, size };
+                    }
+                }
+            }
+            return { productType: 'Unknown', size: 'Unknown' };
+        }
+
         const DEFAULT_STATE = {
-            activeMold: '155 FIL',
+            activeMold: 'FIL 535',
             currentSessionStart: new Date().toISOString(),
             isRunning: true,
             history: {
-                '155 FIL': 0, '154 FIL': 0, '153 FIL': 0, '10 Q': 0, '15 Q': 0, '678 FIL': 0, '535 FIL': 0, '445 FIL': 0
+                'FIL 535': 0, 'FIL 444': 0, 'FIL 445': 0, 'FIL 726': 0, 'FIL 648': 0, 'SF 00': 0,
+                'FIL 152': 0, 'SF 79': 0, 'FIL 153': 0, 'SF 079': 0, 'FIL 154': 0, 'FIL 678': 0
             },
             parts: {},
             maintenanceLogs: [],
@@ -727,14 +844,64 @@
             renderDashboard();
         }
 
+        function editMoldRuntime(moldName) {
+            const stats = getMoldStats(moldName);
+            const currentDays = (stats.totalMs / (1000 * 60 * 60 * 24)).toFixed(2);
+
+            const newDays = prompt(`بڕی کارکردنی دەستی بنووسە بۆ [${moldName}] بە ڕۆژ (بۆ نموونە: 45.5):`, currentDays);
+
+            if (newDays !== null && newDays.trim() !== "" && !isNaN(newDays)) {
+                const totalMs = parseFloat(newDays) * 24 * 60 * 60 * 1000;
+
+                if (systemState.activeMold === moldName && systemState.isRunning) {
+                    const now = new Date().getTime();
+                    const sessionStart = new Date(systemState.currentSessionStart).getTime();
+                    const currentSessionDuration = Math.max(0, now - sessionStart);
+                    systemState.history[moldName] = Math.max(0, totalMs - currentSessionDuration);
+                } else {
+                    systemState.history[moldName] = totalMs;
+                }
+
+                saveState();
+                renderAnalysisTable();
+                renderDashboard();
+                showNotification(`مێژووی [${moldName}] نوێکرایەوە`, 'success');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.style.padding = '12px 24px';
+            toast.style.borderRadius = '12px';
+            toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            toast.style.color = 'white';
+            toast.style.zIndex = '9999';
+            toast.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            toast.style.fontWeight = 'bold';
+            toast.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         // --- 6. Render UI ---
         function renderDashboard() {
             const stats = getMoldStats(viewingMold);
             const isActiveSystem = (viewingMold === systemState.activeMold);
+            const category = getMoldCategory(viewingMold);
 
-            document.getElementById('activeName').innerText = viewingMold;
-            document.getElementById('activeName').style.cursor = "pointer";
-            document.getElementById('activeName').onclick = () => openPartsDetails(viewingMold);
+            // Display mold name with category badge
+            const nameElement = document.getElementById('activeName');
+            nameElement.innerHTML = `
+                ${viewingMold}
+                <span class="badge ms-2" style="background: var(--accent-secondary); font-size: 0.7rem; vertical-align: middle;">
+                    ${category.productType} - ${category.size}
+                </span>
+            `;
+            nameElement.style.cursor = "pointer";
+            nameElement.onclick = () => openPartsDetails(viewingMold);
 
             const statusPill = document.querySelector('.status-pill');
             if (isActiveSystem && systemState.isRunning) {
@@ -777,7 +944,7 @@
             const btnContainer = document.getElementById('actionButtons');
             if (btnContainer) {
                 btnContainer.innerHTML = `<button class="btn btn-outline-dark rounded-pill px-4" onclick="openPartsDetails('${viewingMold}')">
-                    <i class="bi bi-wrench me-2"></i> Maintenance Details
+                    <i class="bi bi-wrench me-2"></i> تۆمارکردنی چاکسازی
                 </button>`;
             }
 
@@ -789,31 +956,51 @@
 
             const grid = document.getElementById('inventoryGrid');
             grid.innerHTML = '';
-            ALL_MOLDS.forEach(mold => {
-                const moldStats = getMoldStats(mold);
-                const card = document.createElement('div');
-                card.className = 'inv-card';
-                if (mold === viewingMold) card.style.borderColor = "var(--text-main)";
 
-                card.onclick = () => {
-                    viewingMold = mold;
-                    renderDashboard();
-                };
+            // Group molds by product type (BLOCK/QUATE) for high-density layout
+            Object.entries(MOLD_CATEGORIES).forEach(([productType, sizes]) => {
+                // Add product type header
+                const catHeader = document.createElement('div');
+                catHeader.className = 'grid-header mt-3';
+                catHeader.innerHTML = `<div class="grid-category-title"><i class="bi bi-box-seam"></i> ${productType}</div>`;
+                grid.appendChild(catHeader);
 
-                let statusText = moldStats.days > 0 ? `Day ${moldStats.days}` : "New";
-                let statusColor = moldStats.days > 0 ? "text-secondary" : "text-success";
-                if (mold === systemState.activeMold && systemState.isRunning) {
-                    statusText = "RUNNING";
-                    statusColor = "text-success fw-bold";
-                }
+                // Flatten all sizes for this product type and create cards
+                Object.entries(sizes).forEach(([size, molds]) => {
+                    molds.forEach(mold => {
+                        const moldStats = getMoldStats(mold);
+                        const card = document.createElement('div');
+                        card.className = 'inv-card';
+                        if (mold === viewingMold) card.style.borderColor = "var(--text-main)";
 
-                card.innerHTML = `
-                    <div class="inv-icon"><i class="bi bi-box-seam"></i></div>
-                    <div class="inv-name">${mold}</div>
-                    <div class="inv-status ${statusColor}">${statusText}</div>
-                    <div style="font-size: 0.7rem; color: #9ca3af; margin-top: 4px;">Health: ${moldStats.health}%</div>
-                `;
-                grid.appendChild(card);
+                        card.onclick = () => {
+                            viewingMold = mold;
+                            renderDashboard();
+                        };
+
+                        let statusText = moldStats.days > 0 ? `Day ${moldStats.days}` : "New";
+                        let statusColor = moldStats.days > 0 ? "text-secondary" : "text-success";
+                        if (mold === systemState.activeMold && systemState.isRunning) {
+                            statusText = "RUNNING";
+                            statusColor = "text-success fw-bold";
+                        }
+
+                        card.innerHTML = `
+                            <div class="inv-icon"><i class="bi bi-gear-fill" style="font-size: 0.7rem;"></i></div>
+                            <div class="inv-content">
+                                <div class="inv-name-row">
+                                    <div class="inv-name">${mold}</div>
+                                    <div class="inv-size-badge">${size}</div>
+                                </div>
+                                <div class="inv-status-row">
+                                    <div class="inv-status ${statusColor}">${statusText}</div>
+                                    <div class="inv-health-mini">${moldStats.health}% HLT</div>
+                                </div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                });
             });
         }
 
@@ -871,49 +1058,84 @@
         function renderAnalysisTable() {
             const tbody = document.getElementById('analysisTableBody');
             tbody.innerHTML = '';
-            ALL_MOLDS.forEach(mold => {
-                const stats = getMoldStats(mold);
-                const isActive = (mold === systemState.activeMold && systemState.isRunning);
-                const isPaused = (mold === systemState.activeMold && !systemState.isRunning);
 
-                const totalSeconds = Math.floor(stats.totalMs / 1000);
-                const d = Math.floor(totalSeconds / (3600 * 24));
-                const h = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-                const m = Math.floor((totalSeconds % 3600) / 60);
-                const s = Math.floor(totalSeconds % 60);
-                const pad = (n) => n.toString().padStart(2, '0');
-
-                let statusBadge = '<span class="badge bg-secondary">ناچالاک</span>';
-                if (isActive) statusBadge = '<span class="badge bg-success">چالاک</span>';
-                if (isPaused) statusBadge = '<span class="badge bg-warning text-dark">وەستاوە</span>';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="ps-4">
-                        <a href="#" class="fw-bold text-decoration-none text-dark" onclick="viewOnDashboard('${mold}'); return false;">${mold}</a>
-                    </td>
-                    <td>${statusBadge}</td>
-                    <td class="font-monospace">${d}d ${pad(h)}:${pad(m)}:${pad(s)}</td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
-                                <div class="progress-bar ${stats.health < 20 ? 'bg-danger' : 'bg-success'}" style="width: ${stats.health}%"></div>
-                            </div>
-                            <span style="font-size: 0.8rem">${stats.health}%</span>
-                        </div>
-                    </td>
-                    <td class="pe-4 text-end">
-                        <div class="btn-group">
-                            ${isActive ?
-                        `<button class="btn btn-sm btn-danger" onclick="stopActiveMold()"><i class="bi bi-pause-fill"></i></button>` :
-                        `<button class="btn btn-sm btn-success" onclick="startSpecificMold('${mold}')"><i class="bi bi-play-fill"></i></button>`
-                    }
-                            <button class="btn btn-sm" style="border: 1px solid var(--accent-primary); color: var(--accent-primary);" onclick="openPartsDetails('${mold}')"><i class="bi bi-wrench"></i></button>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="restartActiveMold('${mold}')"><i class="bi bi-arrow-counterclockwise"></i></button>
+            // Group molds by category
+            Object.entries(MOLD_CATEGORIES).forEach(([productType, sizes]) => {
+                // Add category header
+                const categoryHeader = document.createElement('tr');
+                categoryHeader.style.background = 'linear-gradient(135deg, rgba(91, 124, 153, 0.1) 0%, rgba(91, 124, 153, 0.05) 100%)';
+                categoryHeader.innerHTML = `
+                    <td colspan="5" class="ps-4 py-3">
+                        <div class="fw-bold" style="font-size: 1.1rem; color: var(--accent-primary); letter-spacing: 1px;">
+                            <i class="bi bi-box-seam me-2"></i>${productType}
                         </div>
                     </td>
                 `;
-                tbody.appendChild(tr);
+                tbody.appendChild(categoryHeader);
+
+                // Add molds for each size within this category
+                Object.entries(sizes).forEach(([size, molds]) => {
+                    // Add size subheader
+                    const sizeHeader = document.createElement('tr');
+                    sizeHeader.style.background = 'rgba(0, 0, 0, 0.02)';
+                    sizeHeader.innerHTML = `
+                        <td colspan="5" class="ps-5 py-2">
+                            <span class="badge" style="background: var(--accent-secondary); font-size: 0.75rem;">${size}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(sizeHeader);
+
+                    // Add each mold in this size
+                    molds.forEach(mold => {
+                        const stats = getMoldStats(mold);
+                        const isActive = (mold === systemState.activeMold && systemState.isRunning);
+                        const isPaused = (mold === systemState.activeMold && !systemState.isRunning);
+
+                        const totalSeconds = Math.floor(stats.totalMs / 1000);
+                        const d = Math.floor(totalSeconds / (3600 * 24));
+                        const h = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                        const m = Math.floor((totalSeconds % 3600) / 60);
+                        const s = Math.floor(totalSeconds % 60);
+                        const pad = (n) => n.toString().padStart(2, '0');
+
+                        let statusBadge = '<span class="badge bg-secondary">ناچالاک</span>';
+                        if (isActive) statusBadge = '<span class="badge bg-success">چالاک</span>';
+                        if (isPaused) statusBadge = '<span class="badge bg-warning text-dark">وەستاوە</span>';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="ps-5">
+                                <a href="#" class="fw-bold text-decoration-none text-dark" onclick="viewOnDashboard('${mold}'); return false;">${mold}</a>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td class="font-monospace">
+                                ${d}d ${pad(h)}:${pad(m)}:${pad(s)}
+                                <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="editMoldRuntime('${mold}')" title="دەستکاری کردنی مێژوو">
+                                    <i class="bi bi-pencil-square" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
+                                        <div class="progress-bar ${stats.health < 20 ? 'bg-danger' : 'bg-success'}" style="width: ${stats.health}%"></div>
+                                    </div>
+                                    <span style="font-size: 0.8rem">${stats.health}%</span>
+                                </div>
+                            </td>
+                            <td class="pe-4 text-end">
+                                <div class="btn-group">
+                                    ${isActive ?
+                                `<button class="btn btn-sm btn-danger" onclick="stopActiveMold()"><i class="bi bi-pause-fill"></i></button>` :
+                                `<button class="btn btn-sm btn-success" onclick="startSpecificMold('${mold}')"><i class="bi bi-play-fill"></i></button>`
+                            }
+                                    <button class="btn btn-sm" style="border: 1px solid var(--accent-primary); color: var(--accent-primary);" onclick="openPartsDetails('${mold}')"><i class="bi bi-wrench"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="restartActiveMold('${mold}')"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
             });
         }
 
@@ -1049,7 +1271,41 @@
                 systemState.parts[moldName] = Array(20).fill(false);
             }
             renderPartsGrid();
+            renderSpecificMoldHistory(moldName);
             new bootstrap.Modal(document.getElementById('partsModal')).show();
+        }
+
+        function renderSpecificMoldHistory(moldName) {
+            const container = document.getElementById('specificMoldHistoryList');
+            container.innerHTML = '';
+
+            const logs = systemState.maintenanceLogs.filter(log => log.mold === moldName).reverse();
+
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="text-center py-3 text-muted small"><i class="bi bi-info-circle me-1"></i> هیچ مێژوویەک بۆ ئەم قاڵبە نەدۆزرایەوە.</div>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const date = new Date(log.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const time = new Date(log.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+                const partsText = log.type === 'RESET' ? 'MOLD RESET' : (log.changes.length > 0 ? log.changes.join(', ') : 'Checked');
+
+                const logDiv = document.createElement('div');
+                logDiv.className = 'p-2 mb-1 border-bottom d-flex justify-content-between align-items-start';
+                logDiv.style.fontSize = '0.8rem';
+                logDiv.innerHTML = `
+                    <div style="flex: 1;">
+                        <div class="fw-bold">${partsText}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">${date} - ${time}</div>
+                    </div>
+                    <div class="text-end" style="min-width: 80px;">
+                        <span class="badge" style="background: var(--accent-primary); font-size: 0.65rem;">${log.user}</span>
+                    </div>
+                `;
+                container.appendChild(logDiv);
+            });
         }
 
         function updateManualLink() {
