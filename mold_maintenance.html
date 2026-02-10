@@ -319,6 +319,16 @@
         .history-row {
             transition: all 0.2s ease;
         }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
@@ -337,6 +347,10 @@
                     <i class="bi bi-person-circle text-secondary"></i>
                     <span id="userInfoDisplay" class="fw-bold" style="font-size: 0.9rem;">User</span>
                 </div>
+                <button id="btnSync" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" onclick="syncFromCloud()"
+                    style="border: 1px solid #e2e8f0; color: var(--accent-primary);">
+                    <i class="bi bi-cloud-arrow-down-fill me-2"></i> Sync
+                </button>
                 <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openAnalysis()"
                     style="background: var(--accent-primary); border: none; box-shadow: 0 4px 12px rgba(91, 124, 153, 0.3);">
                     <i class="bi bi-graph-up me-2"></i> شیکاری
@@ -586,26 +600,70 @@
 
         // --- 3. Initialize/Sync State from Firestore ---
         async function initSystemState() {
-            moldStateDoc.onSnapshot((doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    systemState = { ...DEFAULT_STATE, ...data };
+            // 1. Load from LocalStorage (Instant)
+            const localData = localStorage.getItem('moldMaintenanceState');
+            if (localData) {
+                try {
+                    console.log("Loaded state from LocalStorage");
+                    systemState = { ...DEFAULT_STATE, ...JSON.parse(localData) };
                     ensureStateIntegrity();
-                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) {
-                        viewingMold = systemState.activeMold;
+                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) viewingMold = systemState.activeMold;
+                    renderDashboard();
+                } catch (e) { console.error("Local load error", e); }
+            }
+
+            // 2. Initial Fetch from Cloud (One-time)
+            await syncFromCloud();
+        }
+
+        async function syncFromCloud() {
+            const btn = document.getElementById('btnSync');
+            if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Syncing...'; btn.disabled = true; }
+
+            try {
+                const doc = await moldStateDoc.get();
+                if (doc.exists) {
+                    const cloudData = doc.data();
+                    const localData = systemState;
+
+                    // Smart merge: Compare timestamps to determine which data is newer
+                    const cloudTime = new Date(cloudData.currentSessionStart || 0).getTime();
+                    const localTime = new Date(localData.currentSessionStart || 0).getTime();
+
+                    if (cloudTime > localTime) {
+                        // Cloud is newer, use it
+                        systemState = { ...DEFAULT_STATE, ...cloudData };
+                        console.log("✅ Cloud data is newer, synced from cloud");
+                    } else if (localTime > cloudTime) {
+                        // Local is newer, keep local and update cloud
+                        console.log("✅ Local data is newer, keeping local and syncing to cloud");
+                        await moldStateDoc.set(systemState);
+                    } else {
+                        // Same timestamp, use cloud (default behavior)
+                        systemState = { ...DEFAULT_STATE, ...cloudData };
+                        console.log("✅ Timestamps match, using cloud data");
                     }
+
+                    ensureStateIntegrity();
+                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) viewingMold = systemState.activeMold;
+
+                    // Update Local & UI
+                    localStorage.setItem('moldMaintenanceState', JSON.stringify(systemState));
                     renderDashboard();
                     if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
                     if (document.getElementById('historyModal').classList.contains('show')) renderHistoryTable();
                 } else {
-                    console.log("No state found in Firestore, initializing...");
-                    systemState = JSON.parse(JSON.stringify(DEFAULT_STATE));
-                    ensureStateIntegrity();
-                    saveState();
+                    console.log("No cloud data found.");
+                    if (!localStorage.getItem('moldMaintenanceState')) {
+                        saveState(); // Initialize cloud if empty
+                    }
                 }
-            }, (error) => {
-                console.error("Error listening to state changes: ", error);
-            });
+            } catch (error) {
+                console.error("Sync Error:", error);
+                alert("Failed to sync with cloud. " + error.message);
+            } finally {
+                if (btn) { btn.innerHTML = '<i class="bi bi-cloud-check"></i> Sync'; btn.disabled = false; }
+            }
         }
 
         function ensureStateIntegrity() {
@@ -1093,9 +1151,10 @@
         async function saveState() {
             try {
                 const stateToSave = { ...systemState };
+                localStorage.setItem('moldMaintenanceState', JSON.stringify(stateToSave));
                 await moldStateDoc.set(stateToSave);
             } catch (error) {
-                console.error("Error saving state to Firestore: ", error);
+                console.error("Error saving state: ", error);
             }
         }
 
