@@ -232,6 +232,10 @@
                             onclick="showProjectsPage()">
                             <i class="bi bi-briefcase-fill"></i> پڕۆژەکان
                         </button>
+                        <button class="modern-action-btn btn-danger admin-only" id="migrateBtn"
+                            onclick="migrateDataToSubcollections()">
+                            <i class="bi bi-database-fill-up"></i> گواستنەوەی داتا
+                        </button>
                         <button class="modern-action-btn btn-warning" id="testFirebaseBtn" style="display: none;">
                             <i class="bi bi-bug"></i> Test DB
                         </button>
@@ -1649,8 +1653,24 @@
             try {
                 console.log('📥 Loading data from Firebase...');
 
-                // 1. Load Employees
-                const employeesSnapshot = await db.collection('employees').get();
+                // 1. Load Employees with Role-Based Filtering
+                let employeesQuery = db.collection('employees');
+
+                // Supervisor/Manager Filtering logic
+                if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin') {
+                    if (currentUser.department) {
+                        // Most roles have a single department
+                        employeesQuery = employeesQuery.where('department', '==', currentUser.department);
+                    } else if (USER_PERMISSIONS[currentUser.username]) {
+                        // Some might have multiple - if so, we fetch all but filter in JS (or use 'in' query)
+                        const allowedDepts = USER_PERMISSIONS[currentUser.username];
+                        if (allowedDepts.length > 0) {
+                            employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
+                        }
+                    }
+                }
+
+                const employeesSnapshot = await employeesQuery.get();
                 employees = [];
                 employeesSnapshot.forEach(doc => {
                     employees.push({ id: doc.id, ...doc.data() });
@@ -2029,8 +2049,8 @@
         }
 
         // Apply department filter to daily work totals
-        function applyTotalsDepartmentFilter() {
-            updateDailyWorkTotals();
+        async function applyTotalsDepartmentFilter() {
+            await updateDailyWorkTotals();
             showNotification('فیلتەری بەش جێبەجێ کرا', 'success');
         }
 
@@ -2228,7 +2248,7 @@
         }
 
         // Show dashboard
-        function showDashboard() {
+        async function showDashboard() {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
             document.getElementById('workRecordsPage').style.display = 'none';
@@ -2311,10 +2331,10 @@
             updateNotificationCount();
 
             // Update daily work totals
-            updateDailyWorkTotals();
+            await updateDailyWorkTotals();
 
             // Update electrical/mechanical work totals
-            updateElectricalMechanicalTotals();
+            await updateElectricalMechanicalTotals();
 
 
         }
@@ -2334,7 +2354,7 @@
         }
 
         // Function to show the new Totals Page
-        function showTotalsPage() {
+        async function showTotalsPage() {
             // Hide Main Dashboard
             document.getElementById('dashboardPage').style.display = 'none';
 
@@ -2364,9 +2384,9 @@
         }
 
         // Function to go back
-        function backToDashboardFromTotals() {
+        async function backToDashboardFromTotals() {
             document.getElementById('totalsPage').style.display = 'none';
-            document.getElementById('dashboardPage').style.display = 'block';
+            await showDashboard();
         }
         // Show notifications page - UPDATED
         function showNotificationsPage() {
@@ -2393,7 +2413,7 @@
         }
 
         // Back to dashboard from projects
-        function backToDashboardFromProjects() {
+        async function backToDashboardFromProjects() {
             document.getElementById('projectsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
 
@@ -2407,7 +2427,7 @@
             updateElectricalMechanicalTotals();
         }
         // Back to dashboard from notifications
-        function backToDashboardFromNotifications() {
+        async function backToDashboardFromNotifications() {
             document.getElementById('notificationsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
 
@@ -3033,7 +3053,7 @@
 
 
         // Back to dashboard functions - make sure they show the department filter for admin
-        function backToDashboard() {
+        async function backToDashboard() {
             document.getElementById('workRecordsPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
 
@@ -3047,10 +3067,10 @@
             updateElectricalMechanicalTotals();
         }
         // Switch record type
-        function switchRecordType(type) {
+        async function switchRecordType(type) {
             currentRecordType = type;
             updateRecordTabs();
-            loadWorkRecords();
+            await loadWorkRecords();
         }
 
         // Update record tabs
@@ -3070,26 +3090,77 @@
             }
         }
 
-        // Load work records - Modern Card Design
-        function loadWorkRecords(employee = null) {
+        // Load work records from subcollection - NEW ASYNC VERSION WITH FALLBACK
+        async function loadWorkRecords(employee = null) {
             if (!employee) {
                 employee = employees.find(emp => emp.id === currentEmployeeId);
                 if (!employee) return;
             }
 
             const recordsContainer = document.getElementById('recordsContainer');
+            recordsContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-primary font-bold">خەریکە تۆمارەکان باردەکرێن...</p></div>';
+
+            try {
+                // Fetch from Firestore Subcollection
+                const snapshot = await db.collection('employees').doc(employee.id).collection('workRecords').get();
+                const subcollectionRecords = [];
+                snapshot.forEach(doc => {
+                    subcollectionRecords.push({ id: doc.id, ...doc.data() });
+                });
+
+                // FALLBACK: Merge with legacy data still in the employee document
+                const legacyDaily = employee.dailyWork || [];
+                const legacyOther = employee.otherWork || [];
+
+                // Filter subcollection records by type
+                const subDaily = subcollectionRecords.filter(r => r.type === 'daily' || (!r.type && r.carts !== undefined));
+                const subOther = subcollectionRecords.filter(r => r.type === 'other' || (!r.type && r.carts === undefined));
+
+                // Merge and Deduplicate (just in case)
+                const mergeRecords = (sub, legacy) => {
+                    const combined = [...sub];
+                    legacy.forEach(lRec => {
+                        // Check if this record already exists in subcollection results (by createdAt or content)
+                        const exists = sub.some(sRec =>
+                            (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date)
+                        );
+                        if (!exists) combined.push(lRec);
+                    });
+                    return combined;
+                };
+
+                const dailyWork = mergeRecords(subDaily, legacyDaily);
+                const otherWork = mergeRecords(subOther, legacyOther);
+
+                // Update local employee object so other functions (ratings, etc) can still work
+                employee.dailyWork = dailyWork;
+                employee.otherWork = otherWork;
+
+                // Update record counts in UI
+                document.getElementById('dailyWorkCount').textContent = dailyWork.length;
+                document.getElementById('otherWorkCount').textContent = otherWork.length;
+
+                // Update individual totals for this employee now that we have merged data
+                if (['crushing-prep', 'cutting-setting', 'unsetting'].includes(employee.department)) {
+                    updateEmployeeDailyWorkTotals(employee);
+                } else if (employee.department === 'mechanical' || employee.department === 'electrical-ac') {
+                    updateEmployeeElectricalMechanicalTotals(employee);
+                }
+
+                renderWorkRecordsHtml(employee);
+            } catch (error) {
+                console.error('Error loading work records:', error);
+                showNotification('هەڵە لە بارکردنی تۆمارەکان', 'danger');
+                recordsContainer.innerHTML = '<p class="text-center text-danger">هەڵە لە بارکردنی داتا</p>';
+            }
+        }
+
+        // Helper to render the records HTML (moved out of loadWorkRecords)
+        function renderWorkRecordsHtml(employee) {
+            const recordsContainer = document.getElementById('recordsContainer');
             recordsContainer.innerHTML = '';
 
-            // Update record counts
-            const dailyCount = employee.dailyWork ? employee.dailyWork.length : 0;
-            const otherCount = employee.otherWork ? employee.otherWork.length : 0;
-
-            document.getElementById('dailyWorkCount').textContent = dailyCount;
-            document.getElementById('otherWorkCount').textContent = otherCount;
-
-            // Load records based on current type
             let workRecords = [];
-
             if (currentRecordType === 'daily') {
                 workRecords = employee.dailyWork || [];
             } else {
@@ -3169,8 +3240,6 @@
                                 </div>
                             `;
                         }
-                    } else if (currentRecordType === 'daily' && !isSpecial) {
-                        // Standard daily work details
                     }
 
                     recordContent += `</div>`;
@@ -3869,18 +3938,21 @@
                 workRecord.carts = carts;
             }
 
-            employee.dailyWork.push(workRecord);
+            employee.dailyWork.push(workRecord); // Keep for local UI update
 
-            const success = await saveEmployeeToFirebase(employee);
+            // New Subcollection Logic
+            workRecord.type = 'daily';
+            const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
+                // Update local employees array structure if needed
                 loadWorkRecords(employee);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
                 if (modal) modal.hide();
                 showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
 
-                if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
-                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+                if (typeof updateDailyWorkTotals === 'function') await updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') await updateElectricalMechanicalTotals();
             } else {
                 showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
             }
@@ -3928,15 +4000,19 @@
                 workRecord.isSpecial = true; // Mark as special to show timing details
             }
 
-            employee.otherWork.push(workRecord);
+            employee.otherWork.push(workRecord); // Local update
 
-            const success = await saveEmployeeToFirebase(employee);
+            // Subcollection Save
+            workRecord.type = 'other';
+            const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
                 loadWorkRecords(employee);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addOtherWorkModal'));
                 modal.hide();
                 showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
+                await updateDailyWorkTotals();
+                await updateElectricalMechanicalTotals();
             } else {
                 showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
             }
@@ -4059,10 +4135,13 @@
                 }
 
                 employee.dailyWork.push(workRecord);
-                await saveEmployeeToFirebase(employee);
+
+                // Subcollection Save
+                workRecord.type = 'daily';
+                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
-            // Save grouped notifications
+            // Save grouped notifications (stays same as it is a separate collection)
             for (const workKey in notificationGroups) {
                 await saveNotificationToFirebase(notificationGroups[workKey]);
                 notifications.push(notificationGroups[workKey]);
@@ -4072,7 +4151,8 @@
 
             // If we're on the work records page, reload the records
             if (document.getElementById('workRecordsPage').style.display === 'block') {
-                loadWorkRecords();
+                const currentEmp = employees.find(e => e.id === currentEmployeeId);
+                if (currentEmp) loadWorkRecords(currentEmp);
             }
 
             const modal = bootstrap.Modal.getInstance(document.getElementById('addSpecialDailyWorkModal'));
@@ -4080,7 +4160,8 @@
             showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
 
             // Update electrical/mechanical work totals
-            updateElectricalMechanicalTotals();
+            await updateElectricalMechanicalTotals();
+            await updateDailyWorkTotals();
         }
 
         // Open quick record modal
@@ -4193,7 +4274,10 @@
                 }
 
                 employee.dailyWork.push(workRecord);
-                await saveEmployeeToFirebase(employee);
+
+                // Subcollection Save
+                workRecord.type = 'daily';
+                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
             showNotification(`تۆماری کار بۆ ${selectedEmployees.length} کارمەند بەسەرکەوتووی تۆمارکرا`, 'success');
@@ -4201,10 +4285,11 @@
             modal.hide();
 
             // Update daily work totals
-            updateDailyWorkTotals();
+            await updateDailyWorkTotals();
+            await updateElectricalMechanicalTotals();
         }
 
-        function updateDailyWorkTotals() {
+        async function updateDailyWorkTotals() {
             // Safety check: ensure elements exist before using them
             const dailyWorkTotalsSection = document.getElementById('dailyWorkTotalsSection');
             const dailyWorkTotalsBody = document.getElementById('dailyWorkTotalsBody');
@@ -4218,6 +4303,7 @@
 
             if (showTotals) {
                 dailyWorkTotalsSection.style.display = 'block';
+                dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
 
                 // Get selected departments
                 const checkboxes = document.querySelectorAll('.department-checkbox:checked');
@@ -4235,144 +4321,152 @@
                     if (clayTonsColumnHeader) clayTonsColumnHeader.style.display = 'none';
                 }
 
-                // Clear existing rows
-                dailyWorkTotalsBody.innerHTML = '';
+                try {
+                    // Prepare Collection Group Query for Totals
+                    let query = db.collectionGroup('workRecords');
 
-                // Filter employees
-                let employeesToShow = employees.filter(emp =>
-                    emp.department !== 'electrical-ac' && emp.department !== 'mechanical'
-                );
+                    // Filter by date if period is custom
+                    if (periodFilter.type === 'custom') {
+                        query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
+                    } else {
+                        // For "all", we limit to last 30 days for dashboard performance/cost by default 
+                        // unless specifically requested to be truly "all"
+                        const defaultStart = new Date();
+                        defaultStart.setDate(defaultStart.getDate() - 30);
+                        const dateStr = defaultStart.toISOString().split('T')[0];
+                        query = query.where('date', '>=', dateStr);
+                    }
 
-                if (currentUser.role !== 'admin') {
-                    employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
-                } else {
-                    if (selectedDepartments.length > 0) {
+                    const snapshot = await query.get();
+                    const allRecords = [];
+                    snapshot.forEach(doc => {
+                        allRecords.push({ employeeId: doc.ref.parent.parent.id, ...doc.data() });
+                    });
+
+                    // Filter employees
+                    let employeesToShow = employees.filter(emp =>
+                        emp.department !== 'electrical-ac' && emp.department !== 'mechanical'
+                    );
+
+                    if (currentUser.role !== 'admin') {
+                        employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
+                    } else if (selectedDepartments.length > 0) {
                         employeesToShow = employeesToShow.filter(emp => selectedDepartments.includes(emp.department));
                     }
-                }
 
-                if (employeesToShow.length === 0) {
-                    dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
-                    return;
-                }
+                    // Calculate totals for each employee from the fetched records
+                    const employeeTotals = employeesToShow.map(employee => {
+                        let cartsTotal = 0;
+                        let clayTonsTotal = 0;
+                        let workCount = 0;
 
-                // Calculate totals for each employee
-                const employeeTotals = employeesToShow.map(employee => {
-                    let cartsTotal = 0;
-                    let clayTonsTotal = 0;
-                    let workCount = 0;
+                        // Records from subcollection
+                        const subRecords = allRecords.filter(r => r.employeeId === employee.id && (r.type === 'daily' || !r.type));
 
-                    if (employee.dailyWork && employee.dailyWork.length > 0) {
-                        // Filter daily work by period if needed
-                        let filteredDailyWork = employee.dailyWork;
-                        if (periodFilter.type === 'custom' && filteredDailyWork.length > 0) {
-                            filteredDailyWork = filteredDailyWork.filter(work => {
+                        // FALLBACK: Records from legacy array
+                        let legacyRecords = employee.dailyWork || [];
+                        if (periodFilter.type === 'custom' && legacyRecords.length > 0) {
+                            legacyRecords = legacyRecords.filter(work => {
                                 const workDate = work.date;
                                 return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
                             });
+                        } else if (periodFilter.type === 'all' && legacyRecords.length > 0) {
+                            // Default to last 30 days for legacy if not specified (matches subcollection query)
+                            const defaultStart = new Date();
+                            defaultStart.setDate(defaultStart.getDate() - 30);
+                            const dateStr = defaultStart.toISOString().split('T')[0];
+                            legacyRecords = legacyRecords.filter(work => work.date >= dateStr);
                         }
 
-                        filteredDailyWork.forEach(work => {
-                            if (work.carts) {
-                                cartsTotal += parseFloat(work.carts);
-                            }
-                            if (work.clayTons) {
-                                clayTonsTotal += parseFloat(work.clayTons);
-                            }
+                        // Merge subcollection and legacy (with deduplication)
+                        const combinedRecords = [...subRecords];
+                        legacyRecords.forEach(lRec => {
+                            const exists = subRecords.some(sRec =>
+                                (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date)
+                            );
+                            if (!exists) combinedRecords.push(lRec);
+                        });
+
+                        combinedRecords.forEach(work => {
+                            if (work.carts) cartsTotal += parseFloat(work.carts);
+                            if (work.clayTons) clayTonsTotal += parseFloat(work.clayTons);
                             workCount++;
                         });
+
+                        return {
+                            id: employee.id,
+                            name: employee.name,
+                            department: employee.department,
+                            carts: cartsTotal,
+                            clayTons: clayTonsTotal,
+                            workCount: workCount
+                        };
+                    });
+
+                    // Clear existing rows
+                    dailyWorkTotalsBody.innerHTML = '';
+
+                    if (employeeTotals.length === 0) {
+                        dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
+                        return;
                     }
 
-                    return {
-                        id: employee.id,
-                        name: employee.name,
-                        department: employee.department,
-                        carts: cartsTotal,
-                        clayTons: clayTonsTotal,
-                        workCount: workCount
-                    };
-                });
+                    // Sort the employee totals
+                    const sortedTotals = employeeTotals.sort((a, b) => {
+                        let valueA, valueB;
+                        switch (dailyWorkTotalsSortColumn) {
+                            case 'name': valueA = a.name.toLowerCase(); valueB = b.name.toLowerCase(); break;
+                            case 'id': valueA = a.id.toLowerCase(); valueB = b.id.toLowerCase(); break;
+                            case 'department': valueA = a.department.toLowerCase(); valueB = b.department.toLowerCase(); break;
+                            case 'carts': valueA = a.carts; valueB = b.carts; break;
+                            case 'clayTons': valueA = a.clayTons; valueB = b.clayTons; break;
+                            case 'workCount': valueA = a.workCount; valueB = b.workCount; break;
+                            default: return 0;
+                        }
 
-                // Sort the employee totals
-                const sortedTotals = employeeTotals.sort((a, b) => {
-                    let valueA, valueB;
+                        if (typeof valueA === 'string') {
+                            return dailyWorkTotalsSortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+                        } else {
+                            return dailyWorkTotalsSortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+                        }
+                    });
 
-                    switch (dailyWorkTotalsSortColumn) {
-                        case 'name':
-                            valueA = a.name.toLowerCase();
-                            valueB = b.name.toLowerCase();
-                            break;
-                        case 'id':
-                            valueA = a.id.toLowerCase();
-                            valueB = b.id.toLowerCase();
-                            break;
-                        case 'department':
-                            valueA = a.department.toLowerCase();
-                            valueB = b.department.toLowerCase();
-                            break;
-                        case 'carts':
-                            valueA = a.carts;
-                            valueB = b.carts;
-                            break;
-                        case 'clayTons':
-                            valueA = a.clayTons;
-                            valueB = b.clayTons;
-                            break;
-                        case 'workCount':
-                            valueA = a.workCount;
-                            valueB = b.workCount;
-                            break;
-                        default:
-                            return 0;
-                    }
+                    // Add rows
+                    sortedTotals.forEach(employee => {
+                        const row = document.createElement('tr');
+                        const cartsFormatted = Number(employee.carts.toFixed(2));
+                        const clayTonsFormatted = Number(employee.clayTons.toFixed(2));
 
-                    if (typeof valueA === 'string') {
-                        return dailyWorkTotalsSortDirection === 'asc'
-                            ? valueA.localeCompare(valueB)
-                            : valueB.localeCompare(valueA);
-                    } else {
-                        return dailyWorkTotalsSortDirection === 'asc'
-                            ? valueA - valueB
-                            : valueB - valueA;
-                    }
-                });
-
-                // Add rows
-                employeeTotals.forEach(employee => {
-                    const row = document.createElement('tr');
-
-                    // Format numbers to avoid long decimals
-                    const cartsFormatted = Number(employee.carts.toFixed(2));
-                    const clayTonsFormatted = Number(employee.clayTons.toFixed(2));
-
-                    if (currentUser.role === 'admin') {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                    } else if (currentUser.department === 'crushing-prep') {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                    } else {
-                        row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                    }
-                    dailyWorkTotalsBody.appendChild(row);
-                });
-
+                        if (currentUser.role === 'admin') {
+                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                        } else if (currentUser.department === 'crushing-prep') {
+                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                        } else {
+                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                        }
+                        dailyWorkTotalsBody.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error('Error updating daily work totals:', error);
+                    dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">هەڵە لە بارکردنی داتا</td></tr>';
+                }
             } else {
                 dailyWorkTotalsSection.style.display = 'none';
             }
         }
 
-        // Update electrical/mechanical work totals
-        function updateElectricalMechanicalTotals() {
+        async function updateElectricalMechanicalTotals() {
             const electricalMechanicalTotalsSection = document.getElementById('electricalMechanicalTotalsSection');
             const electricalMechanicalTotalsBody = document.getElementById('electricalMechanicalTotalsBody');
+
+            if (!electricalMechanicalTotalsSection || !electricalMechanicalTotalsBody) return;
 
             // Show the section only for electrical/mechanical departments and admin
             const showTotals = ['electrical-ac', 'mechanical'].includes(currentUser.department) || currentUser.role === 'admin';
 
             if (showTotals) {
                 electricalMechanicalTotalsSection.style.display = 'block';
-
-                // Clear existing rows
-                electricalMechanicalTotalsBody.innerHTML = '';
+                electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
 
                 // Filter employees based on user role
                 let employeesToShow = employees;
@@ -4385,35 +4479,62 @@
                     );
                 }
 
-                if (employeesToShow.length === 0) {
-                    electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
-                    return;
-                }
+                try {
+                    // Prepare Collection Group Query
+                    let query = db.collectionGroup('workRecords');
+                    if (periodFilter.type === 'custom') {
+                        query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
+                    } else {
+                        const defaultStart = new Date();
+                        defaultStart.setDate(defaultStart.getDate() - 30);
+                        const dateStr = defaultStart.toISOString().split('T')[0];
+                        query = query.where('date', '>=', dateStr);
+                    }
 
-                // Calculate totals for each employee
-                const employeeTotals = employeesToShow.map(employee => {
-                    let totalHours = 0;
-                    let totalMinutes = 0;
-                    let workCount = 0;
-                    let totalRating = 0;
+                    const snapshot = await query.get();
+                    const allRecords = [];
+                    snapshot.forEach(doc => {
+                        allRecords.push({ employeeId: doc.ref.parent.parent.id, ...doc.data() });
+                    });
 
-                    if (employee.dailyWork && employee.dailyWork.length > 0) {
-                        // Filter daily work by period if needed
-                        let filteredDailyWork = employee.dailyWork;
-                        if (periodFilter.type === 'custom' && filteredDailyWork.length > 0) {
-                            filteredDailyWork = filteredDailyWork.filter(work => {
+                    // Calculate totals for each employee
+                    const employeeTotals = employeesToShow.map(employee => {
+                        let totalHours = 0;
+                        let totalMinutes = 0;
+                        let workCount = 0;
+                        let totalRating = 0;
+
+                        // Records from subcollection
+                        const subRecords = allRecords.filter(r => r.employeeId === employee.id && r.isSpecial);
+
+                        // FALLBACK: Records from legacy array
+                        let legacyRecords = (employee.dailyWork || []).filter(r => r.isSpecial);
+                        if (periodFilter.type === 'custom' && legacyRecords.length > 0) {
+                            legacyRecords = legacyRecords.filter(work => {
                                 const workDate = work.date;
                                 return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
                             });
+                        } else if (periodFilter.type === 'all' && legacyRecords.length > 0) {
+                            const defaultStart = new Date();
+                            defaultStart.setDate(defaultStart.getDate() - 30);
+                            const dateStr = defaultStart.toISOString().split('T')[0];
+                            legacyRecords = legacyRecords.filter(work => work.date >= dateStr);
                         }
 
-                        filteredDailyWork.forEach(work => {
-                            if (work.isSpecial) {
-                                totalHours += parseInt(work.totalHours || 0);
-                                totalMinutes += parseInt(work.totalMinutes || 0);
-                                totalRating += parseInt(work.rate || 0);
-                                workCount++;
-                            }
+                        // Merge subcollection and legacy
+                        const combinedRecords = [...subRecords];
+                        legacyRecords.forEach(lRec => {
+                            const exists = subRecords.some(sRec =>
+                                (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date)
+                            );
+                            if (!exists) combinedRecords.push(lRec);
+                        });
+
+                        combinedRecords.forEach(work => {
+                            totalHours += parseInt(work.totalHours || 0);
+                            totalMinutes += parseInt(work.totalMinutes || 0);
+                            totalRating += parseInt(work.rate || 0);
+                            workCount++;
                         });
 
                         // Convert minutes to hours if needed
@@ -4421,81 +4542,65 @@
                             totalHours += Math.floor(totalMinutes / 60);
                             totalMinutes = totalMinutes % 60;
                         }
+
+                        const averageRating = workCount > 0 ? totalRating / workCount : 0;
+
+                        return {
+                            id: employee.id,
+                            name: employee.name,
+                            department: employee.department,
+                            position: employee.position,
+                            totalHours: totalHours,
+                            totalMinutes: totalMinutes,
+                            workCount: workCount,
+                            averageRating: averageRating
+                        };
+                    });
+
+                    electricalMechanicalTotalsBody.innerHTML = '';
+
+                    if (employeeTotals.length === 0) {
+                        electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
+                        return;
                     }
 
-                    const averageRating = workCount > 0 ? totalRating / workCount : 0;
+                    // Sort the employee totals
+                    const sortedTotals = employeeTotals.sort((a, b) => {
+                        let valueA, valueB;
+                        switch (electricalMechanicalTotalsSortColumn) {
+                            case 'name': valueA = a.name.toLowerCase(); valueB = b.name.toLowerCase(); break;
+                            case 'id': valueA = a.id.toLowerCase(); valueB = b.id.toLowerCase(); break;
+                            case 'department': valueA = a.department.toLowerCase(); valueB = b.department.toLowerCase(); break;
+                            case 'workCount': valueA = a.workCount; valueB = b.workCount; break;
+                            case 'averageRating': valueA = a.averageRating; valueB = b.averageRating; break;
+                            default: return 0;
+                        }
 
-                    return {
-                        id: employee.id,
-                        name: employee.name,
-                        department: employee.department,
-                        position: employee.position,
-                        totalHours: totalHours,
-                        totalMinutes: totalMinutes,
-                        workCount: workCount,
-                        averageRating: averageRating
-                    };
-                });
+                        if (typeof valueA === 'string') {
+                            return electricalMechanicalTotalsSortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+                        } else {
+                            return electricalMechanicalTotalsSortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+                        }
+                    });
 
-                // Sort the employee totals
-                const sortedTotals = employeeTotals.sort((a, b) => {
-                    let valueA, valueB;
-
-                    switch (electricalMechanicalTotalsSortColumn) {
-                        case 'name':
-                            valueA = a.name.toLowerCase();
-                            valueB = b.name.toLowerCase();
-                            break;
-                        case 'id':
-                            valueA = a.id.toLowerCase();
-                            valueB = b.id.toLowerCase();
-                            break;
-                        case 'department':
-                            valueA = a.department.toLowerCase();
-                            valueB = b.department.toLowerCase();
-                            break;
-                        case 'position':
-                            valueA = a.position.toLowerCase();
-                            valueB = b.position.toLowerCase();
-                            break;
-                        case 'totalHours':
-                            valueA = a.totalHours;
-                            valueB = b.totalHours;
-                            break;
-                        case 'workCount':
-                            valueA = a.workCount;
-                            valueB = b.workCount;
-                            break;
-                        default:
-                            return 0;
-                    }
-
-                    if (typeof valueA === 'string') {
-                        return electricalMechanicalTotalsSortDirection === 'asc'
-                            ? valueA.localeCompare(valueB)
-                            : valueB.localeCompare(valueA);
-                    } else {
-                        return electricalMechanicalTotalsSortDirection === 'asc'
-                            ? valueA - valueB
-                            : valueB - valueA;
-                    }
-                });
-
-                // Add rows to the table
-                sortedTotals.forEach(employee => {
-                    const row = document.createElement('tr');
-
-                    row.innerHTML = `
-                    <td>${employee.name}</td>
-                    <td>${employee.id}</td>
-                    <td>${getDepartmentDisplayName(employee.department)}</td>
-                    <td>${employee.position}</td>
-                    <td><span>${employee.totalHours} کاتژمێر و ${employee.totalMinutes} خولەک</span></td>
-                    <td><span>${employee.workCount}</span></td>
-                `;
-
-                    electricalMechanicalTotalsBody.appendChild(row);
-                });
+                    // Add rows
+                    sortedTotals.forEach(employee => {
+                        const row = document.createElement('tr');
+                        const ratingClass = getRatingClass(employee.averageRating);
+                        row.innerHTML = `
+                            <td>${employee.name}</td>
+                            <td>${employee.id}</td>
+                            <td>${getDepartmentDisplayName(employee.department)}</td>
+                            <td class="text-center">${employee.totalHours}س ${employee.totalMinutes}د</td>
+                            <td class="text-center">${employee.workCount}</td>
+                            <td class="text-center"><span class="badge ${ratingClass}">${employee.averageRating.toFixed(1)}</span></td>
+                        `;
+                        electricalMechanicalTotalsBody.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error('Error updating elect-mech totals:', error);
+                    electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">هەڵە لە بارکردنی داتا</td></tr>';
+                }
             } else {
                 electricalMechanicalTotalsSection.style.display = 'none';
             }
@@ -6333,7 +6438,10 @@
                 };
 
                 employee.dailyWork.push(workRecord);
-                await saveEmployeeToFirebase(employee);
+
+                // Subcollection Save
+                workRecord.type = 'daily';
+                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
             showNotification(`کاری پاککردنەوە بۆ ${selectedEmployees.length} کارمەند تۆمارکرا`, 'success');
@@ -6449,7 +6557,10 @@
                 };
 
                 employee.dailyWork.push(workRecord);
-                await saveEmployeeToFirebase(employee);
+
+                // Subcollection Save
+                workRecord.type = 'daily';
+                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
             showNotification(`کاری گریسین بۆ ${selectedEmployees.length} کارمەند لە ${selectedDepartments.length} شوێن تۆمارکرا`, 'success');
@@ -6522,6 +6633,75 @@
             }
         }
 
+        // --- DATA MIGRATION UTILITY (Run once) ---
+        async function migrateDataToSubcollections() {
+            if (!confirm('ئایا دڵنیای لە گواستنەوەی هەموو داتاکان بۆ سیستەمی نوێ؟\nئەم کارە کاتێکی کەمی دەوێت و دڵنیایی دەدات لەوەی داتاکان ون نەبن.')) return;
+
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>خەریکە دەگوازرێتەوە...';
+            btn.disabled = true;
+
+            let successCount = 0;
+            let totalRecordsMoved = 0;
+
+            try {
+                // Fetch ALL employees to migrate their data
+                const snapshot = await db.collection('employees').get();
+                const allEmployees = [];
+                snapshot.forEach(doc => allEmployees.push({ id: doc.id, ...doc.data() }));
+
+                for (const emp of allEmployees) {
+                    const batch = db.batch();
+                    let recordsToMove = [];
+
+                    if (emp.dailyWork && emp.dailyWork.length > 0) {
+                        emp.dailyWork.forEach(r => {
+                            r.type = 'daily';
+                            recordsToMove.push(r);
+                        });
+                    }
+
+                    if (emp.otherWork && emp.otherWork.length > 0) {
+                        emp.otherWork.forEach(r => {
+                            r.type = 'other';
+                            recordsToMove.push(r);
+                        });
+                    }
+
+                    if (recordsToMove.length > 0) {
+                        console.log(`Migrating ${recordsToMove.length} records for ${emp.name} (${emp.id})`);
+
+                        // Move to subcollection
+                        for (const record of recordsToMove) {
+                            const newRef = db.collection('employees').doc(emp.id).collection('workRecords').doc();
+                            batch.set(newRef, record);
+                            totalRecordsMoved++;
+                        }
+
+                        // Clear original arrays and update main doc
+                        const empRef = db.collection('employees').doc(emp.id);
+                        batch.update(empRef, {
+                            dailyWork: [],
+                            otherWork: []
+                        });
+
+                        await batch.commit();
+                        successCount++;
+                    }
+                }
+
+                showNotification(`سەرکەوتوو بوو: داتای ${successCount} کارمەند و ${totalRecordsMoved} تۆمار گواسترایەوە.`, 'success');
+                refreshData();
+            } catch (error) {
+                console.error('Migration error:', error);
+                showNotification('هەڵە لە کاتی گواستنەوەی داتا: ' + error.message, 'danger');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
         // Apply restrictions when page loads
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', applyPermissionRestrictions);
@@ -6545,4 +6725,3 @@
 </body>
 
 </html>
-
