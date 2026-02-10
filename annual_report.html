@@ -746,16 +746,17 @@
             breadcrumb.innerHTML = '<li class="breadcrumb-item active">Months</li>';
 
             try {
-                // Get all documents to extract unique year-months
-                // Note: Efficient way would be to store a 'months' metadata collection, 
-                // but for now we scan the collection as requested.
-                const snapshot = await db.collection('annual_daily_records').get();
+                // Optimized: Fetch only the last 500 records to extract unique year-months
+                // This covers roughly 1.5 years of daily data with much fewer reads.
+                const snapshot = await db.collection('annual_daily_records')
+                    .orderBy(firebase.firestore.FieldPath.documentId(), 'desc')
+                    .limit(500)
+                    .get();
+
                 const months = new Set();
 
                 snapshot.forEach(doc => {
-                    // ID is YYYY-MM-DD
                     const date = doc.id;
-
                     if (date.length === 10) {
                         const month = date.substring(0, 7); // YYYY-MM
                         months.add(month);
@@ -785,7 +786,19 @@
 
             catch (error) {
                 console.error("Error loading history:", error);
-                container.innerHTML = '<div class="text-danger text-center p-3">Error loading history.</div>';
+
+                if (error.message && error.message.includes('index')) {
+                    console.error("🚨 FIRESTORE INDEX REQUIRED for Annual Report: Click the link above.");
+                    container.innerHTML = `
+                        <div class="alert alert-warning m-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            پێویستە 'Index' دروست بکرێت بۆ مێژووی ڕاپۆڕتی ساڵانە.
+                            <br><small>تکایە سەیری Console بکە بۆ لینکەکە.</small>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="text-danger text-center p-3">Error loading history: ' + error.message + '</div>';
+                }
             }
         }
 
@@ -1212,5 +1225,3 @@
 </body>
 
 </html>
-
-
