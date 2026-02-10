@@ -62,6 +62,16 @@
             }
         }
 
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -446,6 +456,9 @@
                     <i class="bi bi-person-fill" style="color: var(--primary);"></i>
                     <span>User</span>
                 </div>
+                <button id="btnSync" class="btn-header" onclick="loadData()" style="color: var(--primary);">
+                    <i class="bi bi-cloud-arrow-down-fill"></i> Sync
+                </button>
                 <a href="dashboard.html" class="btn-header">
                     <i class="bi bi-arrow-right-circle-fill"></i> گەڕانەوە
                 </a>
@@ -625,12 +638,21 @@
             loadData();
         });
 
-        function loadData() {
-            db.collection('manuals').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        async function loadData() {
+            const btn = document.getElementById('btnSync');
+            if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Syncing...'; btn.disabled = true; }
+
+            try {
+                const snap = await db.collection('manuals').orderBy('createdAt', 'desc').get();
                 allManuals = [];
                 snap.forEach(doc => allManuals.push({ id: doc.id, ...doc.data() }));
                 if (!currentDeptId) renderDepartments(); else renderManuals(currentDeptId);
-            });
+            } catch (error) {
+                console.error("Error loading manuals:", error);
+                showToast("Failed to load manuals", "danger");
+            } finally {
+                if (btn) { btn.innerHTML = '<i class="bi bi-cloud-check"></i> Sync'; btn.disabled = false; }
+            }
         }
 
         function hexToRgb(hex) {
@@ -806,6 +828,7 @@
                 if (id) await db.collection('manuals').doc(id).update(data);
                 else { data.createdAt = new Date().toISOString(); await db.collection('manuals').add(data); }
                 bootstrap.Modal.getInstance(document.getElementById('manualModal')).hide();
+                loadData(); // Refresh
                 showToast('سەرکەوتووبوو', 'success');
             } catch (e) { showToast('هەڵە ڕوویدا', 'danger'); }
         }
@@ -814,6 +837,7 @@
             if (confirm('دڵنیایت؟')) {
                 try {
                     await db.collection('manuals').doc(id).delete();
+                    loadData(); // Refresh
                     showToast('سڕایەوە', 'success');
                 } catch (e) { showToast('هەڵە', 'danger'); }
             }
