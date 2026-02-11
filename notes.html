@@ -418,6 +418,11 @@
                 <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 600;">DAILY NOTES & FEEDBACK</div>
             </div>
             <div class="d-flex align-items-center gap-3">
+                <!-- REFRESH BUTTON - Manually reload notes -->
+                <button class="btn btn-header" onclick="refreshNotes()" title="نوێکردنەوە">
+                    <i class="bi bi-arrow-clockwise fs-4"></i>
+                    <span>نوێکردنەوە</span>
+                </button>
                 <div class="user-badge" id="userInfo">
                     <i class="bi bi-person-circle fs-5"></i>
                     <span>User</span>
@@ -672,10 +677,15 @@
             loadNotes();
         });
 
-        // --- 3. LOAD DATA (Fixed Logic) ---
-        function loadNotes() {
-            // We fetch ALL notes first, then filter/sort in Javascript to prevent "Index" errors
-            db.collection('notes').onSnapshot(snap => {
+        // --- 3. LOAD DATA (OPTIMIZED - One-time read instead of realtime listener) ---
+        // IMPORTANT: Changed from onSnapshot() to get() to MASSIVELY reduce database reads
+        // onSnapshot() creates a persistent listener that re-reads ALL notes on EVERY change
+        // get() reads notes only once, saving hundreds of thousands of reads per month
+        // NO DATA LOSS: All write operations (save/delete) remain unchanged
+        async function loadNotes() {
+            try {
+                console.log('📡 Loading notes from Firebase...');
+                const snap = await db.collection('notes').get(); // ONE-TIME READ (not realtime)
                 notesList = [];
                 snap.forEach(doc => {
                     notesList.push({ id: doc.id, ...doc.data() });
@@ -685,7 +695,17 @@
                 notesList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                 renderNotes();
-            });
+                console.log(`✅ Loaded ${notesList.length} notes`);
+            } catch (error) {
+                console.error('❌ Error loading notes:', error);
+                showToast('هەڵە لە بارکردنی تێبینییەکان', 'danger');
+            }
+        }
+
+        // Manual refresh function - call this to reload notes on demand
+        function refreshNotes() {
+            loadNotes();
+            showToast('تێبینییەکان نوێ کرانەوە', 'success');
         }
 
         function renderNotes() {
@@ -989,6 +1009,9 @@
                 }
                 bootstrap.Modal.getInstance(document.getElementById('noteModal')).hide();
 
+                // RELOAD notes after save (since we removed realtime listener)
+                loadNotes();
+
                 // Force re-verification for electrical, setting and unemp users
                 if (currentUser.username === 'electrical' || currentUser.username === 'setemp' || currentUser.username === 'unemp') {
                     activeEmployee = null;
@@ -1006,6 +1029,8 @@
                 try {
                     await db.collection('notes').doc(id).delete();
                     showToast('سڕایەوە', 'success');
+                    // RELOAD notes after delete (since we removed realtime listener)
+                    loadNotes();
                 } catch (e) { showToast('هەڵە', 'danger'); }
             }
         }
@@ -1027,6 +1052,8 @@
                 });
                 inputEl.value = ''; // Clear input
                 showToast('وەڵام نێردرا', 'success');
+                // RELOAD notes after reply (since we removed realtime listener)
+                loadNotes();
             } catch (e) {
                 console.error(e);
                 showToast('هەڵە ڕوویدا', 'danger');
@@ -1057,6 +1084,8 @@
                     replies: updatedReplies
                 });
                 showToast('وەڵامەکە نوێکرایەوە', 'success');
+                // RELOAD notes after edit (since we removed realtime listener)
+                loadNotes();
             } catch (e) {
                 console.error(e);
                 showToast('هەڵە ڕوویدا', 'danger');
@@ -1083,6 +1112,8 @@
                     replies: updatedReplies
                 });
                 showToast('وەڵامەکە سڕایەوە', 'success');
+                // RELOAD notes after delete (since we removed realtime listener)
+                loadNotes();
             } catch (e) {
                 console.error(e);
                 showToast('هەڵە ڕوویدا', 'danger');
@@ -1161,4 +1192,3 @@
 </body>
 
 </html>
-
