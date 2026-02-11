@@ -437,18 +437,38 @@
                     });
                 }
 
-                let employeesQuery = db.collection('employees');
-                // Role-Based Filtering to reduce reads
-                if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin' && currentUser.role !== 'manager') {
-                    const allowedDepts = USER_PERMISSIONS[currentUser.username];
-                    if (allowedDepts && allowedDepts.length > 0) {
-                        employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
-                    } else if (currentUser.department) {
-                        employeesQuery = employeesQuery.where('department', '==', currentUser.department);
+                // ✨ SESSION CACHING ✨ - Cache employee data to reduce redundant reads
+                // Saves 50+ reads per page refresh after initial load
+                const cachedEmployees = sessionStorage.getItem('reports_cached_employees');
+                const cacheTimestamp = sessionStorage.getItem('reports_cache_timestamp');
+                const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes (longer since employees rarely change)
+
+                const now = Date.now();
+                const cacheValid = cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION;
+
+                if (cacheValid && cachedEmployees) {
+                    employees = JSON.parse(cachedEmployees);
+                    console.log('✅ Using cached employees - NO FIREBASE READS!');
+                } else {
+                    console.log('📡 Fetching employees from Firebase...');
+                    let employeesQuery = db.collection('employees');
+                    // Role-Based Filtering to reduce reads
+                    if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin' && currentUser.role !== 'manager') {
+                        const allowedDepts = USER_PERMISSIONS[currentUser.username];
+                        if (allowedDepts && allowedDepts.length > 0) {
+                            employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
+                        } else if (currentUser.department) {
+                            employeesQuery = employeesQuery.where('department', '==', currentUser.department);
+                        }
                     }
+                    const snap = await employeesQuery.get();
+                    snap.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
+
+                    // Save to cache
+                    sessionStorage.setItem('reports_cached_employees', JSON.stringify(employees));
+                    sessionStorage.setItem('reports_cache_timestamp', now.toString());
+                    console.log(`✅ Cached ${employees.length} employees`);
                 }
-                const snap = await employeesQuery.get();
-                snap.forEach(doc => employees.push({ id: doc.id, ...doc.data() }));
 
                 // Apply Permissions
                 updateDashboardPermissions();
