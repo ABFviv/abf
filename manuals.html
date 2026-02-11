@@ -643,9 +643,30 @@
             if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Syncing...'; btn.disabled = true; }
 
             try {
-                const snap = await db.collection('manuals').orderBy('createdAt', 'desc').get();
-                allManuals = [];
-                snap.forEach(doc => allManuals.push({ id: doc.id, ...doc.data() }));
+                // ✨ SESSION CACHING ✨ - Cache manuals to reduce redundant reads
+                // Manuals rarely change, so longer cache duration
+                const cachedManuals = sessionStorage.getItem('cached_manuals');
+                const cacheTimestamp = sessionStorage.getItem('manuals_cache_timestamp');
+                const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+
+                const now = Date.now();
+                const cacheValid = cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION;
+
+                if (cacheValid && cachedManuals) {
+                    allManuals = JSON.parse(cachedManuals);
+                    console.log('✅ Using cached manuals - NO FIREBASE READS!');
+                } else {
+                    console.log('📡 Fetching manuals from Firebase...');
+                    const snap = await db.collection('manuals').orderBy('createdAt', 'desc').get();
+                    allManuals = [];
+                    snap.forEach(doc => allManuals.push({ id: doc.id, ...doc.data() }));
+
+                    // Save to cache
+                    sessionStorage.setItem('cached_manuals', JSON.stringify(allManuals));
+                    sessionStorage.setItem('manuals_cache_timestamp', now.toString());
+                    console.log(`✅ Cached ${allManuals.length} manuals`);
+                }
+
                 if (!currentDeptId) renderDepartments(); else renderManuals(currentDeptId);
             } catch (error) {
                 console.error("Error loading manuals:", error);
@@ -828,6 +849,11 @@
                 if (id) await db.collection('manuals').doc(id).update(data);
                 else { data.createdAt = new Date().toISOString(); await db.collection('manuals').add(data); }
                 bootstrap.Modal.getInstance(document.getElementById('manualModal')).hide();
+
+                // Clear cache since we modified data
+                sessionStorage.removeItem('cached_manuals');
+                sessionStorage.removeItem('manuals_cache_timestamp');
+
                 loadData(); // Refresh
                 showToast('سەرکەوتووبوو', 'success');
             } catch (e) { showToast('هەڵە ڕوویدا', 'danger'); }
@@ -837,6 +863,11 @@
             if (confirm('دڵنیایت؟')) {
                 try {
                     await db.collection('manuals').doc(id).delete();
+
+                    // Clear cache since we modified data
+                    sessionStorage.removeItem('cached_manuals');
+                    sessionStorage.removeItem('manuals_cache_timestamp');
+
                     loadData(); // Refresh
                     showToast('سڕایەوە', 'success');
                 } catch (e) { showToast('هەڵە', 'danger'); }
