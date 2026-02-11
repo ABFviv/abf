@@ -808,6 +808,11 @@
                 const container = document.getElementById('historyContent');
                 const breadcrumb = document.getElementById('historyBreadcrumb');
                 container.innerHTML = '';
+                // Reset container styles to default
+                container.style.display = '';
+                container.style.flexWrap = '';
+                container.style.gap = '';
+                container.style.justifyContent = '';
 
                 updateBackBtnVisibility();
 
@@ -819,7 +824,14 @@
                         const isLast = index === currentHistoryPath.length - 1;
                         let name = step;
                         if (index === 0) name = formatDept(step); // Dept Name
-                        // Index 1 is Year, Index 2 is Month
+                        // Index 1 is Year, Index 2 is Month (YYYY-MM)
+                        if (index === 2) {
+                            const monthsList = ['ڕێبەندان (01)', 'ڕەشەمێ (02)', 'نەورۆز (03)', 'گوڵان (04)', 'جۆزەردان (05)', 'پووشپەڕ (06)', 'گەلاوێژ (07)', 'خەرمانان (08)', 'ڕەزبەر (09)', 'گەڵاڕێزان (10)', 'سەرماوەز (11)', 'بەفرانبار (12)'];
+                            const mIdx = parseInt(step.split('-')[1]) - 1;
+                            name = monthsList[mIdx] || step;
+                        }
+                        // Index 3 is Day
+                        if (index === 3) name = "ڕۆژی " + step;
                         bcHtml += ` / <span class="${isLast ? 'active' : ''}" onclick="navigateToHistoryStep(${index})">${name}</span>`;
                     });
                     breadcrumb.innerHTML = bcHtml;
@@ -890,51 +902,67 @@
                          <div class="folder-item" onclick="openHistoryFolder('${currentHistoryPath[1]}-${m.id}')">
                             <div class="folder-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"><i class="bi bi-calendar-event-fill"></i></div>
                             <div class="folder-name">${m.name}</div>
-                            <div class="folder-meta text-muted">Open to load reports</div>
+                            <div class="folder-meta text-muted">Open to view days</div>
                         </div>
                     `;
                         container.innerHTML += html;
                     });
                     return;
                 }
-
-                // --- LEVEL 3: REPORT LIST (Within Dept > Year > Month) ---
                 if (currentHistoryPath.length === 3) {
-                    const [selectedDept, selectedYear, selectedMonthStr] = currentHistoryPath;
-                    // selectedMonthStr is like "2025-05", but wait, in prev step we pushed "YYYY-MM"
-                    // The path structure: [Dept, Year, YYYY-MM]
+                    const [dept, year, monthStr] = currentHistoryPath; // monthStr is "YYYY-MM"
 
-                    const datePrefix = selectedMonthStr; // e.g., "2025-05"
+                    for (let day = 1; day <= 31; day++) {
+                        const dayStr = day.toString().padStart(2, '0');
+                        const fullDate = `${monthStr}-${dayStr}`;
+
+                        const html = `
+                             <div class="folder-item" onclick="openHistoryFolder('${dayStr}')" style="width: 100px; height: 100px; min-width: 100px; padding: 10px;">
+                                <div class="folder-icon" style="font-size: 1.5rem; margin-bottom: 5px;"><i class="bi bi-calendar-date"></i></div>
+                                <div class="folder-name" style="font-size: 0.9rem;">${dayStr}</div>
+                                <div class="folder-meta text-muted" style="font-size: 0.7rem;">Show</div>
+                            </div>
+                        `;
+                        container.innerHTML += html;
+                    }
+                    container.style.display = 'flex';
+                    container.style.flexWrap = 'wrap';
+                    container.style.gap = '10px';
+                    container.style.justifyContent = 'center';
+                    return;
+                }
+
+                // --- LEVEL 4: REPORT LIST (Within Dept > Year > Month > Day) ---
+                if (currentHistoryPath.length === 4) {
+                    const [selectedDept, selectedYear, selectedMonthStr, selectedDay] = currentHistoryPath;
+                    const fullDate = `${selectedMonthStr}-${selectedDay}`;
 
                     document.getElementById('historyLoading').style.display = 'block';
 
                     try {
                         let query = db.collection('dailyReports')
-                            .where('date', '>=', datePrefix + '-01')
-                            .where('date', '<=', datePrefix + '-31');
-                        // Removed 'department' filter from query to avoid composite index requirement
-                        // We filter department locally in JS instead.
+                            .where('date', '==', fullDate);
 
                         const snapshot = await query.get();
 
                         document.getElementById('historyLoading').style.display = 'none';
 
                         if (snapshot.empty) {
-                            container.innerHTML = '<p class="text-muted text-center w-100 py-5">No reports found for this month.</p>';
+                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">No reports found for ${fullDate}.</p>`;
                             return;
                         }
 
                         let reports = [];
                         snapshot.forEach(doc => {
                             const data = doc.data();
-                            // Filter locally
+                            // Filter locally by department
                             if (data.department === selectedDept) {
                                 reports.push({ id: doc.id, ...data });
                             }
                         });
 
                         if (reports.length === 0) {
-                            container.innerHTML = '<p class="text-muted text-center w-100 py-5">No reports found for this month.</p>';
+                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">No reports found for ${fullDate} in this department.</p>`;
                             return;
                         }
 
