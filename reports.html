@@ -1190,40 +1190,6 @@
                 }
             }
 
-            async function deleteAllReports() {
-                if (!confirm("Are you sure you want to delete ALL reports? This cannot be undone!")) return;
-                if (!confirm("FINAL CONFIRMATION: Delete every single report in the database?")) return;
-
-                document.getElementById('historyLoading').style.display = 'block';
-                try {
-                    const snapshot = await db.collection('dailyReports').get();
-                    if (snapshot.empty) {
-                        showToast("No reports to delete", "info");
-                        return;
-                    }
-
-                    // Batch delete (limited to 500 per batch)
-                    const chunks = [];
-                    const docs = snapshot.docs;
-                    for (let i = 0; i < docs.length; i += 500) {
-                        chunks.push(docs.slice(i, i + 500));
-                    }
-
-                    for (const chunk of chunks) {
-                        const batch = db.batch();
-                        chunk.forEach(doc => batch.delete(doc.ref));
-                        await batch.commit();
-                    }
-
-                    showToast(`Deleted ${docs.length} reports successfully`, "success");
-                    loadHistoryData();
-                } catch (e) {
-                    console.error(e);
-                    showToast("Error deleting all reports", "danger");
-                } finally {
-                    document.getElementById('historyLoading').style.display = 'none';
-                }
-            }
 
             // --- BATCH PRINTING BY DATE ---
             function promptBatchPrint() {
