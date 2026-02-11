@@ -735,77 +735,72 @@
             }
 
             historyModal.show();
-            loadMonths();
+            loadYears();
         }
 
-        async function loadMonths() {
+        function loadYears() {
             const container = document.getElementById('historyContent');
             const breadcrumb = document.getElementById('historyBreadcrumb');
 
-            container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
-            breadcrumb.innerHTML = '<li class="breadcrumb-item active">Months</li>';
+            container.innerHTML = '';
+            breadcrumb.innerHTML = '<li class="breadcrumb-item active">بەروارەکان </li>';
 
-            try {
-                // Optimized: Fetch only the last 500 records to extract unique year-months
-                // This covers roughly 1.5 years of daily data with much fewer reads.
-                const snapshot = await db.collection('annual_daily_records')
-                    .orderBy(firebase.firestore.FieldPath.documentId(), 'desc')
-                    .limit(500)
-                    .get();
-
-                const months = new Set();
-
-                snapshot.forEach(doc => {
-                    const date = doc.id;
-                    if (date.length === 10) {
-                        const month = date.substring(0, 7); // YYYY-MM
-                        months.add(month);
-                    }
-                });
-
-                const sortedMonths = Array.from(months).sort().reverse();
-
-                if (sortedMonths.length === 0) {
-                    container.innerHTML = '<div class="text-center p-5 text-muted">No records found.</div>';
-                    return;
-                }
-
-                let html = '<div class="folder-grid">';
-                sortedMonths.forEach(month => {
-                    html += `
-                        <div class="folder-item" onclick="loadMonthTable('${month}')">
-                            <i class="bi bi-folder-fill folder-icon"></i>
-                            <div class="folder-name">${month}</div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                container.innerHTML = html;
-
+            const currentYear = new Date().getFullYear();
+            const years = [];
+            for (let y = currentYear; y >= 2026; y--) {
+                years.push(y);
             }
 
-            catch (error) {
-                console.error("Error loading history:", error);
+            let html = '<div class="folder-grid">';
+            years.forEach(year => {
+                html += `
+                    <div class="folder-item" onclick="loadYearMonths('${year}')">
+                        <i class="bi bi-calendar-event folder-icon" style="color: #3b82f6;"></i>
+                        <div class="folder-name">${year}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
 
-                if (error.message && error.message.includes('index')) {
-                    console.error("🚨 FIRESTORE INDEX REQUIRED for Annual Report: Click the link above.");
-                    container.innerHTML = `
-                        <div class="alert alert-warning m-4">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            پێویستە 'Index' دروست بکرێت بۆ مێژووی ڕاپۆڕتی ساڵانە.
-                            <br><small>تکایە سەیری Console بکە بۆ لینکەکە.</small>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = '<div class="text-danger text-center p-3">Error loading history: ' + error.message + '</div>';
-                }
-            }
+        function loadYearMonths(year) {
+            const container = document.getElementById('historyContent');
+            const breadcrumb = document.getElementById('historyBreadcrumb');
+
+            breadcrumb.innerHTML = `<li class="breadcrumb-item"><a href="#" onclick="loadYears(); return false;">Years</a></li><li class="breadcrumb-item active">${year}</li>`;
+
+            const months = [
+                { id: '01', name: 'ڕێبەندان (01)' }, { id: '02', name: 'ڕەشەمێ (02)' }, { id: '03', name: 'نەورۆز (03)' },
+                { id: '04', name: 'گوڵان (04)' }, { id: '05', name: 'جۆزەردان (05)' }, { id: '06', name: 'پووشپەڕ (06)' },
+                { id: '07', name: 'گەلاوێژ (07)' }, { id: '08', name: 'خەرمانان (08)' }, { id: '09', name: 'ڕەزبەر (09)' },
+                { id: '10', name: 'گەڵاڕێزان (10)' }, { id: '11', name: 'سەرماوەز (11)' }, { id: '12', name: 'بەفرانبار (12)' }
+            ];
+
+            let html = '<div class="folder-grid">';
+            [...months].reverse().forEach(m => {
+                const monthStr = `${year}-${m.id}`;
+                html += `
+                    <div class="folder-item" onclick="loadMonthTable('${monthStr}')">
+                        <i class="bi bi-folder-fill folder-icon"></i>
+                        <div class="folder-name">${m.name}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         // --- Analysis Logic ---
         let analysisModal;
 
         function openAnalysisModal() {
+            // RESTRICT: Only admin and himat can access analysis (Heavy Reads)
+            if (currentUser && currentUser.username !== 'admin' && currentUser.username !== 'himat') {
+                alert('تەنها ئەدمین دەتوانێت ئەم بەشە ببینێت \n Only Admin can access Analysis section.');
+                return;
+            }
+
             if (!analysisModal) {
                 analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
             }
@@ -1024,7 +1019,7 @@
             container.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
 
             // Update Breadcrumb
-            breadcrumb.innerHTML = `<li class="breadcrumb-item"><a href="#" onclick="loadMonths(); return false;">Months</a></li><li class="breadcrumb-item active">${month}</li>`;
+            breadcrumb.innerHTML = `<li class="breadcrumb-item"><a href="#" onclick="loadYears(); return false;">Years</a></li><li class="breadcrumb-item"><a href="#" onclick="loadYearMonths('${month.substring(0, 4)}'); return false;">${month.substring(0, 4)}</a></li><li class="breadcrumb-item active">${month}</li>`;
 
             try {
                 // Query strings strictly: start at "2026-01-01" end at "2026-01-31" effectively
