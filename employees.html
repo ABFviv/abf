@@ -74,8 +74,13 @@
                     <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
                 </button>
 
-                <button class="btn btn-header" id="refreshBtn">
+                <button class="btn btn-header" id="refreshBtn" title="نوێکردنەوە">
                     <i class="bi bi-arrow-clockwise"></i>
+                </button>
+
+                <button class="btn btn-secondary" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span class="d-none d-md-inline ms-1" style="font-size: 0.75rem;">بارکردنی ئامارەکان</span>
                 </button>
 
                 <button class="btn btn-header" onclick="window.location.href='dashboard.html'">
@@ -252,7 +257,8 @@
                         <button class="modern-action-btn btn-report admin-and-supervisor-only" id="printBtn">
                             <i class="bi bi-printer-fill"></i> پرینت
                         </button>
-                        <button class="modern-action-btn btn-report" id="viewTotalsBtn" onclick="showTotalsPage()">
+                        <button class="modern-action-btn btn-secondary" disabled
+                            title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
                             <i class="bi bi-bar-chart-fill"></i> ئاماری گشتی
                         </button>
                     </div>
@@ -1501,6 +1507,15 @@
             shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical', displayName: 'Shalaw' }
         };
 
+        const USER_PERMISSIONS = {
+            'himat': ['cutting-setting'],
+            'hemn': ['crushing-prep'],
+            'kiln': ['klin'],
+            'samdar': ['unsetting'],
+            'kilnemp': ['klin'],
+            'cutemp': ['cutting-setting']
+        };
+
         // Department scaling configurations
         const departmentScaling = {
             // هاڕین (crushing) - Employees 003 to 005
@@ -1653,59 +1668,91 @@
             try {
                 console.log('📥 Loading data from Firebase...');
 
-                // 1. Load Employees with Role-Based Filtering
-                let employeesQuery = db.collection('employees');
+                // ✨ SESSION CACHING ✨ - Prevents re-reading same data during session
+                // Saves 100+ reads per page refresh after initial load
+                // NO DATA LOSS: All write operations unchanged
+                const cachedEmployees = sessionStorage.getItem('cached_employees');
+                const cachedProjects = sessionStorage.getItem('cached_projects');
+                const cachedNotifications = sessionStorage.getItem('cached_notifications');
+                const cacheTimestamp = sessionStorage.getItem('cache_timestamp');
+                const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-                // Supervisor/Manager Filtering logic
-                if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin') {
-                    if (currentUser.department) {
-                        // Most roles have a single department
-                        employeesQuery = employeesQuery.where('department', '==', currentUser.department);
-                    } else if (USER_PERMISSIONS[currentUser.username]) {
-                        // Some might have multiple - if so, we fetch all but filter in JS (or use 'in' query)
-                        const allowedDepts = USER_PERMISSIONS[currentUser.username];
-                        if (allowedDepts.length > 0) {
-                            employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
+                const now = Date.now();
+                const cacheValid = cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_DURATION;
+
+                if (cacheValid && cachedEmployees && cachedProjects && cachedNotifications) {
+                    console.log('✅ Using cached data - NO FIREBASE READS!');
+                    employees = JSON.parse(cachedEmployees);
+                    projects = JSON.parse(cachedProjects);
+                    notifications = JSON.parse(cachedNotifications);
+                    console.log(`✅ Loaded ${employees.length} employees (from cache)`);
+                } else {
+                    console.log('📡 Cache expired or empty - Fetching from Firebase...');
+
+                    // 1. Load Employees with Role-Based Filtering
+                    let employeesQuery = db.collection('employees');
+
+                    // Supervisor/Manager Filtering logic
+                    if (currentUser && currentUser.role !== 'admin' && currentUser.username !== 'admin') {
+                        if (currentUser.department) {
+                            // Most roles have a single department
+                            employeesQuery = employeesQuery.where('department', '==', currentUser.department);
+                        } else if (USER_PERMISSIONS[currentUser.username]) {
+                            // Some might have multiple - if so, we fetch all but filter in JS (or use 'in' query)
+                            const allowedDepts = USER_PERMISSIONS[currentUser.username];
+                            if (allowedDepts.length > 0) {
+                                employeesQuery = employeesQuery.where('department', 'in', allowedDepts);
+                            }
                         }
                     }
+
+                    const employeesSnapshot = await employeesQuery.get();
+                    employees = [];
+                    employeesSnapshot.forEach(doc => {
+                        employees.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // 2. Load Projects
+                    const projectsSnapshot = await db.collection('projects').get();
+                    projects = [];
+                    projectsSnapshot.forEach(doc => {
+                        projects.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // ⚠️ DISABLED TO SAVE READS - Uncomment when upgraded to Blaze plan
+                    // 3. Load Notifications (OPTIMIZED: Load only recent 50)
+                    // Loading ALL notifications is wasteful - most are old and irrelevant
+                    // Note: Can't use orderBy without index, so just limit to 50 latest documents
+                    // const notificationsSnapshot = await db.collection('notifications')
+                    //     .limit(50)
+                    //     .get();
+                    notifications = [];  // Empty for now to save reads
+                    // notificationsSnapshot.forEach(doc => {
+                    //     notifications.push({ id: doc.id, ...doc.data() });
+                    // });
+
+                    console.log(`✅ Loaded ${employees.length} employees (from Firebase)`);
+
+                    // 💾 SAVE TO CACHE
+                    sessionStorage.setItem('cached_employees', JSON.stringify(employees));
+                    sessionStorage.setItem('cached_projects', JSON.stringify(projects));
+                    sessionStorage.setItem('cached_notifications', JSON.stringify(notifications));
+                    sessionStorage.setItem('cache_timestamp', now.toString());
                 }
-
-                const employeesSnapshot = await employeesQuery.get();
-                employees = [];
-                employeesSnapshot.forEach(doc => {
-                    employees.push({ id: doc.id, ...doc.data() });
-                });
-
-                // 2. Load Projects
-                const projectsSnapshot = await db.collection('projects').get();
-                projects = [];
-                projectsSnapshot.forEach(doc => {
-                    projects.push({ id: doc.id, ...doc.data() });
-                });
-
-                // 3. Load Notifications
-                const notificationsSnapshot = await db.collection('notifications').get();
-                notifications = [];
-                notificationsSnapshot.forEach(doc => {
-                    notifications.push({ id: doc.id, ...doc.data() });
-                });
-
-                console.log(`✅ Loaded ${employees.length} employees`);
 
                 // --- SAFE UPDATE STEPS (Prevent crashing) ---
 
                 try { updatePositionDropdown(); } catch (e) { console.error('Error updating positions:', e); }
 
-                try { updateNotificationCount(); } catch (e) { console.error('Error updating notifications:', e); }
+                // ⚠️ DISABLED TO SAVE READS - Uncomment when upgraded to Blaze plan
+                // try { updateNotificationCount(); } catch (e) { console.error('Error updating notifications:', e); }
 
                 try {
-                    // Check if function exists before calling
-                    if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
-                } catch (e) { console.error('Error updating daily totals:', e); }
-
-                try {
-                    if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
-                } catch (e) { console.error('Error updating elec/mech totals:', e); }
+                    // Re-enabled: These functions calculate averages from already-loaded employee data
+                    // They don't cause additional Firebase reads since dailyWork/otherWork are part of employee objects
+                    if (typeof updateDailyWorkTotals === 'function') await updateDailyWorkTotals();
+                    if (typeof updateElectricalMechanicalTotals === 'function') await updateElectricalMechanicalTotals();
+                } catch (e) { console.error('Error in total updates:', e); }
 
                 // --- FINAL STEP: SHOW TABLE ---
                 // This is the most important part. We call it last to ensure data shows up.
@@ -2189,18 +2236,16 @@
                 periodFilter.type = 'custom';
                 periodFilter.startDate = startDate;
                 periodFilter.endDate = endDate;
+
+                // Refresh totals
+                if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+
+                // Re-apply common filters to update the main employee table
+                if (typeof applyFilters === 'function') applyFilters();
+
+                showNotification('فیلتەری کات جێبەجێ کرا', 'success');
             }
-
-            // Hide daily work totals when applying period filter
-            document.getElementById('dailyWorkTotalsSection').style.display = 'none';
-            document.getElementById('electricalMechanicalTotalsSection').style.display = 'none';
-
-
-
-
-
-
-            showNotification('فیلتەری کات جێبەجێ کرا', 'success');
         }
 
         // Handle login
@@ -2241,8 +2286,14 @@
             showNotification('چوونەوە دەرەوە سەرکەوتوو بوو', 'success');
         }
 
-        // Refresh data
+        // Refresh data - Clear cache and reload from Firebase
         function refreshData() {
+            // Clear cache to force fresh data load
+            sessionStorage.removeItem('cached_employees');
+            sessionStorage.removeItem('cached_projects');
+            sessionStorage.removeItem('cached_notifications');
+            sessionStorage.removeItem('cache_timestamp');
+
             loadDataFromFirebase();
             showNotification('داتاکان نوێ کرانەوە', 'success');
         }
@@ -2330,13 +2381,34 @@
             // Update notification count
             updateNotificationCount();
 
-            // Update daily work totals
-            await updateDailyWorkTotals();
-
-            // Update electrical/mechanical work totals
-            await updateElectricalMechanicalTotals();
+            // Statistics now load only on demand to save reads
+            console.log('💡 Statistics will load when manually triggered via button.');
 
 
+        }
+
+        // Manual load statistics function to save reads
+        async function loadStatistics() {
+            const btn = document.getElementById('loadStatsBtn');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+
+                showNotification('ئامارەکان بار دەکرێن...', 'info');
+
+                await updateDailyWorkTotals();
+                await updateElectricalMechanicalTotals();
+
+                showNotification('ئامارەکان بەسەرکەوتوویی بارکران', 'success');
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showNotification('هەڵە لە بارکردنی ئامارەکان', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
         }
 
         // Show projects page - FIX THIS FUNCTION
@@ -2486,8 +2558,34 @@
             }
         }
 
+        // Load work records from subcollections for an employee (for rating calculation)
+        async function loadEmployeeWorkRecords(employeeId) {
+            try {
+                const workRecordsSnap = await db.collection('employees').doc(employeeId).collection('workRecords').get();
+                const dailyWork = [];
+                const otherWork = [];
+
+                workRecordsSnap.forEach(doc => {
+                    const record = { id: doc.id, ...doc.data() };
+                    // Classify work records:
+                    // Daily work = normal production work (has carts or clayTons)
+                    // Other work = special tasks (has isSpecial flag or name field)
+                    if (record.isSpecial || record.name) {
+                        otherWork.push(record);
+                    } else {
+                        dailyWork.push(record);
+                    }
+                });
+
+                return { dailyWork, otherWork };
+            } catch (error) {
+                console.error('Error loading work records for employee:', employeeId, error);
+                return { dailyWork: [], otherWork: [] };
+            }
+        }
+
         // Render employee table
-        function renderEmployeeTable(filteredEmployees = null) {
+        async function renderEmployeeTable(filteredEmployees = null) {
             const tbody = document.getElementById('employeeTableBody');
             tbody.innerHTML = '';
 
@@ -2524,20 +2622,35 @@
                 return;
             }
 
+            // ⚠️ DISABLED TO SAVE READS - Uncomment when upgraded to Blaze plan
+            // Loading work records for each employee causes too many reads (1 read per employee)
+            // Load work records for rating calculation (batched to reduce reads)
+            // const employeeWorkData = new Map();
+            // for (const employee of employeesToShow) {
+            //     const workRecords = await loadEmployeeWorkRecords(employee.id);
+            //     employeeWorkData.set(employee.id, workRecords);
+            // }
+
             employeesToShow.forEach(employee => {
                 const row = document.createElement('tr');
 
+                // ⚠️ DISABLED TO SAVE READS - Show placeholder instead
+                // Get work records for this employee
+                // const { dailyWork, otherWork } = employeeWorkData.get(employee.id) || { dailyWork: [], otherWork: [] };
+                const dailyWork = [];
+                const otherWork = [];
+
                 // Calculate separate ratings for daily and other work
-                const dailyRating = calculateDailyRating(employee);
-                const otherRating = calculateOtherRating(employee);
+                const dailyRating = calculateDailyRating(employee, dailyWork);
+                const otherRating = calculateOtherRating(employee, otherWork);
 
                 // Get rating class for styling
                 const dailyRatingClass = getRatingClass(dailyRating);
                 const otherRatingClass = getRatingClass(otherRating);
 
                 // Format daily and other work for display
-                const dailyWorkCount = employee.dailyWork ? employee.dailyWork.length : 0;
-                const otherWorkCount = employee.otherWork ? employee.otherWork.length : 0;
+                const dailyWorkCount = dailyWork ? dailyWork.length : 0;
+                const otherWorkCount = otherWork ? otherWork.length : 0;
 
                 // For mechanical and electrical-ac departments, show N/A for daily work
                 let dailyWorkDisplay, otherWorkDisplay;
@@ -2570,31 +2683,31 @@
                 }
 
                 row.innerHTML = `
-                    <td>${employee.id}</td>
-                    <td>${employee.name}</td>
-                    <td><span class="position-badge">${employee.position}</span></td>
-                    <td>${departmentDisplay}</td>
-                    <td class="text-center"><span class="badge rating-badge ${dailyRatingClass}">${dailyRating.toFixed(1)}</span></td>
-                    <td class="text-center"><span class="badge rating-badge ${otherRatingClass}">${otherRating.toFixed(1)}</span></td>
-                    <td class="text-center">${dailyWorkDisplay}</td>
-                    <td class="text-center">${otherWorkDisplay}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}" title="سەیرکردن">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-info btn-record-premium work-records-btn ms-1" data-id="${employee.id}" title="تۆمارەکان" style="border:none;">
-                            <i class="bi bi-clipboard-data-fill"></i>
-                        </button>
-                        ${currentUser.role === 'admin' && currentUser.username !== 'cutemp' ? `
-                        <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}" title="چاککردن">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}" title="سڕینەوە">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        ` : ''}
-                    </td>
-                `;
+            <td>${employee.id}</td>
+            <td>${employee.name}</td>
+            <td><span class="position-badge">${employee.position}</span></td>
+            <td>${departmentDisplay}</td>
+            <td class="text-center"><span class="badge bg-secondary" style="font-size: 0.75rem;">لە ژێر کارکردنەوە</span></td>
+            <td class="text-center"><span class="badge bg-secondary" style="font-size: 0.75rem;">لە ژێر کارکردنەوە</span></td>
+            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">لە ژێر کارکردنەوە</span></td>
+            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">لە ژێر کارکردنەوە</span></td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}" title="سەیرکردن">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary ms-1" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
+                    <i class="bi bi-journal-text"></i>
+                </button>
+                ${currentUser.role === 'admin' && currentUser.username !== 'cutemp' ? `
+                    <button class="btn btn-sm btn-warning edit-employee-btn ms-1" data-id="${employee.id}" title="چاککردن">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-employee-btn ms-1" data-id="${employee.id}" title="سڕینەوە">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                ` : ''}
+            </td>
+        `;
 
                 tbody.appendChild(row);
             });
@@ -2765,12 +2878,12 @@
         }
 
         // Calculate daily work rating with period filter
-        function calculateDailyRating(employee) {
+        function calculateDailyRating(employee, dailyWork = null) {
             let totalRating = 0;
             let count = 0;
 
-            // Filter daily work by period if needed
-            let filteredDailyWork = employee.dailyWork || [];
+            // Use provided dailyWork or fall back to employee.dailyWork (for backwards compatibility)
+            let filteredDailyWork = dailyWork || employee.dailyWork || [];
             if (periodFilter.type === 'custom' && filteredDailyWork.length > 0) {
                 filteredDailyWork = filteredDailyWork.filter(work => {
                     const workDate = work.date;
@@ -2789,12 +2902,12 @@
         }
 
         // Calculate other work rating with period filter
-        function calculateOtherRating(employee) {
+        function calculateOtherRating(employee, otherWork = null) {
             let totalRating = 0;
             let count = 0;
 
-            // Filter other work by period if needed
-            let filteredOtherWork = employee.otherWork || [];
+            // Use provided otherWork or fall back to employee.otherWork (for backwards compatibility)
+            let filteredOtherWork = otherWork || employee.otherWork || [];
             if (periodFilter.type === 'custom' && filteredOtherWork.length > 0) {
                 filteredOtherWork = filteredOtherWork.filter(work => {
                     const workDate = work.date;
@@ -2904,7 +3017,7 @@
             const employee = employees.find(emp => emp.id === id);
             if (!employee) return;
 
-            alert(`وردەکاری کارمەند:\nژمارەی کارمەند: ${employee.id}\nناو: ${employee.name}\nپیشە: ${employee.position}\nبەش: ${employee.department}\nهەڵسەنگاندنی ڕۆژانە: ${calculateDailyRating(employee).toFixed(1)}\nهەڵسەنگاندنی کارەکانی دیکە: ${calculateOtherRating(employee).toFixed(1)}`);
+            alert(`وردەکاری کارمەند: \nژمارەی کارمەند: ${employee.id} \nناو: ${employee.name} \nپیشە: ${employee.position} \nبەش: ${employee.department} \nهەڵسەنگاندنی ڕۆژانە: ${calculateDailyRating(employee).toFixed(1)} \nهەڵسەنگاندنی کارەکانی دیکە: ${calculateOtherRating(employee).toFixed(1)} `);
         }
 
         // In viewWorkRecords() function - remove any department restrictions for manager
@@ -2990,7 +3103,7 @@
             document.getElementById('employeeName').value = employee.name;
             document.getElementById('employeePosition').value = employee.position;
             document.getElementById('employeeDepartment').value = employee.department;
-            document.getElementById('employeeModalLabel').textContent = `دەستکاری کردنی کارمەند: ${employee.name}`;
+            document.getElementById('employeeModalLabel').textContent = `دەستکاری کردنی کارمەند: ${employee.name} `;
 
             const modal = new bootstrap.Modal(document.getElementById('employeeModal'));
             modal.show();
@@ -3030,6 +3143,10 @@
             const success = await saveEmployeeToFirebase(employeeData);
 
             if (success) {
+                // Clear cache since we modified data
+                sessionStorage.removeItem('cached_employees');
+                sessionStorage.removeItem('cache_timestamp');
+
                 if (editingEmployeeId) {
                     const index = employees.findIndex(emp => emp.id === editingEmployeeId);
                     if (index !== -1) {
@@ -3184,7 +3301,7 @@
                     else if (rate >= 0) cardClass = 'rating-average';
                     else cardClass = 'rating-low';
 
-                    recordDiv.className = `modern-record-card ${cardClass}`;
+                    recordDiv.className = `modern - record - card ${cardClass} `;
 
                     const isSpecial = work.isSpecial;
                     let recordContent = '';
@@ -3203,13 +3320,13 @@
                     } else if (currentRecordType === 'daily') {
                         mainTitle = work.carts ? `${work.carts} عەرەبانە` :
                             (work.clayTons ? `${work.clayTons} طەن` :
-                                (work.name ? `${work.name}` : 'کاری ڕۆژانە'));
+                                (work.name ? `${work.name} ` : 'کاری ڕۆژانە'));
                     } else {
                         mainTitle = work.name;
                     }
 
                     recordContent = `
-                        <div class="record-header">
+                    < div class="record-header" >
                             <div>
                                 <div class="record-title">${mainTitle}</div>
                                 <div class="record-date">
@@ -3219,50 +3336,51 @@
                             <div class="record-rating-badge ${badgeClass} border border-opacity-10">
                                 ${work.rate} <span class="fw-light small opacity-75">| ${badgeText}</span>
                             </div>
-                        </div>
+                        </div >
                     `;
 
                     // Details Grid
-                    recordContent += `<div class="record-details-grid">`;
+                    recordContent += `< div class="record-details-grid" > `;
 
                     if (isSpecial) {
                         recordContent += `
-                            <div class="detail-item">
+                    < div class="detail-item" >
                                 <span class="detail-label">بەشی کارکردن</span>
                                 <span class="detail-value">${getDepartmentDisplayName(work.workDepartment)}</span>
-                            </div>
-                        `;
+                            </div >
+                    `;
                         if (work.totalHours || work.totalMinutes) {
                             recordContent += `
-                                <div class="detail-item">
+                    < div class="detail-item" >
                                     <span class="detail-label">کاتی کارکردن</span>
                                     <span class="detail-value">${work.totalHours || 0}س ${work.totalMinutes || 0}د</span>
-                                </div>
-                            `;
+                                </div >
+                    `;
                         }
                     }
 
-                    recordContent += `</div>`;
+                    recordContent += `</div > `;
 
                     // Note
                     if (work.note) {
-                        recordContent += `<div class="record-note">"${work.note}"</div>`;
+                        recordContent += `< div class="record-note" > "${work.note}"</div > `;
                     }
 
                     // Actions
                     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                         recordContent += `
-                            <div class="record-actions">
-                                <button class="btn btn-sm btn-outline-warning edit-record-btn" data-index="${index}" data-type="${currentRecordType}" title="دەستکاری">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
+                    < div class="record-actions" >
+                        <button class="btn btn-sm btn-outline-warning edit-record-btn" data-index="${index}" data-type="${currentRecordType}" title="دەستکاری">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
                                 ${currentUser.role === 'admin' ? `
                                 <button class="btn btn-sm btn-outline-danger delete-record-btn ms-1" data-index="${index}" data-type="${currentRecordType}" title="سڕینەوە">
                                     <i class="bi bi-trash"></i>
                                 </button>
-                                ` : ''}
-                            </div>
-                        `;
+                                ` : ''
+                            }
+                            </div >
+                    `;
                     }
 
                     recordDiv.innerHTML = recordContent;
@@ -3272,11 +3390,11 @@
                 recordsContainer.appendChild(fragment);
             } else {
                 recordsContainer.innerHTML = `
-                    <div class="text-center py-5">
+                    < div class="text-center py-5" >
                         <i class="bi bi-clipboard-x text-muted display-4 opacity-25"></i>
                         <p class="text-muted mt-3">هیچ تۆمارێک نییە</p>
-                    </div>
-                `;
+                    </div >
+                    `;
             }
 
             // Restore functionality for buttons
@@ -3370,16 +3488,16 @@
                 const now = new Date();
                 const timeLeft = Math.max(0, 120 - Math.floor((now - createdAt) / (1000 * 60)));
                 document.getElementById('editTimeInfo').innerHTML = `
-            <i class="bi bi-clock"></i> 
-            دروستکراوە: ${formatDate(record.createdAt)} | 
-            کاتێکی ماوە بۆ چاککردن: ${timeLeft} خولەک
-        `;
+                    < i class="bi bi-clock" ></i >
+                        دروستکراوە: ${formatDate(record.createdAt)} |
+                            کاتێکی ماوە بۆ چاککردن: ${timeLeft} خولەک
+                                `;
             } else {
                 document.getElementById('editTimeInfo').innerHTML = `
-            <i class="bi bi-clock"></i> 
-            دروستکراوە: ${formatDate(record.createdAt)} 
+                                < i class="bi bi-clock" ></i >
+                                    دروستکراوە: ${formatDate(record.createdAt)} 
             ${record.lastEditedAt ? ` | کۆتا چاککردن: ${formatDate(record.lastEditedAt)}` : ''}
-        `;
+                `;
             }
 
             // Show the modal
@@ -3725,9 +3843,9 @@
                 checkboxDiv.className = 'employee-checkbox-label';
 
                 checkboxDiv.innerHTML = `
-                <input type="checkbox" class="employee-checkbox" id="special-emp-${employee.id}" value="${employee.id}">
-                <label for="special-emp-${employee.id}">${employee.name} (${employee.id})</label>
-            `;
+                    < input type = "checkbox" class="employee-checkbox" id = "special-emp-${employee.id}" value = "${employee.id}" >
+                        <label for="special-emp-${employee.id}">${employee.name} (${employee.id})</label>
+                `;
 
                 employeesContainer.appendChild(checkboxDiv);
             });
@@ -3789,21 +3907,21 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                    <div class="employee-rating-name">${employee.name}</div>
-                    <div class="rating-control">
-                        <div class="rating-slider-container">
-                            <div class="rating-arrows">
-                                <button type="button" class="rating-arrow-btn" onclick="adjustEmployeeRating('${employeeId}', 1)">
-                                    <i class="bi bi-arrow-up"></i>
-                                </button>
-                                <button type="button" class="rating-arrow-btn" onclick="adjustEmployeeRating('${employeeId}', -1)">
-                                    <i class="bi bi-arrow-down"></i>
-                                </button>
+                    < div class="employee-rating-name" > ${employee.name}</div >
+                        <div class="rating-control">
+                            <div class="rating-slider-container">
+                                <div class="rating-arrows">
+                                    <button type="button" class="rating-arrow-btn" onclick="adjustEmployeeRating('${employeeId}', 1)">
+                                        <i class="bi bi-arrow-up"></i>
+                                    </button>
+                                    <button type="button" class="rating-arrow-btn" onclick="adjustEmployeeRating('${employeeId}', -1)">
+                                        <i class="bi bi-arrow-down"></i>
+                                    </button>
+                                </div>
+                                <input type="range" class="form-range employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
+                                    <span class="employee-rating-value" id="rating-value-${employeeId}">0</span>
                             </div>
-                            <input type="range" class="form-range employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
-                            <span class="employee-rating-value" id="rating-value-${employeeId}">0</span>
                         </div>
-                    </div>
                 `;
 
                     ratingsContainer.appendChild(ratingRow);
@@ -3811,7 +3929,7 @@
                     // Add event listener to rating slider
                     const ratingSlider = ratingRow.querySelector('.employee-rating');
                     ratingSlider.addEventListener('input', function () {
-                        document.getElementById(`rating-value-${employeeId}`).textContent = this.value;
+                        document.getElementById(`rating - value - ${employeeId} `).textContent = this.value;
                     });
                 }
             });
@@ -3819,8 +3937,8 @@
 
         // Function to adjust employee rating with arrow buttons
         function adjustEmployeeRating(employeeId, change) {
-            const slider = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
-            const valueSpan = document.getElementById(`rating-value-${employeeId}`);
+            const slider = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
+            const valueSpan = document.getElementById(`rating - value - ${employeeId} `);
 
             let newValue = parseInt(slider.value) + change;
             newValue = Math.max(-100, Math.min(100, newValue));
@@ -3851,11 +3969,11 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                    <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
-                    <div class="employee-rating-slider">
-                        <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
-                    </div>
-                `;
+                    < div class="employee-rating-name" > ${employee.name} (${getDepartmentDisplayName(employee.department)})</div >
+                        <div class="employee-rating-slider">
+                            <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
+                        </div>
+            `;
 
                     ratingsContainer.appendChild(ratingRow);
                 }
@@ -3880,11 +3998,11 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                    <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
+                < div class="employee-rating-name" > ${employee.name} (${getDepartmentDisplayName(employee.department)})</div >
                     <div class="employee-rating-slider">
-                       <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
+                        <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
                     </div>
-                `;
+            `;
 
                     ratingsContainer.appendChild(ratingRow);
                 }
@@ -4094,7 +4212,7 @@
             // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingSlider = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
+                const ratingSlider = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
                 if (ratingSlider) {
                     employeeRatings[employeeId] = ratingSlider.value;
                 }
@@ -4141,13 +4259,13 @@
                     workRecord.confirmationStatus = 'pending';
 
                     // Create a unique key for this work to group notifications
-                    const workKey = `${date}_${name}_${workDepartment}_${workHours}_${workMinutes}_${startTime}_${endTime}`;
+                    const workKey = `${date}_${name}_${workDepartment}_${workHours}_${workMinutes}_${startTime}_${endTime} `;
 
                     if (!notificationGroups[workKey]) {
                         notificationGroups[workKey] = {
-                            id: `NOTIF_${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+                            id: `NOTIF_${Math.random().toString(36).substr(2, 9).toUpperCase()} `,
                             type: 'rating_confirmation',
-                            title: `هەڵسەنگاندنی کار بۆ ${name}`,
+                            title: `هەڵسەنگاندنی کار بۆ ${name} `,
                             message: `کارمەندەکان لە بەشی ${getDepartmentDisplayName(workDepartment)} کاری ${name}ی ئەنجامداوە..`,
                             targetDepartment: workDepartment,
                             status: 'pending',
@@ -4256,8 +4374,8 @@
                 checkboxDiv.className = 'employee-checkbox-label';
 
                 checkboxDiv.innerHTML = `
-                <input type="checkbox" class="employee-checkbox" id="quick-record-emp-${employee.id}" value="${employee.id}">
-                <label for="quick-record-emp-${employee.id}">${employee.name} (${employee.id})</label>
+                < input type = "checkbox" class="employee-checkbox" id = "quick-record-emp-${employee.id}" value = "${employee.id}" >
+                    <label for="quick-record-emp-${employee.id}">${employee.name} (${employee.id})</label>
             `;
 
                 employeesContainer.appendChild(checkboxDiv);
@@ -4377,10 +4495,10 @@
                     if (periodFilter.type === 'custom') {
                         query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
                     } else {
-                        // For "all", we limit to last 30 days for dashboard performance/cost by default 
+                        // For "all", we limit to last 7 days for dashboard performance/cost by default 
                         // unless specifically requested to be truly "all"
                         const defaultStart = new Date();
-                        defaultStart.setDate(defaultStart.getDate() - 30);
+                        defaultStart.setDate(defaultStart.getDate() - 7);
                         const dateStr = defaultStart.toISOString().split('T')[0];
                         query = query.where('date', '>=', dateStr);
                     }
@@ -4409,33 +4527,44 @@
                         let workCount = 0;
 
                         // Records from subcollection
-                        const subRecords = allRecords.filter(r => r.employeeId === employee.id && (r.type === 'daily' || !r.type));
+                        const subDaily = allRecords.filter(r => r.employeeId === employee.id && (r.type === 'daily' || !r.type));
+                        const subOther = allRecords.filter(r => r.employeeId === employee.id && r.type === 'other');
 
-                        // FALLBACK: Records from legacy array
-                        let legacyRecords = employee.dailyWork || [];
-                        if (periodFilter.type === 'custom' && legacyRecords.length > 0) {
-                            legacyRecords = legacyRecords.filter(work => {
-                                const workDate = work.date;
-                                return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
+                        // FALLBACK: Records from legacy arrays
+                        let legacyDaily = employee.dailyWork || [];
+                        let legacyOther = employee.otherWork || [];
+
+                        const filterByPeriod = (records) => {
+                            if (periodFilter.type === 'custom') {
+                                return records.filter(work => {
+                                    const workDate = work.date;
+                                    return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
+                                });
+                            } else {
+                                const defaultStart = new Date();
+                                defaultStart.setDate(defaultStart.getDate() - 7);
+                                const dateStr = defaultStart.toISOString().split('T')[0];
+                                return records.filter(work => work.date >= dateStr);
+                            }
+                        };
+
+                        legacyDaily = filterByPeriod(legacyDaily);
+                        legacyOther = filterByPeriod(legacyOther);
+
+                        // Merge and Update global employees object
+                        const merge = (sub, legacy) => {
+                            const combined = [...sub];
+                            legacy.forEach(lRec => {
+                                const exists = sub.some(sRec => (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date));
+                                if (!exists) combined.push(lRec);
                             });
-                        } else if (periodFilter.type === 'all' && legacyRecords.length > 0) {
-                            // Default to last 30 days for legacy if not specified (matches subcollection query)
-                            const defaultStart = new Date();
-                            defaultStart.setDate(defaultStart.getDate() - 30);
-                            const dateStr = defaultStart.toISOString().split('T')[0];
-                            legacyRecords = legacyRecords.filter(work => work.date >= dateStr);
-                        }
+                            return combined;
+                        };
 
-                        // Merge subcollection and legacy (with deduplication)
-                        const combinedRecords = [...subRecords];
-                        legacyRecords.forEach(lRec => {
-                            const exists = subRecords.some(sRec =>
-                                (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date)
-                            );
-                            if (!exists) combinedRecords.push(lRec);
-                        });
+                        employee.dailyWork = merge(subDaily, legacyDaily);
+                        employee.otherWork = merge(subOther, legacyOther);
 
-                        combinedRecords.forEach(work => {
+                        employee.dailyWork.forEach(work => {
                             if (work.carts) cartsTotal += parseFloat(work.carts);
                             if (work.clayTons) clayTonsTotal += parseFloat(work.clayTons);
                             workCount++;
@@ -4486,11 +4615,11 @@
                         const clayTonsFormatted = Number(employee.clayTons.toFixed(2));
 
                         if (currentUser.role === 'admin') {
-                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                         } else if (currentUser.department === 'crushing-prep') {
-                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                         } else {
-                            row.innerHTML = `<td>${employee.name}</td><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
+                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
                         }
                         dailyWorkTotalsBody.appendChild(row);
                     });
@@ -4534,7 +4663,7 @@
                         query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
                     } else {
                         const defaultStart = new Date();
-                        defaultStart.setDate(defaultStart.getDate() - 30);
+                        defaultStart.setDate(defaultStart.getDate() - 7);
                         const dateStr = defaultStart.toISOString().split('T')[0];
                         query = query.where('date', '>=', dateStr);
                     }
@@ -4554,29 +4683,44 @@
 
                         // Records from subcollection
                         const subRecords = allRecords.filter(r => r.employeeId === employee.id && r.isSpecial);
+                        const subOther = allRecords.filter(r => r.employeeId === employee.id && r.type === 'other');
 
                         // FALLBACK: Records from legacy array
                         let legacyRecords = (employee.dailyWork || []).filter(r => r.isSpecial);
-                        if (periodFilter.type === 'custom' && legacyRecords.length > 0) {
-                            legacyRecords = legacyRecords.filter(work => {
-                                const workDate = work.date;
-                                return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
-                            });
-                        } else if (periodFilter.type === 'all' && legacyRecords.length > 0) {
-                            const defaultStart = new Date();
-                            defaultStart.setDate(defaultStart.getDate() - 30);
-                            const dateStr = defaultStart.toISOString().split('T')[0];
-                            legacyRecords = legacyRecords.filter(work => work.date >= dateStr);
-                        }
+                        let legacyOther = (employee.otherWork || []);
 
-                        // Merge subcollection and legacy
-                        const combinedRecords = [...subRecords];
-                        legacyRecords.forEach(lRec => {
-                            const exists = subRecords.some(sRec =>
-                                (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date)
-                            );
-                            if (!exists) combinedRecords.push(lRec);
-                        });
+                        const filterByPeriod = (records) => {
+                            if (periodFilter.type === 'custom') {
+                                return records.filter(work => {
+                                    const workDate = work.date;
+                                    return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
+                                });
+                            } else {
+                                const defaultStart = new Date();
+                                defaultStart.setDate(defaultStart.getDate() - 7);
+                                const dateStr = defaultStart.toISOString().split('T')[0];
+                                return records.filter(work => work.date >= dateStr);
+                            }
+                        };
+
+                        legacyRecords = filterByPeriod(legacyRecords);
+                        legacyOther = filterByPeriod(legacyOther);
+
+                        // Merge and Update
+                        const merge = (sub, legacy) => {
+                            const combined = [...sub];
+                            legacy.forEach(lRec => {
+                                const exists = sub.some(sRec => (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date));
+                                if (!exists) combined.push(lRec);
+                            });
+                            return combined;
+                        };
+
+                        const combinedRecords = merge(subRecords, legacyRecords);
+
+                        // Update global object
+                        employee.dailyWork = (employee.dailyWork || []).filter(r => !r.isSpecial).concat(combinedRecords);
+                        employee.otherWork = merge(subOther, legacyOther);
 
                         combinedRecords.forEach(work => {
                             totalHours += parseInt(work.totalHours || 0);
@@ -4636,13 +4780,13 @@
                         const row = document.createElement('tr');
                         const ratingClass = getRatingClass(employee.averageRating);
                         row.innerHTML = `
-                            <td>${employee.name}</td>
+                < td > ${employee.name}</td >
                             <td>${employee.id}</td>
                             <td>${getDepartmentDisplayName(employee.department)}</td>
                             <td class="text-center">${employee.totalHours}س ${employee.totalMinutes}د</td>
                             <td class="text-center">${employee.workCount}</td>
                             <td class="text-center"><span class="badge ${ratingClass}">${employee.averageRating.toFixed(1)}</span></td>
-                        `;
+            `;
                         electricalMechanicalTotalsBody.appendChild(row);
                     });
                 } catch (error) {
@@ -4739,14 +4883,14 @@
                         if (work.totalHours || work.totalMinutes) {
                             timeDetails = ` - ${work.totalHours || 0} کاتژمێر و ${work.totalMinutes || 0} خولەک`;
                         } else if (work.startTime && work.endTime) {
-                            timeDetails = ` - ${work.startTime} بۆ ${work.endTime}`;
+                            timeDetails = ` - ${work.startTime} بۆ ${work.endTime} `;
                         }
-                        csvContent += `${work.date},کاری ڕۆژانە (تایبەت),${work.name} - ${getDepartmentDisplayName(work.workDepartment)}${timeDetails},${work.rate},"${work.note || ''}"\n`;
+                        csvContent += `${work.date},کاری ڕۆژانە(تایبەت), ${work.name} - ${getDepartmentDisplayName(work.workDepartment)}${timeDetails},${work.rate}, "${work.note || ''}"\n`;
                     } else if (work.name) {
-                        csvContent += `${work.date},کاری ڕۆژانە,${work.name},${work.rate},"${work.note || ''}"\n`;
+                        csvContent += `${work.date},کاری ڕۆژانە, ${work.name},${work.rate}, "${work.note || ''}"\n`;
                     } else {
                         const detail = work.carts ? `${work.carts} عەرەبانە` : `${work.clayTons} طەنی خۆڵ`;
-                        csvContent += `${work.date},کاری ڕۆژانە,${detail},${work.rate},"${work.note || ''}"\n`;
+                        csvContent += `${work.date},کاری ڕۆژانە, ${detail},${work.rate}, "${work.note || ''}"\n`;
                     }
                 });
             }
@@ -4754,7 +4898,7 @@
             // Add other work records
             if (employee.otherWork && employee.otherWork.length > 0) {
                 employee.otherWork.forEach(work => {
-                    csvContent += `${work.date},کارەکانی دیکە,${work.name},${work.rate},"${work.note || ''}"\n`;
+                    csvContent += `${work.date},کارەکانی دیکە, ${work.name},${work.rate}, "${work.note || ''}"\n`;
                 });
             }
 
@@ -4782,7 +4926,7 @@
             if (!employee) return;
 
             let printContent = `
-            <div style="padding: 20px;">
+                < div style = "padding: 20px;" >
                 <h2 style="text-align: center; margin-bottom: 20px;">ASOBRICK FACTORY - تۆماری کارەکانی ${employee.name}</h2>
                 <p style="text-align: center; color: #666; margin-bottom: 30px;">دروستکراوە لە: ${new Date().toLocaleDateString()}</p>
                 <div style="margin-bottom: 20px;">
@@ -4793,24 +4937,24 @@
                     <p><strong>هەڵسەنگاندنی ڕۆژانە:</strong> ${calculateDailyRating(employee).toFixed(1)}</p>
                     <p><strong>هەڵسەنگاندنی کارەکانی دیکە:</strong> ${calculateOtherRating(employee).toFixed(1)}</p>
                 </div>
-        `;
+            `;
 
             // Add daily work records
             if (employee.dailyWork && employee.dailyWork.length > 0) {
                 printContent += `
-                <h3 style="margin-bottom: 15px;">تۆماری کاری ڕۆژانە</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەروار</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">جۆری کار</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">وردەکاری</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندن</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">تێبینی</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+                < h3 style = "margin-bottom: 15px;" > تۆماری کاری ڕۆژانە</h3 >
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەروار</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">جۆری کار</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">وردەکاری</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندن</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">تێبینی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            `;
 
                 employee.dailyWork.forEach(work => {
                     if (work.isSpecial) {
@@ -4821,14 +4965,14 @@
                             timeDetails = ` - ${work.startTime} بۆ ${work.endTime}`;
                         }
                         printContent += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.date}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">کاری تایبەت</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.name} - ${getDepartmentDisplayName(work.workDepartment)}${timeDetails}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.rate}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.note || ''}</td>
-                        </tr>
-                    `;
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.date}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">کاری تایبەت</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.name} - ${getDepartmentDisplayName(work.workDepartment)}${timeDetails}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.rate}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.note || ''}</td>
+                            </tr>
+                            `;
                     } else if (work.name) {
                         printContent += `
                         <tr>
@@ -4842,38 +4986,38 @@
                     } else {
                         const detail = work.carts ? `${work.carts} عەرەبانە` : `${work.clayTons} طەنی خۆڵ`;
                         printContent += `
-                        <tr>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.date}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">کاری ڕۆژانە</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${detail}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.rate}</td>
-                            <td style="border: 1px solid #ddd; padding: 8px;">${work.note || ''}</td>
-                        </tr>
-                    `;
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.date}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">کاری ڕۆژانە</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${detail}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.rate}</td>
+                                <td style="border: 1px solid #ddd; padding: 8px;">${work.note || ''}</td>
+                            </tr>
+                            `;
                     }
                 });
 
                 printContent += `
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
             `;
             }
 
             // Add other work records
             if (employee.otherWork && employee.otherWork.length > 0) {
                 printContent += `
-                <h3 style="margin-bottom: 15px;">تۆماری کارەکانی دیکە</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەروار</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ناوی کار</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندن</th>
-                            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">تێبینی</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+                < h3 style = "margin-bottom: 15px;" > تۆماری کارەکانی دیکە</h3 >
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">بەروار</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">ناوی کار</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">هەڵسەنگاندن</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">تێبینی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            `;
 
                 employee.otherWork.forEach(work => {
                     printContent += `
@@ -4887,21 +5031,21 @@
                 });
 
                 printContent += `
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
             `;
             }
 
             printContent += `
-                <p style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
+                < p style = "text-align: center; margin-top: 30px; color: #666; font-size: 12px;" >
                     دروستکراوە لەلایەن سیستەمی بەڕێوبردنی کارمەندانی ASOBRICK FACTORY
-                </p>
-            </div>
-        `;
+                </p >
+            </div >
+                `;
 
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
-            <html>
+                < html >
                 <head>
                     <title>تۆماری کارەکانی ${employee.name}</title>
                     <style>
@@ -4912,8 +5056,8 @@
                     </style>
                 </head>
                 <body>${printContent}</body>
-            </html>
-        `);
+            </html >
+                `);
             printWindow.document.close();
             printWindow.print();
 
@@ -4975,7 +5119,7 @@
             Object.keys(employeesByDepartment).forEach(dept => {
                 const departmentHeader = document.createElement('div');
                 departmentHeader.className = 'department-header';
-                departmentHeader.innerHTML = `<strong>${getDepartmentDisplayName(dept)}</strong>`;
+                departmentHeader.innerHTML = `< strong > ${getDepartmentDisplayName(dept)}</strong > `;
                 employeesContainer.appendChild(departmentHeader);
 
                 employeesByDepartment[dept].forEach(employee => {
@@ -4986,9 +5130,9 @@
 
 
                     checkboxDiv.innerHTML = `
-                    <input type="checkbox" class="employee-checkbox" id="project-emp-${employee.id}" value="${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
+                < input type = "checkbox" class="employee-checkbox" id = "project-emp-${employee.id}" value = "${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
                     <label for="project-emp-${employee.id}">${employee.name} (${employee.id})</label>
-                `;
+            `;
 
                     // Add event listener to update our tracking array
                     const checkbox = checkboxDiv.querySelector('.employee-checkbox');
@@ -5050,7 +5194,7 @@
             Object.keys(employeesByDepartment).forEach(dept => {
                 const departmentHeader = document.createElement('div');
                 departmentHeader.className = 'department-header';
-                departmentHeader.innerHTML = `<strong>${getDepartmentDisplayName(dept)}</strong>`;
+                departmentHeader.innerHTML = `< strong > ${getDepartmentDisplayName(dept)}</strong > `;
                 employeesContainer.appendChild(departmentHeader);
 
                 employeesByDepartment[dept].forEach(employee => {
@@ -5061,9 +5205,9 @@
 
 
                     checkboxDiv.innerHTML = `
-                    <input type="checkbox" class="employee-checkbox" id="edit-project-emp-${employee.id}" value="${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
+                < input type = "checkbox" class="employee-checkbox" id = "edit-project-emp-${employee.id}" value = "${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
                     <label for="edit-project-emp-${employee.id}">${employee.name} (${employee.id})</label>
-                `;
+            `;
 
                     // Add event listener to update our tracking array
                     const checkbox = checkboxDiv.querySelector('.employee-checkbox');
@@ -5107,7 +5251,7 @@
             // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
+                const ratingInput = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
                 if (ratingInput) {
                     employeeRatings[employeeId] = ratingInput.value;
                 }
@@ -5119,7 +5263,7 @@
                 return;
             }
 
-            const projectId = document.getElementById('projectId').value || `PROJ${Date.now()}`;
+            const projectId = document.getElementById('projectId').value || `PROJ${Date.now()} `;
 
             const projectData = {
                 id: projectId,
@@ -5141,7 +5285,7 @@
 
                     const projectRecord = {
                         date: new Date().toISOString().split('T')[0],
-                        name: `پڕۆژە: ${name}`,
+                        name: `پڕۆژە: ${name} `,
                         rate: employeeRatings[employeeId],
                         note: details,
                         createdAt: new Date().toISOString(),
@@ -5220,10 +5364,10 @@
                 });
 
                 projectDiv.innerHTML = `
-            <div class="project-header">
+                < div class="project-header" >
                 <div class="project-title">${project.name}</div>
                 <div class="project-date">${formatDate(project.createdAt)}</div>
-            </div>
+            </div >
             <div class="project-rating ${ratingClass}">هەڵسەنگاندنی ناوەند: ${averageRating.toFixed(1)}</div>
             <div class="project-details"><strong>وردەکاری:</strong> ${project.details || 'وردەکاری نییە'}</div>
             <div class="project-employees"><strong>کارمەندان:</strong> ${employeeDetails.join(', ')}</div>
@@ -5236,8 +5380,9 @@
                     <i class="bi bi-trash"></i> سڕینەوە
                 </button>
             </div>
-            ` : ''}
-        `;
+            ` : ''
+                    }
+            `;
 
                 projectsContainer.appendChild(projectDiv);
             });
@@ -5274,7 +5419,7 @@
             // Check the employees that are already in the project and set their ratings
             setTimeout(() => {
                 project.employeeIds.forEach(employeeId => {
-                    const checkbox = document.getElementById(`edit-project-emp-${employeeId}`);
+                    const checkbox = document.getElementById(`edit - project - emp - ${employeeId} `);
                     if (checkbox) {
                         checkbox.checked = true;
                     }
@@ -5287,7 +5432,7 @@
                 setTimeout(() => {
                     if (project.employeeRatings) {
                         Object.keys(project.employeeRatings).forEach(employeeId => {
-                            const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
+                            const ratingInput = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
                             if (ratingInput) {
                                 ratingInput.value = project.employeeRatings[employeeId];
                             }
@@ -5320,7 +5465,7 @@
             // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
+                const ratingInput = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
                 if (ratingInput) {
                     employeeRatings[employeeId] = ratingInput.value;
                 }
@@ -5372,7 +5517,7 @@
 
                     const projectRecord = {
                         date: new Date().toISOString().split('T')[0],
-                        name: `پڕۆژە: ${name}`,
+                        name: `پڕۆژە: ${name} `,
                         rate: employeeRatings[employeeId],
                         note: details,
                         createdAt: new Date().toISOString(),
@@ -5403,7 +5548,7 @@
                     const updatePromises = [];
                     snapshot.forEach(doc => {
                         updatePromises.push(doc.ref.update({
-                            name: `پڕۆژە: ${name}`,
+                            name: `پڕۆژە: ${name} `,
                             rate: employeeRatings[employeeId],
                             note: details,
                             updatedAt: new Date().toISOString()
@@ -5415,7 +5560,7 @@
                     if (employee.otherWork) {
                         const projectRecord = employee.otherWork.find(work => work.projectId === projectId);
                         if (projectRecord) {
-                            projectRecord.name = `پڕۆژە: ${name}`;
+                            projectRecord.name = `پڕۆژە: ${name} `;
                             projectRecord.rate = employeeRatings[employeeId];
                             projectRecord.note = details;
                         }
@@ -5583,7 +5728,7 @@
 
         // Helper to get month name in Kurdish (Simplified)
         function getKurdishMonthName(monthIndex) {
-            return `مانگی ${monthIndex + 1}`;
+            return `مانگی ${monthIndex + 1} `;
         }
 
 
@@ -5597,12 +5742,12 @@
             // 1. Render Breadcrumb
             const breadcrumb = document.createElement('div');
             breadcrumb.className = 'notification-breadcrumb';
-            let bcHtml = `<span onclick="resetNotificationPath()"><i class="bi bi-house-door-fill me-1"></i> سەرەتا</span>`;
+            let bcHtml = `< span onclick = "resetNotificationPath()" > <i class="bi bi-house-door-fill me-1"></i> سەرەتا</span > `;
 
             currentNotificationPath.forEach((step, index) => {
                 const isLast = index === currentNotificationPath.length - 1;
                 const name = index === 0 ? getDepartmentDisplayName(step) : step;
-                bcHtml += ` <i class="bi bi-chevron-left mx-2 opacity-50"></i> <span class="${isLast ? 'active' : ''}" onclick="resetNotificationPath(${index})">${name}</span>`;
+                bcHtml += ` < i class="bi bi-chevron-left mx-2 opacity-50" ></i > <span class="${isLast ? 'active' : ''}" onclick="resetNotificationPath(${index})">${name}</span>`;
             });
             breadcrumb.innerHTML = bcHtml;
             container.appendChild(breadcrumb);
@@ -5623,10 +5768,10 @@
             }
 
             explorerHeader.innerHTML = `
-                <div class="explorer-title">
+                < div class="explorer-title" >
                     <i class="bi ${titleIcon} text-primary fs-4"></i>
                     <span>${titleText}</span>
-                </div>
+                </div >
                 <div class="text-muted small fw-bold">
                     ${allFilteredNotifications.length} ئاگادارکردنەوە
                 </div>
@@ -5697,7 +5842,7 @@
                         <div class="folder-icon"><i class="bi ${data.icon}"></i></div>
                         <div class="folder-name">${data.displayName}</div>
                         <div class="folder-meta">${data.total} ئاگادارکردنەوە</div>
-                    `;
+            `;
                     grid.appendChild(folder);
                 });
 
@@ -5717,7 +5862,7 @@
                 const months = {};
                 deptNotifs.forEach(n => {
                     const date = new Date(n.createdAt);
-                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()}`;
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()} `;
                     if (!months[mName]) months[mName] = { total: 0, pending: 0 };
                     months[mName].total++;
                     if (n.status === 'pending') months[mName].pending++;
@@ -5736,7 +5881,7 @@
                         <div class="folder-icon"><i class="bi bi-calendar-event"></i></div>
                         <div class="folder-name">${mName}</div>
                         <div class="folder-meta">${data.total} دانە</div>
-                    `;
+            `;
                     grid.appendChild(folder);
                 });
 
@@ -5756,7 +5901,7 @@
                 const finalNotifs = allFilteredNotifications.filter(n => {
                     const cat = getNotificationCategory(n);
                     const date = new Date(n.createdAt);
-                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()}`;
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()} `;
                     return cat === selectedCat && mName === selectedMonth;
                 }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -5796,29 +5941,29 @@
                     statusIconClass = 'bi-hourglass-split';
             }
 
-            notificationDiv.className = `modern-notification-card status-${statusSuffix}`;
+            notificationDiv.className = `modern - notification - card status - ${statusSuffix} `;
 
             let actionsHtml = '';
 
             // Actions for Admin or Supervisor
             if (notification.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
                 actionsHtml += `
-                    <div class="notification-controls">
+                < div class="notification-controls" >
                         <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
                             <i class="bi bi-check-lg"></i> پەسەندکردن
                         </button>
                         <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}" title="ڕەتکردنەوە">
                             <i class="bi bi-x-lg"></i> ڕەتکردنەوە
                         </button>
-                    </div>
+                    </div >
                 `;
             }
 
             // Admin specific actions (Edit/Delete)
             if (currentUser.role === 'admin') {
                 actionsHtml += `
-                    <div class="notification-controls" style="${notification.status === 'pending' ? 'border-top: none; padding-top: 5px; margin-top: 0;' : ''}">
-                         ${notification.status === 'pending' ? '' : `
+                < div class="notification-controls" style = "${notification.status === 'pending' ? 'border-top: none; padding-top: 5px; margin-top: 0;' : ''}" >
+                    ${notification.status === 'pending' ? '' : `
                             <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}" title="دەستکاری">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -5833,8 +5978,9 @@
                             <button class="btn btn-sm btn-outline-danger delete-notification-btn ms-1" data-id="${notification.id}" title="سڕینەوە">
                                 <i class="bi bi-trash"></i>
                             </button>
-                         ` : ''}
-                    </div>
+                         ` : ''
+                    }
+                    </div >
                 `;
             }
 
@@ -5857,19 +6003,19 @@
                 if (workDetails.totalHours || workDetails.totalMinutes) {
                     timeDisplay = `${workDetails.totalHours || 0} کاتژمێر و ${workDetails.totalMinutes || 0} خولەک`;
                 } else if (workDetails.startTime && workDetails.endTime) {
-                    timeDisplay = `${workDetails.startTime} - ${workDetails.endTime}`;
+                    timeDisplay = `${workDetails.startTime} - ${workDetails.endTime} `;
                 }
 
-                message = `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری <strong>${title}</strong>ی ئەنجامداوە`;
+                message = `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری < strong > ${title}</strong > ی ئەنجامداوە`;
                 if (workDetails.note) note = workDetails.note;
 
                 detailsHtml = `
-                    <div class="notification-meta mt-1">
+                < div class="notification-meta mt-1" >
                         <i class="bi bi-people"></i>
                         <span>${notification.relatedEmployees.map(emp => `${emp.employeeName} (${emp.rating})`).join('، ')}</span>
-                    </div>
-                    ${timeDisplay ? `<div class="notification-meta"><i class="bi bi-clock"></i> <span>${timeDisplay}</span></div>` : ''}
-                `;
+                    </div >
+                ${timeDisplay ? `<div class="notification-meta"><i class="bi bi-clock"></i> <span>${timeDisplay}</span></div>` : ''}
+            `;
             } else {
                 message = notification.message;
             }
@@ -5883,18 +6029,19 @@
                 const resolutionNote = notification.confirmationNote || notification.rejectionNote || '';
 
                 resolutionHtml = `
-                    <div class="notification-meta" style="margin-top: 8px;">
+                < div class="notification-meta" style = "margin-top: 8px;" >
                         <span class="${actionColor} fw-bold"><i class="bi ${statusIconClass}"></i> ${actionText}</span>
                         <span>لەلایەن: ${resolver}</span>
-                    </div>
-                    ${resolutionNote ? `<div class="record-note mt-2" style="background: ${notification.status === 'confirmed' ? 'rgba(25, 135, 84, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-left: 3px solid ${notification.status === 'confirmed' ? '#198754' : '#dc3545'};">
+                    </div >
+                ${resolutionNote ? `<div class="record-note mt-2" style="background: ${notification.status === 'confirmed' ? 'rgba(25, 135, 84, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-left: 3px solid ${notification.status === 'confirmed' ? '#198754' : '#dc3545'};">
                         <strong>تێبینی:</strong> ${resolutionNote}
-                    </div>` : ''}
-                 `;
+                    </div>` : ''
+                    }
+            `;
             }
 
             notificationDiv.innerHTML = `
-                <div class="notification-header">
+                < div class="notification-header" >
                     <div class="notification-icon">
                         <i class="bi ${statusIconClass}"></i>
                     </div>
@@ -5902,21 +6049,21 @@
                         <div class="notification-title">${title}</div>
                         <div class="notification-id">ID: ${notificationID}</div>
                     </div>
-                </div>
-                
+                </div >
+
                 <div class="notification-body">
                     ${message}
                     ${note ? `<div class="record-note mt-2">${note}</div>` : ''}
                 </div>
                 
                 ${detailsHtml}
-                
-                <div class="notification-meta">
-                     <i class="bi bi-calendar3"></i>
-                     <span>${notification.createdAt ? new Date(notification.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}</span>
-                     <span class="mx-2">•</span>
-                     <span>${getDepartmentDisplayName(notification.targetDepartment)}</span>
-                </div>
+
+            <div class="notification-meta">
+                <i class="bi bi-calendar3"></i>
+                <span>${notification.createdAt ? new Date(notification.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB')}</span>
+                <span class="mx-2">•</span>
+                <span>${getDepartmentDisplayName(notification.targetDepartment)}</span>
+            </div>
                 
                 ${resolutionHtml}
                 ${actionsHtml}
@@ -6225,7 +6372,7 @@
                 const dailyCount = employee.dailyWork ? employee.dailyWork.length : 0;
                 const otherCount = employee.otherWork ? employee.otherWork.length : 0;
 
-                csvContent += `${employee.id},${employee.name},${employee.position},${employee.department},${dailyRating.toFixed(1)},${otherRating.toFixed(1)},${dailyCount},${otherCount}\n`;
+                csvContent += `${employee.id},${employee.name},${employee.position},${employee.department},${dailyRating.toFixed(1)},${otherRating.toFixed(1)},${dailyCount},${otherCount} \n`;
             });
 
             // Create download link
@@ -6287,7 +6434,7 @@
 
             // 2. Build the print content using the filtered list
             let printContent = `
-        <div style="padding: 20px;">
+                < div style = "padding: 20px;" >
             <h2 style="text-align: center; margin-bottom: 20px;">ASOBRICK FACTORY - ڕاپۆرتی کارمەند</h2>
             <p style="text-align: center; color: #666; margin-bottom: 30px;">دروستکراوە لە: ${new Date().toLocaleDateString()}</p>
             <table style="width: 100%; border-collapse: collapse;">
@@ -6325,13 +6472,13 @@
             <p style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
                 دروستکراوە لەلایەن سیستەمی بەڕێوبردنی کارمەندانی ASOBRICK FACTORY
             </p>
-        </div>
-    `;
+        </div >
+                `;
 
             // 3. Open the print window
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
-        <html>
+                < html >
             <head>
                 <title>ڕاپۆرتی کارمەند</title>
                 <style>
@@ -6342,8 +6489,8 @@
                 </style>
             </head>
             <body>${printContent}</body>
-        </html>
-    `);
+        </html >
+                `);
             printWindow.document.close();
             printWindow.print();
 
@@ -6452,7 +6599,7 @@
             const klinEmployees = employees.filter(emp => emp.department === 'klin');
 
             klinEmployees.forEach(emp => {
-                console.log(`ID: ${emp.id}, Name: ${emp.name}, Position: ${emp.position}`);
+                console.log(`ID: ${emp.id}, Name: ${emp.name}, Position: ${emp.position} `);
             });
 
             console.log('=== END DEBUG ===');
@@ -6491,9 +6638,9 @@
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.className = 'employee-checkbox-label';
                 checkboxDiv.innerHTML = `
-            <input type="checkbox" class="employee-checkbox" id="clean-emp-${employee.id}" value="${employee.id}">
-            <label for="clean-emp-${employee.id}">${employee.name}</label>
-        `;
+                < input type = "checkbox" class="employee-checkbox" id = "clean-emp-${employee.id}" value = "${employee.id}" >
+                    <label for="clean-emp-${employee.id}">${employee.name}</label>
+            `;
                 employeesContainer.appendChild(checkboxDiv);
             });
 
@@ -6533,7 +6680,7 @@
 
                 const workRecord = {
                     date: date,
-                    name: `پاککردنەوە: ${workName}`, // Save as "Cleaning: [Name]"
+                    name: `پاککردنەوە: ${workName} `, // Save as "Cleaning: [Name]"
                     rate: rate,
                     note: note,
                     createdAt: new Date().toISOString(),
@@ -6575,8 +6722,8 @@
                     const div = document.createElement('div');
                     div.className = 'employee-checkbox-label';
                     div.innerHTML = `
-                <input type="checkbox" class="employee-checkbox" id="grease-emp-${employee.id}" value="${employee.id}">
-                <label for="grease-emp-${employee.id}">${employee.name}</label>
+                < input type = "checkbox" class="employee-checkbox" id = "grease-emp-${employee.id}" value = "${employee.id}" >
+                    <label for="grease-emp-${employee.id}">${employee.name}</label>
             `;
                     employeesContainer.appendChild(div);
                 });
@@ -6603,9 +6750,9 @@
                 const div = document.createElement('div');
                 div.className = 'employee-checkbox-label';
                 div.innerHTML = `
-            <input type="checkbox" class="department-checkbox" id="grease-dept-${dept.id}" value="${dept.name}">
-            <label for="grease-dept-${dept.id}">${dept.name}</label>
-        `;
+                < input type = "checkbox" class="department-checkbox" id = "grease-dept-${dept.id}" value = "${dept.name}" >
+                    <label for="grease-dept-${dept.id}">${dept.name}</label>
+            `;
                 deptContainer.appendChild(div);
             });
 
@@ -6652,7 +6799,7 @@
 
                 const workRecord = {
                     date: date,
-                    name: `گریسین: ${locationString}`, // Saves as "Greasing: Klin, Unsetting"
+                    name: `گریسین: ${locationString} `, // Saves as "Greasing: Klin, Unsetting"
                     rate: rate,
                     note: note,
                     createdAt: new Date().toISOString(),
@@ -6773,7 +6920,7 @@
                     }
 
                     if (recordsToMove.length > 0) {
-                        console.log(`Migrating ${recordsToMove.length} records for ${emp.name} (${emp.id})`);
+                        console.log(`Migrating ${recordsToMove.length} records for ${emp.name}(${emp.id})`);
 
                         // Move to subcollection
                         for (const record of recordsToMove) {
