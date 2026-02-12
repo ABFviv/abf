@@ -4374,9 +4374,9 @@
                 checkboxDiv.className = 'employee-checkbox-label';
 
                 checkboxDiv.innerHTML = `
-                < input type = "checkbox" class="employee-checkbox" id = "quick-record-emp-${employee.id}" value = "${employee.id}" >
-                    <label for="quick-record-emp-${employee.id}">${employee.name} (${employee.id})</label>
-            `;
+                    \u003cinput type=\"checkbox\" class=\"employee-checkbox\" id=\"quick-record-emp-${employee.id}\" value=\"${employee.id}\"\u003e
+                    \u003clabel for=\"quick-record-emp-${employee.id}\"\u003e${employee.name} (${employee.id})\u003c/label\u003e
+                `;
 
                 employeesContainer.appendChild(checkboxDiv);
             });
