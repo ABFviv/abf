@@ -78,7 +78,8 @@
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
 
-                <button class="btn btn-secondary" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
+                <button class="btn btn-secondary" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان"
+                    style="display: none !important;">
                     <i class="bi bi-bar-chart-line"></i>
                     <span class="d-none d-md-inline ms-1" style="font-size: 0.75rem;">بارکردنی ئامارەکان</span>
                 </button>
@@ -237,7 +238,10 @@
                             onclick="showProjectsPage()">
                             <i class="bi bi-briefcase-fill"></i> پڕۆژەکان
                         </button>
-                      
+                        <button class="modern-action-btn btn-warning" id="migrateRatingsBtn"
+                            onclick="migrateRatingsCache()" style="display: none !important;">
+                            <i class="bi bi-star-fill"></i> حیسابکردنی ئامارەکان
+                        </button>
                         <button class="modern-action-btn btn-warning" id="testFirebaseBtn" style="display: none;">
                             <i class="bi bi-bug"></i> Test DB
                         </button>
@@ -254,8 +258,8 @@
                         <button class="modern-action-btn btn-report admin-and-supervisor-only" id="printBtn">
                             <i class="bi bi-printer-fill"></i> پرینت
                         </button>
-                        <button class="modern-action-btn btn-secondary" disabled
-                            title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
+                        <button class="modern-action-btn btn-info text-white" id="generalStatsBtn"
+                            onclick="showTotalsPage()">
                             <i class="bi bi-bar-chart-fill"></i> ئاماری گشتی
                         </button>
                     </div>
@@ -573,11 +577,19 @@
             </div>
         </div>
 
+        <!-- Employee Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0 fw-bold">تۆماری کارەکانی <span id="recordsEmployeeName" class="text-primary"></span></h4>
+            <button class="btn btn-secondary btn-sm" onclick="backToDashboard()">
+                <i class="bi bi-arrow-right"></i> گەڕانەوە
+            </button>
+        </div>
+
         <div class="record-tabs">
-            <div class="record-tab active" id="dailyWorkTab">
+            <div class="record-tab active" id="dailyWorkTab" onclick="switchRecordType('daily')">
                 تۆماری کاری ڕۆژانە <span class="record-count" id="dailyWorkCount">0</span>
             </div>
-            <div class="record-tab" id="otherWorkTab">
+            <div class="record-tab" id="otherWorkTab" onclick="switchRecordType('other')">
                 تۆماری کارەکانی دیکە <span class="record-count" id="otherWorkCount">0</span>
             </div>
         </div>
@@ -652,7 +664,8 @@
                     <span id="totalNotificationCount">0</span> نوێ
                 </div>
 
-                <button class="btn-header" id="backToDashboardFromNotificationsBtn">
+                <button class="btn-header" id="backToDashboardFromNotificationsBtn"
+                    onclick="backToDashboardFromNotifications()">
                     <i class="bi bi-arrow-right-short fs-4"></i>
                     <span>گەڕانەوە</span>
                 </button>
@@ -661,6 +674,13 @@
 
         <div id="notificationsContainer" class="px-2">
             <!-- Navigation folder explorer will be inserted here -->
+        </div>
+
+        <!-- Load Older Button -->
+        <div class="text-center my-3" id="loadOlderContainer" style="display: none;">
+            <button class="btn btn-outline-primary" id="loadOlderBtn" onclick="loadOlderNotifications()">
+                <i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر
+            </button>
         </div>
     </div>
 
@@ -1632,7 +1652,7 @@
             initializePositionDropdown();
 
             // Request notification permission
-            requestNotificationPermission();
+            // requestNotificationPermission(); // Disabled - function removed during optimization
 
             // Show dashboard with user info
             showDashboard();
@@ -2443,7 +2463,7 @@
 
             // Ensure the tables are visible (override the default display:none)
             // The update functions above usually handle this, but for safety:
-            if (['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) || currentUser.role === 'admin') {
+            if (['crushing-prep', 'cutting-setting', 'unsetting', 'klin', 'electrical-ac', 'mechanical'].includes(currentUser.department) || currentUser.role === 'admin') {
                 document.getElementById('dailyWorkTotalsSection').style.display = 'block';
             }
 
@@ -2455,31 +2475,9 @@
         // Function to go back
         async function backToDashboardFromTotals() {
             document.getElementById('totalsPage').style.display = 'none';
-            await showDashboard();
+            await backToDashboard();
         }
-        // Show notifications page - UPDATED
-        function showNotificationsPage() {
-            // Check if user is manager (should not see notifications)
-            if (currentUser.role === 'manager') {
-                showNotification('چالاک نییە', 'warning');
-                return;
-            }
 
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('workRecordsPage').style.display = 'none';
-            document.getElementById('projectsPage').style.display = 'none';
-            document.getElementById('notificationsPage').style.display = 'block';
-
-            // Hide daily work totals sections AND department filter
-            document.getElementById('dailyWorkTotalsSection').style.display = 'none';
-            document.getElementById('electricalMechanicalTotalsSection').style.display = 'none';
-            document.getElementById('totalsDepartmentFilter').style.display = 'none';
-
-            console.log('📱 Loading notifications page for user:', currentUser);
-            currentNotificationPath = []; // Always start at root
-            loadNotifications();
-        }
 
         // Back to dashboard from projects
         async function backToDashboardFromProjects() {
@@ -2495,6 +2493,83 @@
             updateDailyWorkTotals();
             updateElectricalMechanicalTotals();
         }
+
+        // Show notifications page
+        async function showNotificationsPage() {
+            // Hide other pages
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('workRecordsPage').style.display = 'none';
+            document.getElementById('projectsPage').style.display = 'none';
+            document.getElementById('notificationsPage').style.display = 'block';
+
+            // Hide totals sections
+            document.getElementById('dailyWorkTotalsSection').style.display = 'none';
+            document.getElementById('electricalMechanicalTotalsSection').style.display = 'none';
+            document.getElementById('totalsDepartmentFilter').style.display = 'none';
+
+            // Load notifications
+            await loadNotifications();
+        }
+
+        // Load notifications from Firestore
+        async function loadNotifications() {
+            try {
+                console.log('📥 Loading notifications...');
+
+                let query = db.collection('notifications')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50);
+
+                // Filter by user role
+                if (currentUser.role === 'supervisor') {
+                    query = query.where('targetDepartment', '==', currentUser.department);
+                }
+
+                const snapshot = await query.get();
+
+                console.log(`✅ Loaded ${snapshot.size} notifications`);
+
+                notifications = [];
+                snapshot.forEach(doc => {
+                    notifications.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderNotifications();
+
+            } catch (error) {
+                console.error('❌ Error loading notifications:', error);
+                showNotification('هەڵە لە بارکردنی ئاگادارکردنەوەکان', 'danger');
+            }
+        }
+
+        // Render notifications
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted py-5">هیچ ئاگادارکردنەوەیەک نییە</p>';
+                return;
+            }
+
+            notifications.forEach(notification => {
+                const notifDiv = document.createElement('div');
+                notifDiv.className = 'notification-item';
+                notifDiv.innerHTML = `
+                    <div class="notification-header">
+                        <strong>${notification.title || 'ئاگادارکردنەوە'}</strong>
+                        <span class="text-muted small">${notification.createdAt || ''}</span>
+                    </div>
+                    <div class="notification-body">
+                        ${notification.message || notification.description || ''}
+                    </div>
+                `;
+                container.appendChild(notifDiv);
+            });
+        }
+
         // Back to dashboard from notifications
         async function backToDashboardFromNotifications() {
             document.getElementById('notificationsPage').style.display = 'none';
@@ -2544,16 +2619,589 @@
             }
         }
 
-        // Request notification permission
-        function requestNotificationPermission() {
-            if ('Notification' in window) {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        console.log('Notification permission granted');
+        // 📊 DASHBOARD TOTALS - CALCULATED FROM CACHED AGGREGATES
+        // These functions calculate dashboard statistics from already-loaded employee data
+        // ✅ Zero additional database reads!
+
+
+
+
+        // ⚡ OPTIMIZED NOTIFICATION LOADING - Time-Based Filtering
+        let oldestLoadedTimestamp = null; // Track oldest loaded notification for pagination
+        const DAYS_TO_LOAD = 4; // Load 4 days at a time
+
+        // Show notifications page and load recent notifications
+        async function showNotificationsPage() {
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('notificationsPage').style.display = 'block';
+
+            // Reset and load last 4 days of notifications
+            notifications = [];
+            oldestLoadedTimestamp = null;
+            await loadRecentNotifications();
+        }
+
+        // Load last 4 days of notifications
+        async function loadRecentNotifications() {
+            try {
+                // Calculate 4 days ago
+                const daysAgo = new Date();
+                daysAgo.setDate(daysAgo.getDate() - DAYS_TO_LOAD);
+
+                console.log(`📥 Loading notifications from last ${DAYS_TO_LOAD} days...`);
+
+                let query = db.collection('notifications')
+                    .where('createdAt', '>=', daysAgo.toISOString())
+                    .orderBy('createdAt', 'desc');
+
+                // Filter by user role
+                if (currentUser.role === 'supervisor') {
+                    query = query.where('targetDepartment', '==', currentUser.department);
+                }
+
+                const snapshot = await query.get();
+
+                console.log(`✅ Loaded ${snapshot.size} notifications (${DAYS_TO_LOAD} days)`);
+
+                notifications = [];
+                snapshot.forEach(doc => {
+                    const notification = { id: doc.id, ...doc.data() };
+                    notifications.push(notification);
+
+                    // Track oldest timestamp for pagination
+                    if (!oldestLoadedTimestamp || notification.createdAt < oldestLoadedTimestamp) {
+                        oldestLoadedTimestamp = notification.createdAt;
                     }
                 });
+
+                // Pass to the main loadNotifications function to handle filtering and rendering
+                if (typeof loadNotifications === 'function') {
+                    loadNotifications();
+                } else {
+                    renderNotifications();
+                }
+
+                // Show "Load Older" button if we got notifications (there might be more)
+                document.getElementById('loadOlderContainer').style.display =
+                    notifications.length > 0 ? 'block' : 'none';
+
+            } catch (error) {
+                console.error('❌ Error loading notifications:', error);
+                showNotification('هەڵە لە بارکردنی ئاگادارکردنەوەکان', 'danger');
             }
         }
+
+        // Load older notifications (next 4 days)
+        async function loadOlderNotifications() {
+            if (!oldestLoadedTimestamp) {
+                console.log('No more notifications to load');
+                return;
+            }
+
+            try {
+                const loadBtn = document.getElementById('loadOlderBtn');
+                loadBtn.disabled = true;
+                loadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> بارکردن...';
+
+                // Calculate 4 days before the oldest loaded timestamp
+                const oldestDate = new Date(oldestLoadedTimestamp);
+                const fourDaysEarlier = new Date(oldestDate);
+                fourDaysEarlier.setDate(fourDaysEarlier.getDate() - DAYS_TO_LOAD);
+
+                console.log(`📥 Loading older notifications (${DAYS_TO_LOAD} more days)...`);
+
+                let query = db.collection('notifications')
+                    .where('createdAt', '>=', fourDaysEarlier.toISOString())
+                    .where('createdAt', '<', oldestLoadedTimestamp)
+                    .orderBy('createdAt', 'desc');
+
+                // Filter by user role
+                if (currentUser.role === 'supervisor') {
+                    query = query.where('targetDepartment', '==', currentUser.department);
+                }
+
+                const snapshot = await query.get();
+
+                console.log(`✅ Loaded ${snapshot.size} older notifications`);
+
+                if (snapshot.size === 0) {
+                    // No more notifications
+                    loadBtn.innerHTML = '<i class="bi bi-check-circle"></i> هەموو ئاگادارکردنەوەکان بارکران';
+                    setTimeout(() => {
+                        document.getElementById('loadOlderContainer').style.display = 'none';
+                    }, 2000);
+                    return;
+                }
+
+                // Append older notifications
+                snapshot.forEach(doc => {
+                    const notification = { id: doc.id, ...doc.data() };
+                    notifications.push(notification);
+
+                    // Update oldest timestamp
+                    if (notification.createdAt < oldestLoadedTimestamp) {
+                        oldestLoadedTimestamp = notification.createdAt;
+                    }
+                });
+
+                renderNotifications();
+
+                loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
+                loadBtn.disabled = false;
+
+            } catch (error) {
+                console.error('❌ Error loading older notifications:', error);
+                showNotification('هەڵە لە بارکردنی ئاگادارکردنەوەکان', 'danger');
+
+                const loadBtn = document.getElementById('loadOlderBtn');
+                loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
+                loadBtn.disabled = false;
+            }
+        }
+
+        // Render notifications in the UI
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            container.innerHTML = '';
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-5">هیچ ئاگادارکردنەوەیەک نییە</div>';
+                return;
+            }
+
+            // Group by date for better organization
+            const groupedByDate = {};
+            notifications.forEach(notif => {
+                const date = new Date(notif.createdAt).toLocaleDateString('ar-IQ');
+                if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                }
+                groupedByDate[date].push(notif);
+            });
+
+            // Render grouped notifications
+            for (const [date, notifs] of Object.entries(groupedByDate)) {
+                const dateHeader = document.createElement('h6');
+                dateHeader.className = 'text-muted mt-3 mb-2';
+                dateHeader.textContent = date;
+                container.appendChild(dateHeader);
+
+                notifs.forEach(notif => {
+                    const notifEl = document.createElement('div');
+                    notifEl.className = `notification-item ${notif.status === 'pending' ? 'notification-unread' : ''}`;
+                    notifEl.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <strong>${notif.title || 'ئاگادارکردنەوە'}</strong>
+                            <small class="text-muted">${new Date(notif.createdAt).toLocaleTimeString('ar-IQ')}</small>
+                        </div>
+                        <p class="mb-0">${notif.message || ''}</p>
+                    `;
+                    container.appendChild(notifEl);
+                });
+            }
+
+            // Update total count
+            document.getElementById('totalNotificationCount').textContent = notifications.length;
+        }
+
+
+        // ⭐ COMPREHENSIVE AGGREGATE MIGRATION - ONE-TIME SETUP
+        // Calculates and stores ALL aggregates: ratings, totals, monthly stats, electrical/mechanical
+        async function migrateRatingsCache() {
+            if (!confirm('ئایا دڵنیایت کە دەتەوێت هەموو ئامارەکان بۆ هەموو کارمەندان حیساب بکەیت؟\n\nThis will calculate ALL aggregates (ratings, totals, stats) for all employees.\n\nCost: ~7,000 database reads (one time only)\n\nAfter this, dashboard will load with minimal reads!')) {
+                return;
+            }
+
+            const migrateBtn = document.getElementById('migrateRatingsBtn');
+            const originalText = migrateBtn.innerHTML;
+            migrateBtn.disabled = true;
+            migrateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> چاوەڕوان بە...';
+
+            try {
+                let processedCount = 0;
+                let totalReads = 0;
+                const startTime = Date.now();
+
+                console.log('🚀 Starting comprehensive aggregate migration...');
+
+                // Process each employee
+                for (const employee of employees) {
+                    console.log(`Processing employee ${employee.id} - ${employee.name}...`);
+
+                    // Read all work records for this employee
+                    const workRecordsSnap = await db.collection('employees').doc(employee.id).collection('workRecords').get();
+                    totalReads += workRecordsSnap.size;
+
+                    const dailyRecords = [];
+                    const otherRecords = [];
+                    const electricalRecords = [];
+                    const mechanicalRecords = [];
+
+                    // Classify records
+                    // Classify records
+                    workRecordsSnap.forEach(doc => {
+                        const record = { id: doc.id, ...doc.data() };
+
+                        // FIXED: Prioritize 'type' field
+                        if (record.type === 'daily') {
+                            dailyRecords.push(record);
+                        } else if (record.type === 'other') {
+                            otherRecords.push(record);
+                        } else {
+                            // Fallback for old records
+                            // FIXED: isSpecial is now considered Daily Work
+                            if (record.projectId || (record.name && record.name.startsWith('پڕۆژە'))) {
+                                otherRecords.push(record);
+                            } else {
+                                dailyRecords.push(record);
+                            }
+                        }
+
+                        // Classify by department
+                        if (employee.department === 'electrical' || record.department === 'electrical') {
+                            electricalRecords.push(record);
+                        }
+                        if (employee.department === 'mechanical' || record.department === 'mechanical') {
+                            mechanicalRecords.push(record);
+                        }
+                    });
+
+                    // Calculate averages
+                    let dailyRating = 0;
+                    let otherRating = 0;
+
+                    if (dailyRecords.length > 0) {
+                        const dailySum = dailyRecords.reduce((sum, r) => sum + parseFloat(r.rate || 0), 0);
+                        dailyRating = Math.round((dailySum / dailyRecords.length) * 100) / 100;
+                    }
+
+                    if (otherRecords.length > 0) {
+                        const otherSum = otherRecords.reduce((sum, r) => sum + parseFloat(r.rate || 0), 0);
+                        otherRating = Math.round((otherSum / otherRecords.length) * 100) / 100;
+                    }
+
+                    // Calculate work totals
+                    const totalDailyHours = dailyRecords.reduce((sum, r) => sum + parseFloat(r.hours || 0), 0);
+                    const totalOtherHours = otherRecords.reduce((sum, r) => sum + parseFloat(r.hours || 0), 0);
+                    const totalSalary = dailyRecords.reduce((sum, r) => sum + parseFloat(r.salary || 0), 0) + otherRecords.reduce((sum, r) => sum + parseFloat(r.salary || 0), 0);
+
+                    // Calculate electrical/mechanical totals
+                    const electricalHours = electricalRecords.reduce((sum, r) => sum + parseFloat(r.hours || 0), 0);
+                    const mechanicalHours = mechanicalRecords.reduce((sum, r) => sum + parseFloat(r.hours || 0), 0);
+
+                    // Calculate Carts and Clay Tons
+                    let totalCarts = 0;
+                    let totalClayTons = 0;
+
+                    dailyRecords.forEach(r => {
+                        if (r.carts) totalCarts += parseFloat(r.carts);
+                        if (r.clayTons) totalClayTons += parseFloat(r.clayTons);
+                    });
+
+                    // Get current month for monthly totals
+                    const now = new Date();
+                    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+                    const thisMonthRecords = [...dailyRecords, ...otherRecords].filter(r => {
+                        if (!r.date) return false;
+                        const recordMonth = r.date.substring(0, 7);
+                        return recordMonth === currentMonth;
+                    });
+
+                    const monthlyHours = thisMonthRecords.reduce((sum, r) => sum + parseFloat(r.hours || 0), 0);
+                    const monthlySalary = thisMonthRecords.reduce((sum, r) => sum + parseFloat(r.salary || 0), 0);
+
+                    // Calculate Monthly Carts/Tons
+                    let monthlyCarts = 0;
+                    let monthlyClayTons = 0;
+                    thisMonthRecords.forEach(r => {
+                        if (r.type === 'daily' || !r.type) {
+                            if (r.carts) monthlyCarts += parseFloat(r.carts);
+                            if (r.clayTons) monthlyClayTons += parseFloat(r.clayTons);
+                        }
+                    });
+
+                    // Update employee document with ALL aggregates
+                    await db.collection('employees').doc(employee.id).update({
+                        // Ratings
+                        dailyRating: dailyRating,
+                        dailyWorkCount: dailyRecords.length,
+                        otherRating: otherRating,
+                        otherWorkCount: otherRecords.length,
+
+                        // Work totals
+                        totalDailyHours: Math.round(totalDailyHours * 100) / 100,
+                        totalOtherHours: Math.round(totalOtherHours * 100) / 100,
+                        totalSalary: Math.round(totalSalary * 100) / 100,
+
+                        // Monthly totals
+                        monthlyHours: Math.round(monthlyHours * 100) / 100,
+                        monthlyWorkCount: thisMonthRecords.length,
+                        monthlySalary: Math.round(monthlySalary * 100) / 100,
+                        monthlyCarts: Math.round(monthlyCarts * 100) / 100,
+                        monthlyClayTons: Math.round(monthlyClayTons * 100) / 100,
+                        currentMonth: currentMonth,
+
+                        // Department specific
+                        electricalHours: Math.round(electricalHours * 100) / 100,
+                        electricalCount: electricalRecords.length,
+                        mechanicalHours: Math.round(mechanicalHours * 100) / 100,
+                        mechanicalCount: mechanicalRecords.length,
+
+                        // New Totals for Daily Work (Carts/Tons)
+                        totalCarts: Math.round(totalCarts * 100) / 100,
+                        totalClayTons: Math.round(totalClayTons * 100) / 100
+                    });
+
+                    // Update local employee object
+                    employee.dailyRating = dailyRating;
+                    employee.dailyWorkCount = dailyRecords.length;
+                    employee.otherRating = otherRating;
+                    employee.otherWorkCount = otherRecords.length;
+
+                    // Update local totals
+                    employee.totalCarts = Math.round(totalCarts * 100) / 100;
+                    employee.totalClayTons = Math.round(totalClayTons * 100) / 100;
+                    employee.monthlyHours = Math.round(monthlyHours * 100) / 100;
+                    employee.electricalHours = Math.round(electricalHours * 100) / 100;
+                    employee.mechanicalHours = Math.round(mechanicalHours * 100) / 100;
+
+                    processedCount++;
+                    console.log(`✅ ${employee.name}: Ratings=${dailyRating}/${otherRating}, Monthly=${monthlyHours}h/${thisMonthRecords.length} records`);
+
+                    // Update button with progress
+                    migrateBtn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${processedCount}/${employees.length}`;
+                }
+
+                const endTime = Date.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(1);
+
+                console.log('✅ Migration complete!');
+                console.log(`📊 Stats: ${processedCount} employees, ${totalReads} reads, ${duration}s`);
+
+                // Refresh the table to show new ratings
+                renderEmployeeTable();
+
+                showNotification(`✅ هەموو ئامارەکان تۆمارکران بۆ ${processedCount} کارمەند!\n\nDatabase reads: ${totalReads}\nTime: ${duration}s`, 'success');
+
+                migrateBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> تەواو بوو';
+                setTimeout(() => {
+                    migrateBtn.innerHTML = originalText;
+                    migrateBtn.disabled = false;
+                }, 3000);
+
+            } catch (error) {
+                console.error('❌ Migration error:', error);
+                showNotification('هەڵە لە گواستنەوەی ئامارەکان: ' + error.message, 'danger');
+                migrateBtn.innerHTML = originalText;
+                migrateBtn.disabled = false;
+            }
+        }
+
+        // ✅ INCREMENTAL RATING UPDATE HELPER
+        // Updates employee's cached rating incrementally without reading all work records
+        async function updateEmployeeCachedRating(employeeId, workType, rating, operation = 'add') {
+            try {
+                const employeeRef = db.collection('employees').doc(employeeId);
+                const employeeDoc = await employeeRef.get();
+
+                if (!employeeDoc.exists) {
+                    console.error('Employee not found:', employeeId);
+                    return false;
+                }
+
+                const employeeData = employeeDoc.data();
+                const isDaily = workType === 'daily';
+
+                // Get current values (default to 0 if not set)
+                const currentRating = employeeData[isDaily ? 'dailyRating' : 'otherRating'] || 0;
+                const currentCount = employeeData[isDaily ? 'dailyWorkCount' : 'otherWorkCount'] || 0;
+
+                let newRating, newCount;
+
+                if (operation === 'add') {
+                    // Add new record: (oldAvg × oldCount + newRating) / (oldCount + 1)
+                    newCount = currentCount + 1;
+                    newRating = ((currentRating * currentCount) + parseFloat(rating)) / newCount;
+                } else if (operation === 'delete') {
+                    // Delete record: (oldAvg × oldCount - deletedRating) / (oldCount - 1)
+                    newCount = Math.max(0, currentCount - 1);
+                    if (newCount === 0) {
+                        newRating = 0;
+                    } else {
+                        newRating = ((currentRating * currentCount) - parseFloat(rating)) / newCount;
+                    }
+                } else if (operation === 'update') {
+                    // Update record: oldAvg + (newRating - oldRating) / count
+                    // rating parameter should be {old: oldRating, new: newRating}
+                    const diff = parseFloat(rating.new) - parseFloat(rating.old);
+                    newRating = currentRating + (diff / currentCount);
+                    newCount = currentCount;
+                }
+
+                // Round to 2 decimal places
+                newRating = Math.round(newRating * 100) / 100;
+
+                // Update employee document with new cached values
+                const updateData = {
+                    [isDaily ? 'dailyRating' : 'otherRating']: newRating,
+                    [isDaily ? 'dailyWorkCount' : 'otherWorkCount']: newCount
+                };
+
+                await employeeRef.update(updateData);
+                console.log(`✅ Updated cached rating for employee ${employeeId}:`, updateData);
+
+                // Update local employee data
+                const employee = employees.find(emp => emp.id === employeeId);
+                if (employee) {
+                    employee[isDaily ? 'dailyRating' : 'otherRating'] = newRating;
+                    employee[isDaily ? 'dailyWorkCount' : 'otherWorkCount'] = newCount;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('❌ Error updating cached rating:', error);
+                return false;
+            }
+        }
+
+        // ✅ INCREMENTAL AGGREGATE TOTALS UPDATE HELPER
+        // Updates employee's aggregate totals (hours, salary, counts, carts, tons) incrementally
+        async function updateEmployeeAggregateTotals(employeeId, workData, operation = 'add') {
+            try {
+                const employeeRef = db.collection('employees').doc(employeeId);
+                const employeeDoc = await employeeRef.get();
+
+                if (!employeeDoc.exists) return false;
+
+                const employeeData = employeeDoc.data();
+                const { hours, salary, carts, clayTons, department, date, oldHours, oldSalary, oldCarts, oldClayTons } = workData;
+
+                // Check if current month
+                const now = new Date();
+                const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const recordMonth = date ? date.substring(0, 7) : currentMonth;
+                const isCurrentMonth = recordMonth === currentMonth;
+
+                const updateData = {};
+
+                // Helper to safely parse
+                const parseVal = (val) => parseFloat(val || 0);
+
+                // --- MONTHLY TOTALS (Hours/Salary/Carts/Tons) ---
+                if (isCurrentMonth) {
+                    const monthlyHours = employeeData.monthlyHours || 0;
+                    const monthlyCount = employeeData.monthlyWorkCount || 0;
+                    const monthlySalary = employeeData.monthlySalary || 0;
+                    const monthlyCarts = employeeData.monthlyCarts || 0;
+                    const monthlyClayTons = employeeData.monthlyClayTons || 0;
+
+                    if (operation === 'add') {
+                        updateData.monthlyHours = Math.round((monthlyHours + parseVal(hours)) * 100) / 100;
+                        updateData.monthlyWorkCount = monthlyCount + 1;
+                        updateData.monthlySalary = Math.round((monthlySalary + parseVal(salary)) * 100) / 100;
+                        updateData.monthlyCarts = Math.round((monthlyCarts + parseVal(carts)) * 100) / 100;
+                        updateData.monthlyClayTons = Math.round((monthlyClayTons + parseVal(clayTons)) * 100) / 100;
+                    } else if (operation === 'delete') {
+                        updateData.monthlyHours = Math.round(Math.max(0, monthlyHours - parseVal(hours)) * 100) / 100;
+                        updateData.monthlyWorkCount = Math.max(0, monthlyCount - 1);
+                        updateData.monthlySalary = Math.round(Math.max(0, monthlySalary - parseVal(salary)) * 100) / 100;
+                        updateData.monthlyCarts = Math.round(Math.max(0, monthlyCarts - parseVal(carts)) * 100) / 100;
+                        updateData.monthlyClayTons = Math.round(Math.max(0, monthlyClayTons - parseVal(clayTons)) * 100) / 100;
+                    } else if (operation === 'update') {
+                        const hDiff = parseVal(hours) - parseVal(oldHours);
+                        const sDiff = parseVal(salary) - parseVal(oldSalary);
+                        const cDiff = parseVal(carts) - parseVal(oldCarts);
+                        const tDiff = parseVal(clayTons) - parseVal(oldClayTons);
+
+                        updateData.monthlyHours = Math.round((monthlyHours + hDiff) * 100) / 100;
+                        updateData.monthlySalary = Math.round((monthlySalary + sDiff) * 100) / 100;
+                        updateData.monthlyCarts = Math.round((monthlyCarts + cDiff) * 100) / 100;
+                        updateData.monthlyClayTons = Math.round((monthlyClayTons + tDiff) * 100) / 100;
+                    }
+                }
+
+                // --- LIFETIME TOTALS (Carts/ClayTons) ---
+                const currentCarts = employeeData.totalCarts || 0;
+                const currentClayTons = employeeData.totalClayTons || 0;
+                const currentDailyHours = employeeData.totalDailyHours || 0;
+                const currentSalary = employeeData.totalSalary || 0;
+
+                if (operation === 'add') {
+                    updateData.totalCarts = Math.round((currentCarts + parseVal(carts)) * 100) / 100;
+                    updateData.totalClayTons = Math.round((currentClayTons + parseVal(clayTons)) * 100) / 100;
+                    updateData.totalDailyHours = Math.round((currentDailyHours + parseVal(hours)) * 100) / 100; // Assuming daily work contributes to total hours
+                    updateData.totalSalary = Math.round((currentSalary + parseVal(salary)) * 100) / 100;
+                } else if (operation === 'delete') {
+                    updateData.totalCarts = Math.round(Math.max(0, currentCarts - parseVal(carts)) * 100) / 100;
+                    updateData.totalClayTons = Math.round(Math.max(0, currentClayTons - parseVal(clayTons)) * 100) / 100;
+                    updateData.totalDailyHours = Math.round(Math.max(0, currentDailyHours - parseVal(hours)) * 100) / 100;
+                    updateData.totalSalary = Math.round(Math.max(0, currentSalary - parseVal(salary)) * 100) / 100;
+                } else if (operation === 'update') {
+                    const cDiff = parseVal(carts) - parseVal(oldCarts);
+                    const tDiff = parseVal(clayTons) - parseVal(oldClayTons);
+                    const hDiff = parseVal(hours) - parseVal(oldHours);
+                    const sDiff = parseVal(salary) - parseVal(oldSalary);
+
+                    updateData.totalCarts = Math.round((currentCarts + cDiff) * 100) / 100;
+                    updateData.totalClayTons = Math.round((currentClayTons + tDiff) * 100) / 100;
+                    updateData.totalDailyHours = Math.round((currentDailyHours + hDiff) * 100) / 100;
+                    updateData.totalSalary = Math.round((currentSalary + sDiff) * 100) / 100;
+                }
+
+                // --- DEPARTMENT SPECIFIC (Electrical/Mechanical) ---
+                if (department === 'electrical' || employeeData.department === 'electrical') {
+                    const elecHours = employeeData.electricalHours || 0;
+                    const elecCount = employeeData.electricalCount || 0;
+
+                    if (operation === 'add') {
+                        updateData.electricalHours = Math.round((elecHours + parseVal(hours)) * 100) / 100;
+                        updateData.electricalCount = elecCount + 1;
+                    } else if (operation === 'delete') {
+                        updateData.electricalHours = Math.round(Math.max(0, elecHours - parseVal(hours)) * 100) / 100;
+                        updateData.electricalCount = Math.max(0, elecCount - 1);
+                    } else if (operation === 'update') {
+                        const hDiff = parseVal(hours) - parseVal(oldHours);
+                        updateData.electricalHours = Math.round((elecHours + hDiff) * 100) / 100;
+                    }
+                }
+
+                if (department === 'mechanical' || employeeData.department === 'mechanical') {
+                    const mechHours = employeeData.mechanicalHours || 0;
+                    const mechCount = employeeData.mechanicalCount || 0;
+
+                    if (operation === 'add') {
+                        updateData.mechanicalHours = Math.round((mechHours + parseVal(hours)) * 100) / 100;
+                        updateData.mechanicalCount = mechCount + 1;
+                    } else if (operation === 'delete') {
+                        updateData.mechanicalHours = Math.round(Math.max(0, mechHours - parseVal(hours)) * 100) / 100;
+                        updateData.mechanicalCount = Math.max(0, mechCount - 1);
+                    } else if (operation === 'update') {
+                        const hDiff = parseVal(hours) - parseVal(oldHours);
+                        updateData.mechanicalHours = Math.round((mechHours + hDiff) * 100) / 100;
+                    }
+                }
+
+                if (Object.keys(updateData).length > 0) {
+                    await employeeRef.update(updateData);
+                    console.log(`✅ Updated aggregate totals for employee ${employeeId}:`, updateData);
+
+                    // Update local employee object
+                    const employee = employees.find(emp => emp.id === employeeId);
+                    if (employee) {
+                        Object.keys(updateData).forEach(key => {
+                            employee[key] = updateData[key];
+                        });
+                    }
+                }
+
+                return true;
+            } catch (error) {
+                console.error('❌ Error updating aggregate totals:', error);
+                return false;
+            }
+        }
+
 
         // Load work records from subcollections for an employee (for rating calculation)
         async function loadEmployeeWorkRecords(employeeId) {
@@ -2564,13 +3212,20 @@
 
                 workRecordsSnap.forEach(doc => {
                     const record = { id: doc.id, ...doc.data() };
-                    // Classify work records:
-                    // Daily work = normal production work (has carts or clayTons)
-                    // Other work = special tasks (has isSpecial flag or name field)
-                    if (record.isSpecial || record.name) {
+
+                    // FIXED: Prioritize 'type' field
+                    if (record.type === 'daily') {
+                        dailyWork.push(record);
+                    } else if (record.type === 'other') {
                         otherWork.push(record);
                     } else {
-                        dailyWork.push(record);
+                        // Fallback for old records
+                        // FIXED: isSpecial is now considered Daily Work
+                        if (record.projectId || (record.name && record.name.startsWith('پڕۆژە'))) {
+                            otherWork.push(record);
+                        } else {
+                            dailyWork.push(record);
+                        }
                     }
                 });
 
@@ -2631,25 +3286,18 @@
             employeesToShow.forEach(employee => {
                 const row = document.createElement('tr');
 
-                // ⚠️ DISABLED TO SAVE READS - Show placeholder instead
-                // Get work records for this employee
-                // const { dailyWork, otherWork } = employeeWorkData.get(employee.id) || { dailyWork: [], otherWork: [] };
-                const dailyWork = [];
-                const otherWork = [];
-
-                // Calculate separate ratings for daily and other work
-                const dailyRating = calculateDailyRating(employee, dailyWork);
-                const otherRating = calculateOtherRating(employee, otherWork);
+                // ✅ USE CACHED RATINGS - No database reads needed!
+                // Get cached ratings from employee document (set to 0 if not available)
+                const dailyRating = employee.dailyRating || 0;
+                const otherRating = employee.otherRating || 0;
+                const dailyWorkCount = employee.dailyWorkCount || 0;
+                const otherWorkCount = employee.otherWorkCount || 0;
 
                 // Get rating class for styling
                 const dailyRatingClass = getRatingClass(dailyRating);
                 const otherRatingClass = getRatingClass(otherRating);
 
                 // Format daily and other work for display
-                const dailyWorkCount = dailyWork ? dailyWork.length : 0;
-                const otherWorkCount = otherWork ? otherWork.length : 0;
-
-                // For mechanical and electrical-ac departments, show N/A for daily work
                 let dailyWorkDisplay, otherWorkDisplay;
                 if (employee.department === 'mechanical' || employee.department === 'electrical-ac') {
                     dailyWorkDisplay = dailyWorkCount > 0 ? `${dailyWorkCount} تۆمار` : 'هیچ تۆمارێک نییە';
@@ -2684,15 +3332,15 @@
             <td>${employee.name}</td>
             <td><span class="position-badge">${employee.position}</span></td>
             <td>${departmentDisplay}</td>
-            <td class="text-center"><span class="badge bg-secondary" style="font-size: 0.75rem;">لە ژێر کارکردنەوە</span></td>
-            <td class="text-center"><span class="badge bg-secondary" style="font-size: 0.75rem;">لە ژێر کارکردنەوە</span></td>
-            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">لە ژێر کارکردنەوە</span></td>
-            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">لە ژێر کارکردنەوە</span></td>
+            <td class="text-center"><span class="employee-rating-value ${dailyRatingClass}">${dailyRating}</span></td>
+            <td class="text-center"><span class="employee-rating-value ${otherRatingClass}">${otherRating}</span></td>
+            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">${dailyWorkDisplay}</span></td>
+            <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">${otherWorkDisplay}</span></td>
             <td class="text-center">
                 <button class="btn btn-sm btn-primary view-employee-btn" data-id="${employee.id}" title="سەیرکردن">
                     <i class="bi bi-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-secondary ms-1" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان">
+                <button class="btn btn-sm btn-info work-records-btn ms-1" data-id="${employee.id}" title="تۆماری کارەکان">
                     <i class="bi bi-journal-text"></i>
                 </button>
                 ${currentUser.role === 'admin' && currentUser.username !== 'cutemp' ? `
@@ -2790,12 +3438,12 @@
                         valueB = b.department.toLowerCase();
                         break;
                     case 'dailyRating':
-                        valueA = calculateDailyRating(a);
-                        valueB = calculateDailyRating(b);
+                        valueA = a.dailyRating || 0;
+                        valueB = b.dailyRating || 0;
                         break;
                     case 'otherRating':
-                        valueA = calculateOtherRating(a);
-                        valueB = calculateOtherRating(b);
+                        valueA = a.otherRating || 0;
+                        valueB = b.otherRating || 0;
                         break;
                     default:
                         return 0;
@@ -2811,6 +3459,37 @@
                         : valueB - valueA;
                 }
             });
+        }
+
+        // Apply filters and sorting to employee table
+        function applyFilters() {
+            // Get filtered employees based on search and filters
+            let filteredEmployees = employees;
+
+            // Apply search filter if exists
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && searchInput.value.trim()) {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                filteredEmployees = filteredEmployees.filter(emp =>
+                    emp.name.toLowerCase().includes(searchTerm) ||
+                    emp.id.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Apply department filter if exists
+            const filterDepartment = document.getElementById('filterDepartment');
+            if (filterDepartment && filterDepartment.value) {
+                filteredEmployees = filteredEmployees.filter(emp => emp.department === filterDepartment.value);
+            }
+
+            // Apply position filter if exists
+            const filterPosition = document.getElementById('filterPosition');
+            if (filterPosition && filterPosition.value) {
+                filteredEmployees = filteredEmployees.filter(emp => emp.position === filterPosition.value);
+            }
+
+            // Render the filtered and sorted table
+            renderEmployeeTable(filteredEmployees);
         }
 
         // Sort table function
@@ -3204,6 +3883,37 @@
             }
         }
 
+        // View work records - wrapper function for button click
+        function viewWorkRecords(employeeId) {
+            // Find the employee object
+            const employee = employees.find(emp => emp.id === employeeId);
+            if (!employee) {
+                showNotification('کارمەند نەدۆزرایەوە', 'danger');
+                return;
+            }
+
+            // Set current employee ID for the loadWorkRecords function
+            currentEmployeeId = employeeId;
+
+            // Set default record type to 'daily'
+            currentRecordType = 'daily';
+
+            // Show the work records page
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('workRecordsPage').style.display = 'block';
+            document.getElementById('projectsPage').style.display = 'none';
+            document.getElementById('notificationsPage').style.display = 'none';
+
+            // Update the employee name in the header
+            document.getElementById('recordsEmployeeName').textContent = employee.name;
+
+            // Update tabs to show daily as active
+            updateRecordTabs();
+
+            // Load the records
+            loadWorkRecords(employee);
+        }
+
         // Load work records from subcollection - NEW ASYNC VERSION WITH FALLBACK
         async function loadWorkRecords(employee = null) {
             if (!employee) {
@@ -3227,8 +3937,9 @@
                 const legacyOther = employee.otherWork || [];
 
                 // Filter subcollection records by type
-                const subDaily = subcollectionRecords.filter(r => r.type === 'daily' || (!r.type && r.carts !== undefined));
-                const subOther = subcollectionRecords.filter(r => r.type === 'other' || (!r.type && r.carts === undefined));
+                // FIXED: isSpecial is included in Daily (removed !r.isSpecial check, and moved r.isSpecial to daily)
+                const subDaily = subcollectionRecords.filter(r => r.type === 'daily' || (!r.type && !r.projectId && (!r.name || !r.name.startsWith('پڕۆژە'))));
+                const subOther = subcollectionRecords.filter(r => r.type === 'other' || (!r.type && (r.projectId || (r.name && r.name.startsWith('پڕۆژە')))));
 
                 // Merge and Deduplicate (just in case)
                 const mergeRecords = (sub, legacy) => {
@@ -3323,7 +4034,7 @@
                     }
 
                     recordContent = `
-                    < div class="record-header" >
+                    <div class="record-header">
                             <div>
                                 <div class="record-title">${mainTitle}</div>
                                 <div class="record-date">
@@ -3333,40 +4044,40 @@
                             <div class="record-rating-badge ${badgeClass} border border-opacity-10">
                                 ${work.rate} <span class="fw-light small opacity-75">| ${badgeText}</span>
                             </div>
-                        </div >
+                        </div>
                     `;
 
                     // Details Grid
-                    recordContent += `< div class="record-details-grid" > `;
+                    recordContent += `<div class="record-details-grid">`;
 
                     if (isSpecial) {
                         recordContent += `
-                    < div class="detail-item" >
+                    <div class="detail-item">
                                 <span class="detail-label">بەشی کارکردن</span>
                                 <span class="detail-value">${getDepartmentDisplayName(work.workDepartment)}</span>
-                            </div >
+                            </div>
                     `;
                         if (work.totalHours || work.totalMinutes) {
                             recordContent += `
-                    < div class="detail-item" >
+                    <div class="detail-item">
                                     <span class="detail-label">کاتی کارکردن</span>
                                     <span class="detail-value">${work.totalHours || 0}س ${work.totalMinutes || 0}د</span>
-                                </div >
+                                </div>
                     `;
                         }
                     }
 
-                    recordContent += `</div > `;
+                    recordContent += `</div>`;
 
                     // Note
                     if (work.note) {
-                        recordContent += `< div class="record-note" > "${work.note}"</div > `;
+                        recordContent += `<div class="record-note">"${work.note}"</div>`;
                     }
 
                     // Actions
                     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                         recordContent += `
-                    < div class="record-actions" >
+                    <div class="record-actions">
                         <button class="btn btn-sm btn-outline-warning edit-record-btn" data-index="${index}" data-type="${currentRecordType}" title="دەستکاری">
                             <i class="bi bi-pencil-square"></i>
                         </button>
@@ -3376,7 +4087,7 @@
                                 </button>
                                 ` : ''
                             }
-                            </div >
+                            </div>
                     `;
                     }
 
@@ -3517,6 +4228,15 @@
 
             if (!record) return;
 
+            // Store old rating for incremental update calculation
+            const oldRating = record.rate;
+
+            // Store old values for aggregate totals update
+            const oldCarts = record.carts || 0;
+            const oldClayTons = record.clayTons || 0;
+            const oldTotalHours = parseFloat(record.totalHours || 0) + (parseFloat(record.totalMinutes || 0) / 60);
+            const oldWorkDepartment = record.workDepartment;
+
             // Check if the record was created more than 2 hours ago for supervisors
             if (currentUser.role === 'supervisor') {
                 const createdAt = new Date(record.createdAt);
@@ -3591,12 +4311,18 @@
 
                     await db.collection('employees').doc(employee.id).collection('workRecords').doc(record.id).update(updateData);
                     console.log('✅ Work record updated in subcollection:', record.id);
+
+                    // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                    await updateEmployeeCachedRating(employee.id, type, { old: oldRating, new: rate }, 'update');
                 } else {
                     // Legacy record - update the main employee document
                     await db.collection('employees').doc(employee.id).update({
                         [type === 'daily' ? 'dailyWork' : 'otherWork']: workRecords
                     });
                     console.log('✅ Legacy work record updated in main document');
+
+                    // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                    await updateEmployeeCachedRating(employee.id, type, { old: oldRating, new: rate }, 'update');
                 }
 
                 loadWorkRecords(employee);
@@ -3605,8 +4331,22 @@
                 showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
 
                 // Update totals if needed
-                updateDailyWorkTotals();
-                updateElectricalMechanicalTotals();
+                if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+
+                // ✅ UPDATE AGGREGATE TOTALS INCREMENTALLY
+                const newTotalHours = parseFloat(record.totalHours || 0) + (parseFloat(record.totalMinutes || 0) / 60);
+
+                await updateEmployeeAggregateTotals(employee.id, {
+                    carts: record.carts,
+                    clayTons: record.clayTons,
+                    hours: newTotalHours,
+                    department: record.workDepartment || oldWorkDepartment,
+                    date: record.date,
+                    oldCarts: oldCarts,
+                    oldClayTons: oldClayTons,
+                    oldHours: oldTotalHours
+                }, 'update');
             } catch (error) {
                 console.error('❌ Error updating work record:', error);
                 showNotification('هەڵە لە نوێکردنەوەی تۆماری کار', 'danger');
@@ -3627,11 +4367,17 @@
 
             if (!record) return;
 
+            // Store rating for decremental update
+            const deletedRating = record.rate;
+
             try {
                 // If record has an ID, it's from the subcollection - delete it there
                 if (record.id) {
                     await db.collection('employees').doc(employee.id).collection('workRecords').doc(record.id).delete();
                     console.log('✅ Work record deleted from subcollection:', record.id);
+
+                    // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                    await updateEmployeeCachedRating(employee.id, type, deletedRating, 'delete');
                 } else {
                     // Legacy record - remove from main employee document
                     workRecords.splice(index, 1);
@@ -3639,6 +4385,9 @@
                         [type === 'daily' ? 'dailyWork' : 'otherWork']: workRecords
                     });
                     console.log('✅ Legacy work record deleted from main document');
+
+                    // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                    await updateEmployeeCachedRating(employee.id, type, deletedRating, 'delete');
                 }
 
                 // Remove from local array
@@ -3648,8 +4397,20 @@
                 showNotification('تۆماری کار بەسەرکەوتووی سڕدرایەوە', 'success');
 
                 // Update totals
-                updateDailyWorkTotals();
-                updateElectricalMechanicalTotals();
+                if (typeof updateDailyWorkTotals === 'function') updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+
+                // ✅ UPDATE AGGREGATE TOTALS INCREMENTALLY
+                const deletedHours = parseFloat(record.totalHours || 0) + (parseFloat(record.totalMinutes || 0) / 60);
+
+                await updateEmployeeAggregateTotals(employee.id, {
+                    carts: record.carts,
+                    clayTons: record.clayTons,
+                    hours: deletedHours,
+                    department: record.workDepartment,
+                    date: record.date,
+                    salary: record.salary // if available
+                }, 'delete');
             } catch (error) {
                 console.error('❌ Error deleting work record:', error);
                 showNotification('هەڵە لە سڕینەوەی تۆماری کار', 'danger');
@@ -3839,7 +4600,7 @@
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.className = 'employee-checkbox-label';
 
-               checkboxDiv.innerHTML = `
+                checkboxDiv.innerHTML = `
                     <input type="checkbox" class="employee-checkbox" id="special-emp-${employee.id}" value="${employee.id}">
                     <label for="special-emp-${employee.id}">${employee.name} (${employee.id})</label>
                 `;
@@ -3848,7 +4609,7 @@
             });
         }
 
-       // Update special work departments dropdown
+        // Update special work departments dropdown
         function updateSpecialWorkDepartments() {
             const departmentSelect = document.getElementById('specialWorkDepartment');
 
@@ -3932,11 +4693,10 @@
             });
         }
 
-
         // Function to adjust employee rating with arrow buttons
         function adjustEmployeeRating(employeeId, change) {
-            const slider = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
-            const valueSpan = document.getElementById(`rating - value - ${employeeId} `);
+            const slider = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
+            const valueSpan = document.getElementById(`rating-value-${employeeId}`);
 
             let newValue = parseInt(slider.value) + change;
             newValue = Math.max(-100, Math.min(100, newValue));
@@ -3967,7 +4727,7 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                    < div class="employee-rating-name" > ${employee.name} (${getDepartmentDisplayName(employee.department)})</div >
+                    <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
                         <div class="employee-rating-slider">
                             <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
                         </div>
@@ -3996,7 +4756,7 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                < div class="employee-rating-name" > ${employee.name} (${getDepartmentDisplayName(employee.department)})</div >
+                <div class="employee-rating-name">${employee.name} (${getDepartmentDisplayName(employee.department)})</div>
                     <div class="employee-rating-slider">
                         <input type="number" class="form-control employee-rating" min="-100" max="100" value="0" data-employee="${employeeId}">
                     </div>
@@ -4109,6 +4869,9 @@
             const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
+                // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                await updateEmployeeCachedRating(employee.id, 'daily', rate, 'add');
+
                 // Update local employees array structure if needed
                 loadWorkRecords(employee);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addDailyWorkModal'));
@@ -4117,6 +4880,13 @@
 
                 if (typeof updateDailyWorkTotals === 'function') await updateDailyWorkTotals();
                 if (typeof updateElectricalMechanicalTotals === 'function') await updateElectricalMechanicalTotals();
+
+                // ✅ UPDATE AGGREGATE TOTALS INCREMENTALLY
+                await updateEmployeeAggregateTotals(employee.id, {
+                    carts: carts,
+                    clayTons: employee.department === 'crushing-prep' ? carts : 0, // correctly handle department logic
+                    date: date
+                }, 'add');
             } else {
                 showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
             }
@@ -4171,12 +4941,23 @@
             const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
+                // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                await updateEmployeeCachedRating(employee.id, 'other', rate, 'add');
+
                 loadWorkRecords(employee);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addOtherWorkModal'));
                 modal.hide();
                 showNotification('تۆماری کار بەسەرکەوتووی جێبەجێ کرا', 'success');
-                await updateDailyWorkTotals();
-                await updateElectricalMechanicalTotals();
+                if (typeof updateDailyWorkTotals === 'function') await updateDailyWorkTotals();
+                if (typeof updateElectricalMechanicalTotals === 'function') await updateElectricalMechanicalTotals();
+
+                // ✅ UPDATE AGGREGATE TOTALS INCREMENTALLY
+                const inputHours = parseFloat(workHours || 0) + (parseFloat(workMinutes || 0) / 60);
+                await updateEmployeeAggregateTotals(employee.id, {
+                    hours: inputHours,
+                    department: workDepartment,
+                    date: date
+                }, 'add');
             } else {
                 showNotification('هەڵە لە تۆمارکردنی تۆماری کار', 'danger');
             }
@@ -4207,7 +4988,7 @@
                 return;
             }
 
-             // Get ratings for each employee
+            // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
                 const ratingSlider = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
@@ -4221,7 +5002,6 @@
                 showNotification('تکایە هەڵسەنگاندن بۆ هەموو کارمەندەکان دیاری بکە', 'danger');
                 return;
             }
-
 
             // Group notifications by work details to avoid duplicates
             const notificationGroups = {};
@@ -4303,7 +5083,20 @@
 
                 // Subcollection Save
                 workRecord.type = 'daily';
-                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
+                const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
+
+                if (success) {
+                    // ✅ UPDATE CACHED RATING INCREMENTALLY (No extra reads!)
+                    await updateEmployeeCachedRating(employee.id, 'daily', employeeRatings[employeeId], 'add');
+
+                    // ✅ UPDATE AGGREGATE TOTALS INCREMENTALLY
+                    const specialHours = parseFloat(workHours || 0) + (parseFloat(workMinutes || 0) / 60);
+                    await updateEmployeeAggregateTotals(employee.id, {
+                        hours: specialHours,
+                        department: workDepartment,
+                        date: date
+                    }, 'add');
+                }
             }
 
             // Save grouped notifications (stays same as it is a separate collection)
@@ -4373,8 +5166,8 @@
                 checkboxDiv.className = 'employee-checkbox-label';
 
                 checkboxDiv.innerHTML = `
-                    \u003cinput type=\"checkbox\" class=\"employee-checkbox\" id=\"quick-record-emp-${employee.id}\" value=\"${employee.id}\"\u003e
-                    \u003clabel for=\"quick-record-emp-${employee.id}\"\u003e${employee.name} (${employee.id})\u003c/label\u003e
+                    <input type="checkbox" class="employee-checkbox" id="quick-record-emp-${employee.id}" value="${employee.id}">
+                    <label for="quick-record-emp-${employee.id}">${employee.name} (${employee.id})</label>
                 `;
 
                 employeesContainer.appendChild(checkboxDiv);
@@ -4464,11 +5257,12 @@
             if (!dailyWorkTotalsSection || !dailyWorkTotalsBody) return;
 
             // Show the section only for specific departments and admin
-            const showTotals = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) || currentUser.role === 'admin';
+            const showTotals = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin', 'electrical-ac', 'mechanical'].includes(currentUser.department) || currentUser.role === 'admin';
 
             if (showTotals) {
                 dailyWorkTotalsSection.style.display = 'block';
-                dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
+                // Using cached data, so no spinner needed, but we can show one briefly if we want
+                // dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
 
                 // Get selected departments
                 const checkboxes = document.querySelectorAll('.department-checkbox:checked');
@@ -4487,30 +5281,111 @@
                 }
 
                 try {
-                    // Prepare Collection Group Query for Totals
-                    let query = db.collectionGroup('workRecords');
-
-                    // Filter by date if period is custom
-                    if (periodFilter.type === 'custom') {
-                        query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
-                    } else {
-                        // For "all", we limit to last 7 days for dashboard performance/cost by default 
-                        // unless specifically requested to be truly "all"
-                        const defaultStart = new Date();
-                        defaultStart.setDate(defaultStart.getDate() - 7);
-                        const dateStr = defaultStart.toISOString().split('T')[0];
-                        query = query.where('date', '>=', dateStr);
-                    }
-
-                    const snapshot = await query.get();
-                    const allRecords = [];
-                    snapshot.forEach(doc => {
-                        allRecords.push({ employeeId: doc.ref.parent.parent.id, ...doc.data() });
-                    });
-
+                    // OPTIMIZED: Use cached employee data
                     // Filter employees
                     let employeesToShow = employees.filter(emp =>
                         emp.department !== 'electrical-ac' && emp.department !== 'mechanical'
+                    );
+
+                    if (currentUser.role !== 'admin' && !['electrical-ac', 'mechanical'].includes(currentUser.department)) {
+                        employeesToShow = employeesToShow.filter(emp => emp.department === currentUser.department);
+                    } else if (selectedDepartments.length > 0) {
+                        employeesToShow = employeesToShow.filter(emp => selectedDepartments.includes(emp.department));
+                    }
+
+                    // Calculate totals for each employee from CACHED data
+                    const employeeTotals = employeesToShow.map(employee => {
+                        // Default to MONTHLY totals (most common use case)
+                        // If "All Time" is needed, we could check a UI toggle, but for now we default to Monthly
+                        // to keep it fast and relevant.
+                        const useAllTime = false; // Set to true if UI supported "All Time"
+
+                        return {
+                            name: employee.name,
+                            department: employee.department,
+                            totalCarts: useAllTime ? (employee.totalCarts || 0) : (employee.monthlyCarts || 0),
+                            totalClayTons: useAllTime ? (employee.totalClayTons || 0) : (employee.monthlyClayTons || 0),
+                            count: useAllTime ? (employee.dailyWorkCount || 0) : (employee.monthlyWorkCount || 0) // Approximation
+                        };
+                    });
+
+                    // Sort by Carts (descending)
+                    employeeTotals.sort((a, b) => b.totalCarts - a.totalCarts);
+
+                    // Render rows
+                    let html = '';
+                    let grandTotalCarts = 0;
+                    let grandTotalClayTons = 0;
+
+                    employeeTotals.forEach(emp => {
+                        // Only show employees with activity
+                        if (emp.totalCarts > 0 || emp.totalClayTons > 0) {
+                            grandTotalCarts += emp.totalCarts;
+                            grandTotalClayTons += emp.totalClayTons;
+
+                            html += `
+                                <tr>
+                                    <td>${emp.name}</td>
+                                    <td>${getDepartmentDisplayName(emp.department)}</td>
+                                    ${currentUser.department !== 'crushing-prep' ? `<td>${emp.totalCarts}</td>` : ''}
+                                    ${(currentUser.role === 'admin' || currentUser.department === 'crushing-prep') ? `<td>${emp.totalClayTons}</td>` : ''}
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    // Add total row
+                    html += `
+                        <tr class="table-primary fw-bold">
+                            <td>کۆی گشتی</td>
+                            <td>-</td>
+                            ${currentUser.department !== 'crushing-prep' ? `<td>${Math.round(grandTotalCarts * 100) / 100}</td>` : ''}
+                            ${(currentUser.role === 'admin' || currentUser.department === 'crushing-prep') ? `<td>${Math.round(grandTotalClayTons * 100) / 100}</td>` : ''}
+                        </tr>
+                    `;
+
+                    if (html === '' || html.includes('کۆی گشتی')) {
+                        // No data found logic
+                        if (grandTotalCarts === 0 && grandTotalClayTons === 0) {
+                            html = '<tr><td colspan="6" class="text-center text-muted">هیچ داتایەک نەدۆزرایەوە بۆ ئەم مانگە</td></tr>';
+                        }
+                    }
+
+                    dailyWorkTotalsBody.innerHTML = html;
+
+                } catch (error) {
+                    console.error('Error updating daily work totals:', error);
+                    dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">هەڵە لە وەرگرتنی زانیارییەکان</td></tr>';
+                }
+            } else {
+                dailyWorkTotalsSection.style.display = 'none';
+            }
+        }
+
+
+
+        // Update Electrical & Mechanical Totals - OPTIMIZED WITH CACHED DATA
+        async function updateElectricalMechanicalTotals() {
+            const electMechTotalsSection = document.getElementById('electMechTotalsSection');
+            const electMechTotalsBody = document.getElementById('electMechTotalsBody');
+
+            if (!electMechTotalsSection || !electMechTotalsBody) return;
+
+            // Only show for Admin, Electrical, or Mechanical
+            const showTotals = ['electrical-ac', 'mechanical'].includes(currentUser.department) || currentUser.role === 'admin';
+
+            if (showTotals) {
+                electMechTotalsSection.style.display = 'block';
+                // electMechTotalsBody.innerHTML = '<tr><td colspan="4" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
+
+                try {
+                    // Get selected departments
+                    const checkboxes = document.querySelectorAll('.department-checkbox:checked');
+                    const selectedDepartments = Array.from(checkboxes).map(checkbox => checkbox.value);
+
+                    // Filter employees
+                    let employeesToShow = employees.filter(emp =>
+                        emp.department === 'electrical-ac' || emp.department === 'mechanical'
                     );
 
                     if (currentUser.role !== 'admin') {
@@ -4519,283 +5394,69 @@
                         employeesToShow = employeesToShow.filter(emp => selectedDepartments.includes(emp.department));
                     }
 
-                    // Calculate totals for each employee from the fetched records
+                    // Calculate totals for each employee from CACHED data
                     const employeeTotals = employeesToShow.map(employee => {
-                        let cartsTotal = 0;
-                        let clayTonsTotal = 0;
-                        let workCount = 0;
-
-                        // Records from subcollection
-                        const subDaily = allRecords.filter(r => r.employeeId === employee.id && (r.type === 'daily' || !r.type));
-                        const subOther = allRecords.filter(r => r.employeeId === employee.id && r.type === 'other');
-
-                        // FALLBACK: Records from legacy arrays
-                        let legacyDaily = employee.dailyWork || [];
-                        let legacyOther = employee.otherWork || [];
-
-                        const filterByPeriod = (records) => {
-                            if (periodFilter.type === 'custom') {
-                                return records.filter(work => {
-                                    const workDate = work.date;
-                                    return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
-                                });
-                            } else {
-                                const defaultStart = new Date();
-                                defaultStart.setDate(defaultStart.getDate() - 7);
-                                const dateStr = defaultStart.toISOString().split('T')[0];
-                                return records.filter(work => work.date >= dateStr);
-                            }
-                        };
-
-                        legacyDaily = filterByPeriod(legacyDaily);
-                        legacyOther = filterByPeriod(legacyOther);
-
-                        // Merge and Update global employees object
-                        const merge = (sub, legacy) => {
-                            const combined = [...sub];
-                            legacy.forEach(lRec => {
-                                const exists = sub.some(sRec => (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date));
-                                if (!exists) combined.push(lRec);
-                            });
-                            return combined;
-                        };
-
-                        employee.dailyWork = merge(subDaily, legacyDaily);
-                        employee.otherWork = merge(subOther, legacyOther);
-
-                        employee.dailyWork.forEach(work => {
-                            if (work.carts) cartsTotal += parseFloat(work.carts);
-                            if (work.clayTons) clayTonsTotal += parseFloat(work.clayTons);
-                            workCount++;
-                        });
-
                         return {
-                            id: employee.id,
                             name: employee.name,
                             department: employee.department,
-                            carts: cartsTotal,
-                            clayTons: clayTonsTotal,
-                            workCount: workCount
+                            // Use cached totals (Lifetime or Monthly based on logic, here prioritizing displayed aggregates)
+                            // Note: 'electricalHours'/'mechanicalHours' are usually "Lifetime" in current logic, 
+                            // but we also have 'monthlyHours'.
+                            // Let's use 'electricalHours' as it's the specific aggregate.
+                            totalHours: employee.electricalHours || employee.mechanicalHours || 0,
+                            count: employee.electricalCount || employee.mechanicalCount || 0
                         };
                     });
 
-                    // Clear existing rows
-                    dailyWorkTotalsBody.innerHTML = '';
+                    // Sort by Hours (descending)
+                    employeeTotals.sort((a, b) => b.totalHours - a.totalHours);
 
-                    if (employeeTotals.length === 0) {
-                        dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
-                        return;
+                    // Render rows
+                    let html = '';
+                    let grandTotalHours = 0;
+
+                    employeeTotals.forEach(emp => {
+                        if (emp.totalHours > 0) {
+                            grandTotalHours += emp.totalHours;
+
+                            html += `
+                                <tr>
+                                    <td>${emp.name}</td>
+                                    <td>${getDepartmentDisplayName(emp.department)}</td>
+                                    <td>${emp.totalHours}</td>
+                                    <td>${emp.count}</td>
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    // Add total row
+                    html += `
+                        <tr class="table-primary fw-bold">
+                            <td>کۆی گشتی</td>
+                            <td>-</td>
+                            <td>${Math.round(grandTotalHours * 100) / 100}</td>
+                            <td>-</td>
+                        </tr>
+                    `;
+
+                    if (html === '' || html.includes('کۆی گشتی')) {
+                        if (grandTotalHours === 0) {
+                            html = '<tr><td colspan="4" class="text-center text-muted">هیچ داتایەک نەدۆزرایەوە</td></tr>';
+                        }
                     }
 
-                    // Sort the employee totals
-                    const sortedTotals = employeeTotals.sort((a, b) => {
-                        let valueA, valueB;
-                        switch (dailyWorkTotalsSortColumn) {
-                            case 'name': valueA = a.name.toLowerCase(); valueB = b.name.toLowerCase(); break;
-                            case 'id': valueA = a.id.toLowerCase(); valueB = b.id.toLowerCase(); break;
-                            case 'department': valueA = a.department.toLowerCase(); valueB = b.department.toLowerCase(); break;
-                            case 'carts': valueA = a.carts; valueB = b.carts; break;
-                            case 'clayTons': valueA = a.clayTons; valueB = b.clayTons; break;
-                            case 'workCount': valueA = a.workCount; valueB = b.workCount; break;
-                            default: return 0;
-                        }
+                    electMechTotalsBody.innerHTML = html;
 
-                        if (typeof valueA === 'string') {
-                            return dailyWorkTotalsSortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-                        } else {
-                            return dailyWorkTotalsSortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-                        }
-                    });
-
-                    // Add rows
-                    sortedTotals.forEach(employee => {
-                        const row = document.createElement('tr');
-                        const cartsFormatted = Number(employee.carts.toFixed(2));
-                        const clayTonsFormatted = Number(employee.clayTons.toFixed(2));
-
-                        if (currentUser.role === 'admin') {
-                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                        } else if (currentUser.department === 'crushing-prep') {
-                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${clayTonsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                        } else {
-                            row.innerHTML = `< td > ${employee.name}</td ><td>${employee.id}</td><td>${getDepartmentDisplayName(employee.department)}</td><td><span>${cartsFormatted}</span></td><td><span>${employee.workCount}</span></td>`;
-                        }
-                        dailyWorkTotalsBody.appendChild(row);
-                    });
                 } catch (error) {
-                    console.error('Error updating daily work totals:', error);
-                    dailyWorkTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">هەڵە لە بارکردنی داتا</td></tr>';
+                    console.error('Error updating elect/mech totals:', error);
+                    electMechTotalsBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">هەڵە لە وەرگرتنی زانیارییەکان</td></tr>';
                 }
             } else {
-                dailyWorkTotalsSection.style.display = 'none';
+                electMechTotalsSection.style.display = 'none';
             }
         }
 
-        async function updateElectricalMechanicalTotals() {
-            const electricalMechanicalTotalsSection = document.getElementById('electricalMechanicalTotalsSection');
-            const electricalMechanicalTotalsBody = document.getElementById('electricalMechanicalTotalsBody');
-
-            if (!electricalMechanicalTotalsSection || !electricalMechanicalTotalsBody) return;
-
-            // Show the section only for electrical/mechanical departments and admin
-            const showTotals = ['electrical-ac', 'mechanical'].includes(currentUser.department) || currentUser.role === 'admin';
-
-            if (showTotals) {
-                electricalMechanicalTotalsSection.style.display = 'block';
-                electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بار دەکرێت...</td></tr>';
-
-                // Filter employees based on user role
-                let employeesToShow = employees;
-                if (currentUser.role !== 'admin') {
-                    employeesToShow = employees.filter(emp => emp.department === currentUser.department);
-                } else {
-                    // For admin, show only electrical and mechanical employees
-                    employeesToShow = employees.filter(emp =>
-                        emp.department === 'electrical-ac' || emp.department === 'mechanical'
-                    );
-                }
-
-                try {
-                    // Prepare Collection Group Query
-                    let query = db.collectionGroup('workRecords');
-                    if (periodFilter.type === 'custom') {
-                        query = query.where('date', '>=', periodFilter.startDate).where('date', '<=', periodFilter.endDate);
-                    } else {
-                        const defaultStart = new Date();
-                        defaultStart.setDate(defaultStart.getDate() - 7);
-                        const dateStr = defaultStart.toISOString().split('T')[0];
-                        query = query.where('date', '>=', dateStr);
-                    }
-
-                    const snapshot = await query.get();
-                    const allRecords = [];
-                    snapshot.forEach(doc => {
-                        allRecords.push({ employeeId: doc.ref.parent.parent.id, ...doc.data() });
-                    });
-
-                    // Calculate totals for each employee
-                    const employeeTotals = employeesToShow.map(employee => {
-                        let totalHours = 0;
-                        let totalMinutes = 0;
-                        let workCount = 0;
-                        let totalRating = 0;
-
-                        // Records from subcollection
-                        const subRecords = allRecords.filter(r => r.employeeId === employee.id && r.isSpecial);
-                        const subOther = allRecords.filter(r => r.employeeId === employee.id && r.type === 'other');
-
-                        // FALLBACK: Records from legacy array
-                        let legacyRecords = (employee.dailyWork || []).filter(r => r.isSpecial);
-                        let legacyOther = (employee.otherWork || []);
-
-                        const filterByPeriod = (records) => {
-                            if (periodFilter.type === 'custom') {
-                                return records.filter(work => {
-                                    const workDate = work.date;
-                                    return workDate >= periodFilter.startDate && workDate <= periodFilter.endDate;
-                                });
-                            } else {
-                                const defaultStart = new Date();
-                                defaultStart.setDate(defaultStart.getDate() - 7);
-                                const dateStr = defaultStart.toISOString().split('T')[0];
-                                return records.filter(work => work.date >= dateStr);
-                            }
-                        };
-
-                        legacyRecords = filterByPeriod(legacyRecords);
-                        legacyOther = filterByPeriod(legacyOther);
-
-                        // Merge and Update
-                        const merge = (sub, legacy) => {
-                            const combined = [...sub];
-                            legacy.forEach(lRec => {
-                                const exists = sub.some(sRec => (sRec.createdAt === lRec.createdAt && sRec.date === lRec.date));
-                                if (!exists) combined.push(lRec);
-                            });
-                            return combined;
-                        };
-
-                        const combinedRecords = merge(subRecords, legacyRecords);
-
-                        // Update global object
-                        employee.dailyWork = (employee.dailyWork || []).filter(r => !r.isSpecial).concat(combinedRecords);
-                        employee.otherWork = merge(subOther, legacyOther);
-
-                        combinedRecords.forEach(work => {
-                            totalHours += parseInt(work.totalHours || 0);
-                            totalMinutes += parseInt(work.totalMinutes || 0);
-                            totalRating += parseInt(work.rate || 0);
-                            workCount++;
-                        });
-
-                        // Convert minutes to hours if needed
-                        if (totalMinutes >= 60) {
-                            totalHours += Math.floor(totalMinutes / 60);
-                            totalMinutes = totalMinutes % 60;
-                        }
-
-                        const averageRating = workCount > 0 ? totalRating / workCount : 0;
-
-                        return {
-                            id: employee.id,
-                            name: employee.name,
-                            department: employee.department,
-                            position: employee.position,
-                            totalHours: totalHours,
-                            totalMinutes: totalMinutes,
-                            workCount: workCount,
-                            averageRating: averageRating
-                        };
-                    });
-
-                    electricalMechanicalTotalsBody.innerHTML = '';
-
-                    if (employeeTotals.length === 0) {
-                        electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center">هیچ کارمەندێک نییە</td></tr>';
-                        return;
-                    }
-
-                    // Sort the employee totals
-                    const sortedTotals = employeeTotals.sort((a, b) => {
-                        let valueA, valueB;
-                        switch (electricalMechanicalTotalsSortColumn) {
-                            case 'name': valueA = a.name.toLowerCase(); valueB = b.name.toLowerCase(); break;
-                            case 'id': valueA = a.id.toLowerCase(); valueB = b.id.toLowerCase(); break;
-                            case 'department': valueA = a.department.toLowerCase(); valueB = b.department.toLowerCase(); break;
-                            case 'workCount': valueA = a.workCount; valueB = b.workCount; break;
-                            case 'averageRating': valueA = a.averageRating; valueB = b.averageRating; break;
-                            default: return 0;
-                        }
-
-                        if (typeof valueA === 'string') {
-                            return electricalMechanicalTotalsSortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-                        } else {
-                            return electricalMechanicalTotalsSortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-                        }
-                    });
-
-                    // Add rows
-                    sortedTotals.forEach(employee => {
-                        const row = document.createElement('tr');
-                        const ratingClass = getRatingClass(employee.averageRating);
-                        row.innerHTML = `
-                < td > ${employee.name}</td >
-                            <td>${employee.id}</td>
-                            <td>${getDepartmentDisplayName(employee.department)}</td>
-                            <td class="text-center">${employee.totalHours}س ${employee.totalMinutes}د</td>
-                            <td class="text-center">${employee.workCount}</td>
-                            <td class="text-center"><span class="badge ${ratingClass}">${employee.averageRating.toFixed(1)}</span></td>
-            `;
-                        electricalMechanicalTotalsBody.appendChild(row);
-                    });
-                } catch (error) {
-                    console.error('Error updating elect-mech totals:', error);
-                    electricalMechanicalTotalsBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">هەڵە لە بارکردنی داتا</td></tr>';
-                }
-            } else {
-                electricalMechanicalTotalsSection.style.display = 'none';
-            }
-        }
 
         // Update daily work totals for individual employee
         function updateEmployeeDailyWorkTotals(employee) {
@@ -5129,8 +5790,8 @@
 
 
                     checkboxDiv.innerHTML = `
-                < input type = "checkbox" class="employee-checkbox" id = "project-emp-${employee.id}" value = "${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
-                    <label for="project-emp-${employee.id}">${employee.name} (${employee.id})</label>
+                <input type="checkbox" class="employee-checkbox" id="project-emp-${employee.id}" value="${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
+                <label for="project-emp-${employee.id}">${employee.name} (${employee.id})</label>
             `;
 
                     // Add event listener to update our tracking array
@@ -5204,8 +5865,8 @@
 
 
                     checkboxDiv.innerHTML = `
-                < input type = "checkbox" class="employee-checkbox" id = "edit-project-emp-${employee.id}" value = "${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
-                    <label for="edit-project-emp-${employee.id}">${employee.name} (${employee.id})</label>
+                <input type="checkbox" class="employee-checkbox" id="edit-project-emp-${employee.id}" value="${employee.id}" ${isAlreadySelected ? 'checked' : ''}>
+                <label for="edit-project-emp-${employee.id}">${employee.name} (${employee.id})</label>
             `;
 
                     // Add event listener to update our tracking array
@@ -5247,7 +5908,7 @@
                 return;
             }
 
-           // Get ratings for each employee
+            // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
                 const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
@@ -5475,7 +6136,6 @@
                 showNotification('تکایە هەڵسەنگاندن بۆ هەموو کارmەندەکان دیاری بکە', 'danger');
                 return;
             }
-
 
             const project = projects.find(proj => proj.id === projectId);
             if (!project) return;
@@ -5742,12 +6402,12 @@
             // 1. Render Breadcrumb
             const breadcrumb = document.createElement('div');
             breadcrumb.className = 'notification-breadcrumb';
-            let bcHtml = `< span onclick = "resetNotificationPath()" > <i class="bi bi-house-door-fill me-1"></i> سەرەتا</span > `;
+            let bcHtml = `<span onclick="resetNotificationPath()"><i class="bi bi-house-door-fill me-1"></i> سەرەتا</span>`;
 
             currentNotificationPath.forEach((step, index) => {
                 const isLast = index === currentNotificationPath.length - 1;
                 const name = index === 0 ? getDepartmentDisplayName(step) : step;
-                bcHtml += ` < i class="bi bi-chevron-left mx-2 opacity-50" ></i > <span class="${isLast ? 'active' : ''}" onclick="resetNotificationPath(${index})">${name}</span>`;
+                bcHtml += ` <i class="bi bi-chevron-left mx-2 opacity-50"></i> <span class="${isLast ? 'active' : ''}" onclick="resetNotificationPath(${index})">${name}</span>`;
             });
             breadcrumb.innerHTML = bcHtml;
             container.appendChild(breadcrumb);
@@ -5768,10 +6428,10 @@
             }
 
             explorerHeader.innerHTML = `
-                < div class="explorer-title" >
+                <div class="explorer-title">
                     <i class="bi ${titleIcon} text-primary fs-4"></i>
                     <span>${titleText}</span>
-                </div >
+                </div>
                 <div class="text-muted small fw-bold">
                     ${allFilteredNotifications.length} ئاگادارکردنەوە
                 </div>
@@ -5941,28 +6601,28 @@
                     statusIconClass = 'bi-hourglass-split';
             }
 
-            notificationDiv.className = `modern - notification - card status - ${statusSuffix} `;
+            notificationDiv.className = `modern-notification-card status-${statusSuffix}`;
 
             let actionsHtml = '';
 
             // Actions for Admin or Supervisor
             if (notification.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
                 actionsHtml += `
-                < div class="notification-controls" >
+                <div class="notification-controls">
                         <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
                             <i class="bi bi-check-lg"></i> پەسەندکردن
                         </button>
                         <button class="btn btn-sm btn-danger reject-notification-btn ms-1" data-id="${notification.id}" title="ڕەتکردنەوە">
                             <i class="bi bi-x-lg"></i> ڕەتکردنەوە
                         </button>
-                    </div >
+                    </div>
                 `;
             }
 
             // Admin specific actions (Edit/Delete)
             if (currentUser.role === 'admin') {
                 actionsHtml += `
-                < div class="notification-controls" style = "${notification.status === 'pending' ? 'border-top: none; padding-top: 5px; margin-top: 0;' : ''}" >
+                <div class="notification-controls" style="${notification.status === 'pending' ? 'border-top: none; padding-top: 5px; margin-top: 0;' : ''}">
                     ${notification.status === 'pending' ? '' : `
                             <button class="btn btn-sm btn-outline-warning edit-notification-btn" data-id="${notification.id}" title="دەستکاری">
                                 <i class="bi bi-pencil"></i>
@@ -5980,7 +6640,7 @@
                             </button>
                          ` : ''
                     }
-                    </div >
+                    </div>
                 `;
             }
 
@@ -6006,14 +6666,14 @@
                     timeDisplay = `${workDetails.startTime} - ${workDetails.endTime} `;
                 }
 
-                message = `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری < strong > ${title}</strong > ی ئەنجامداوە`;
+                message = `کارمەندەکان لە بەشی ${getDepartmentDisplayName(notification.targetDepartment)} کاری <strong>${title}</strong> ی ئەنجامداوە`;
                 if (workDetails.note) note = workDetails.note;
 
                 detailsHtml = `
-                < div class="notification-meta mt-1" >
+                <div class="notification-meta mt-1">
                         <i class="bi bi-people"></i>
                         <span>${notification.relatedEmployees.map(emp => `${emp.employeeName} (${emp.rating})`).join('، ')}</span>
-                    </div >
+                    </div>
                 ${timeDisplay ? `<div class="notification-meta"><i class="bi bi-clock"></i> <span>${timeDisplay}</span></div>` : ''}
             `;
             } else {
@@ -6029,10 +6689,10 @@
                 const resolutionNote = notification.confirmationNote || notification.rejectionNote || '';
 
                 resolutionHtml = `
-                < div class="notification-meta" style = "margin-top: 8px;" >
+                <div class="notification-meta" style="margin-top: 8px;">
                         <span class="${actionColor} fw-bold"><i class="bi ${statusIconClass}"></i> ${actionText}</span>
                         <span>لەلایەن: ${resolver}</span>
-                    </div >
+                    </div>
                 ${resolutionNote ? `<div class="record-note mt-2" style="background: ${notification.status === 'confirmed' ? 'rgba(25, 135, 84, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-left: 3px solid ${notification.status === 'confirmed' ? '#198754' : '#dc3545'};">
                         <strong>تێبینی:</strong> ${resolutionNote}
                     </div>` : ''
@@ -6041,7 +6701,7 @@
             }
 
             notificationDiv.innerHTML = `
-                < div class="notification-header" >
+                <div class="notification-header">
                     <div class="notification-icon">
                         <i class="bi ${statusIconClass}"></i>
                     </div>
@@ -6049,7 +6709,7 @@
                         <div class="notification-title">${title}</div>
                         <div class="notification-id">ID: ${notificationID}</div>
                     </div>
-                </div >
+                </div>
 
                 <div class="notification-body">
                     ${message}
@@ -6722,8 +7382,8 @@
                     const div = document.createElement('div');
                     div.className = 'employee-checkbox-label';
                     div.innerHTML = `
-                < input type = "checkbox" class="employee-checkbox" id = "grease-emp-${employee.id}" value = "${employee.id}" >
-                    <label for="grease-emp-${employee.id}">${employee.name}</label>
+                <input type="checkbox" class="employee-checkbox" id="grease-emp-${employee.id}" value="${employee.id}">
+                <label for="grease-emp-${employee.id}">${employee.name}</label>
             `;
                     employeesContainer.appendChild(div);
                 });
@@ -6975,9 +7635,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
