@@ -4207,10 +4207,10 @@
                 return;
             }
 
-            // Get ratings for each employee
+             // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingSlider = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
+                const ratingSlider = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
                 if (ratingSlider) {
                     employeeRatings[employeeId] = ratingSlider.value;
                 }
@@ -4221,6 +4221,7 @@
                 showNotification('تکایە هەڵسەنگاندن بۆ هەموو کارمەندەکان دیاری بکە', 'danger');
                 return;
             }
+
 
             // Group notifications by work details to avoid duplicates
             const notificationGroups = {};
@@ -5246,10 +5247,10 @@
                 return;
             }
 
-            // Get ratings for each employee
+           // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingInput = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
+                const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
                 if (ratingInput) {
                     employeeRatings[employeeId] = ratingInput.value;
                 }
@@ -5463,7 +5464,7 @@
             // Get ratings for each employee
             const employeeRatings = {};
             selectedEmployees.forEach(employeeId => {
-                const ratingInput = document.querySelector(`.employee - rating[data - employee="${employeeId}"]`);
+                const ratingInput = document.querySelector(`.employee-rating[data-employee="${employeeId}"]`);
                 if (ratingInput) {
                     employeeRatings[employeeId] = ratingInput.value;
                 }
@@ -5474,6 +5475,7 @@
                 showNotification('تکایە هەڵسەنگاندن بۆ هەموو کارmەندەکان دیاری بکە', 'danger');
                 return;
             }
+
 
             const project = projects.find(proj => proj.id === projectId);
             if (!project) return;
@@ -6973,6 +6975,7 @@
 </body>
 
 </html>
+
 
 
 
