@@ -3848,7 +3848,7 @@
             });
         }
 
-        // Update special work departments dropdown
+       // Update special work departments dropdown
         function updateSpecialWorkDepartments() {
             const departmentSelect = document.getElementById('specialWorkDepartment');
 
@@ -3895,7 +3895,7 @@
                 return;
             }
 
-                        // Add rating row for each selected employee
+            // Add rating row for each selected employee
             selectedCheckboxes.forEach(checkbox => {
                 const employeeId = checkbox.value;
                 const employee = employees.find(emp => emp.id === employeeId);
@@ -3926,11 +3926,12 @@
                     // Add event listener to rating slider
                     const ratingSlider = ratingRow.querySelector('.employee-rating');
                     ratingSlider.addEventListener('input', function () {
-                        document.getElementById(`rating - value - ${employeeId} `).textContent = this.value;
+                        document.getElementById(`rating-value-${employeeId}`).textContent = this.value;
                     });
                 }
             });
         }
+
 
         // Function to adjust employee rating with arrow buttons
         function adjustEmployeeRating(employeeId, change) {
@@ -6972,6 +6973,7 @@
 </body>
 
 </html>
+
 
 
 
