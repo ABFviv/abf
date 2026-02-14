@@ -1392,6 +1392,32 @@
             // ====================================================================
 
 
+            // --- AUTO-SAVE LOGIC ---
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            }
+
+            const debouncedSaveReport = debounce(() => {
+                saveReport('draft', false, true); // silent=true
+            }, 2000);
+
+            function attachAutoSaveListeners() {
+                const dept = document.getElementById('departmentSelect').value;
+                if (['cutting', 'setting'].includes(dept)) {
+                    const inputs = document.querySelectorAll('#tableWrapper input, #tableWrapper textarea, #tableWrapper select');
+                    inputs.forEach(el => {
+                        el.addEventListener('input', debouncedSaveReport);
+                        el.addEventListener('change', debouncedSaveReport);
+                    });
+                    console.log('Auto-save listeners attached for ' + dept);
+                }
+            }
+
             function renderCuttingTable(wrapper, preserveState = false, overrides = {}) {
                 let savedData = {};
                 if (preserveState) {
@@ -1685,6 +1711,7 @@
                         updateCuttingCount(s);
                     });
                     attachCuttingEventListeners();
+                    attachAutoSaveListeners();
                 }, 50);
             }
 
@@ -1968,11 +1995,13 @@
                             }
                         }
                         calcSettingTotals();
+                        attachAutoSaveListeners();
                     }, 0);
                 } else {
                     // Initialize totals even if no preserved state
                     setTimeout(() => {
                         calcSettingTotals();
+                        attachAutoSaveListeners();
                     }, 0);
                 }
             }
@@ -2520,7 +2549,7 @@
                 document.getElementById('c_total_ton').value = t1 + t2 + t3;
             }
 
-            async function saveReport(status = 'draft', isReject = false) {
+            async function saveReport(status = 'draft', isReject = false, silent = false) {
                 // Prevent editing submitted or approved reports (except for approve/reject actions)
                 if (currentReportData) {
                     const currentStatus = currentReportData.status;
@@ -2639,11 +2668,26 @@
                 try {
                     if (currentReportId) {
                         await db.collection('dailyReports').doc(finalReportId).update(payload);
-                        showToast('Report Updated Successfully', 'success');
+                        if (!silent) showToast('Report Updated Successfully', 'success');
                     } else {
                         await db.collection('dailyReports').doc(finalReportId).set(payload);
                         currentReportId = finalReportId;
-                        showToast('Report Saved Successfully', 'success');
+                        if (!silent) showToast('Report Saved Successfully', 'success');
+                    }
+
+                    if (silent) {
+                        const saveBtn = document.querySelector('button[onclick="saveReport(\'draft\')"]');
+                        if (saveBtn) {
+                            const originalText = saveBtn.innerHTML;
+                            saveBtn.innerHTML = '<i class="bi bi-check2"></i> Saved';
+                            saveBtn.classList.remove('btn-primary');
+                            saveBtn.classList.add('btn-success');
+                            setTimeout(() => {
+                                saveBtn.innerHTML = originalText;
+                                saveBtn.classList.remove('btn-success');
+                                saveBtn.classList.add('btn-primary');
+                            }, 1500);
+                        }
                     }
 
                     // Update local state immediately so UI reflects changes
