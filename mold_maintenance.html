@@ -1347,12 +1347,14 @@
             }
         }
 
-        function renamePart(index) {
+        async function renamePart(index) {
             const currentName = systemState.partNames[currentEditingMold][index];
             const newName = prompt(`Rename ${currentName} for ${currentEditingMold}:`, currentName);
             if (newName !== null && newName.trim() !== "") {
                 systemState.partNames[currentEditingMold][index] = newName.trim();
-                saveState();
+                await saveState(); // Await save
+                renderPartsGrid(); // Re-render grid immediately
+                // Optional: Show a toast?
             }
         }
 
