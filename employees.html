@@ -3895,7 +3895,7 @@
                 return;
             }
 
-            // Add rating row for each selected employee
+                        // Add rating row for each selected employee
             selectedCheckboxes.forEach(checkbox => {
                 const employeeId = checkbox.value;
                 const employee = employees.find(emp => emp.id === employeeId);
@@ -3904,7 +3904,7 @@
                     const ratingRow = document.createElement('div');
                     ratingRow.className = 'employee-rating-row';
                     ratingRow.innerHTML = `
-                    < div class="employee-rating-name" > ${employee.name}</div >
+                    <div class="employee-rating-name">${employee.name}</div>
                         <div class="rating-control">
                             <div class="rating-slider-container">
                                 <div class="rating-arrows">
@@ -6972,6 +6972,7 @@
 </body>
 
 </html>
+
 
 
 
