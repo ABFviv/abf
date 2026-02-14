@@ -3842,9 +3842,9 @@
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.className = 'employee-checkbox-label';
 
-                checkboxDiv.innerHTML = `
-                    < input type = "checkbox" class="employee-checkbox" id = "special-emp-${employee.id}" value = "${employee.id}" >
-                        <label for="special-emp-${employee.id}">${employee.name} (${employee.id})</label>
+               checkboxDiv.innerHTML = `
+                    <input type="checkbox" class="employee-checkbox" id="special-emp-${employee.id}" value="${employee.id}">
+                    <label for="special-emp-${employee.id}">${employee.name} (${employee.id})</label>
                 `;
 
                 employeesContainer.appendChild(checkboxDiv);
