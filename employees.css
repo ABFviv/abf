@@ -453,12 +453,17 @@
 
         /* New styles for employee selection */
         .employee-selection-container {
-            max-height: 200px;
+            max-height: 450px;
+            /* Increased height */
             overflow-y: auto;
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
             padding: 10px;
             background-color: white;
+            /* Grid Layout */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
         }
 
         .employee-checkbox {
@@ -468,13 +473,22 @@
         .employee-checkbox-label {
             display: flex;
             align-items: center;
-            padding: 5px 0;
+            padding: 12px;
             cursor: pointer;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: all 0.2s ease;
         }
 
         .employee-checkbox-label:hover {
-            background-color: #f8f9fa;
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
+
+
 
         /* Adjust notification badge position for this new style */
         .notification-badge {
