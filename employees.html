@@ -258,7 +258,7 @@
                         <button class="modern-action-btn btn-report admin-and-supervisor-only" id="printBtn">
                             <i class="bi bi-printer-fill"></i> پرینت
                         </button>
-                        <button class="modern-action-btn btn-info text-white" id="generalStatsBtn"
+                        <button class="modern-action-btn btn-info text-white admin-only" id="generalStatsBtn"
                             onclick="showTotalsPage()">
                             <i class="bi bi-bar-chart-fill"></i> ئاماری گشتی
                         </button>
@@ -303,57 +303,71 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table modern-table table-hover">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable('id')" style="cursor: pointer; width: 100px;">
-                                <div class="d-flex align-items-center gap-1">
-                                    <i class="bi bi-hash"></i> ژمارە
-                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th onclick="sortTable('name')" style="cursor: pointer;">
-                                <div class="d-flex align-items-center gap-1">
-                                    <i class="bi bi-person"></i> ناو
-                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th onclick="sortTable('position')" style="cursor: pointer;">
-                                <div class="d-flex align-items-center gap-1">
-                                    <i class="bi bi-briefcase"></i> پیشە
-                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th onclick="sortTable('department')" style="cursor: pointer;">
-                                <div class="d-flex align-items-center gap-1">
-                                    <i class="bi bi-diagram-3"></i> بەش
-                                    <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th onclick="sortTable('dailyRating')" class="text-center" style="cursor: pointer;">
-                                <div class="d-flex align-items-center justify-content-center gap-1">
-                                    <i class="bi bi-star"></i> ڕۆژانە
-                                    <i class="bi bi-arrow-down-up opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th onclick="sortTable('otherRating')" class="text-center" style="cursor: pointer;">
-                                <div class="d-flex align-items-center justify-content-center gap-1">
-                                    <i class="bi bi-star"></i> دیکە
-                                    <i class="bi bi-arrow-down-up opacity-50 small"></i>
-                                </div>
-                            </th>
-                            <th class="text-center">کاری ڕۆژانە</th>
-                            <th class="text-center">کارەکانی دیکە</th>
-                            <th class="text-center">کردارەکان</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employeeTableBody">
-                        <!-- Employee rows will be inserted here -->
-                    </tbody>
-                </table>
+        </div>
+
+        <!-- Electrical Rating Info Alert -->
+        <div id="electricalRatingInfo" class="alert alert-primary border-0 shadow-sm mx-3 mt-3 mb-0"
+            style="display: none; background-color: #f0f9ff; color: #0369a1;">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-circle-fill fs-5 me-2"></i>
+                <div>
+                    <strong>تێبینی بۆ بەشی کارەبا:</strong>
+                    هەڵسەنگاندنی ڕۆژانە = هەڵسەنگاندنی ناوەند + (ژمارەی کار × 0.20)
+                </div>
             </div>
         </div>
+
+        <div class="table-responsive">
+            <table class="table modern-table table-hover">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('id')" style="cursor: pointer; width: 100px;">
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-hash"></i> ژمارە
+                                <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('name')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-person"></i> ناو
+                                <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('position')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-briefcase"></i> پیشە
+                                <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('department')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-diagram-3"></i> بەش
+                                <i class="bi bi-arrow-down-up ms-auto opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('dailyRating')" class="text-center" style="cursor: pointer;">
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <i class="bi bi-star"></i> ڕۆژانە
+                                <i class="bi bi-arrow-down-up opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th onclick="sortTable('otherRating')" class="text-center" style="cursor: pointer;">
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <i class="bi bi-star"></i> دیکە
+                                <i class="bi bi-arrow-down-up opacity-50 small"></i>
+                            </div>
+                        </th>
+                        <th class="text-center">کاری ڕۆژانە</th>
+                        <th class="text-center">کارەکانی دیکە</th>
+                        <th class="text-center">کردارەکان</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTableBody">
+                    <!-- Employee rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
     </div>
 
     <div class="dashboard-container" id="totalsPage" style="display: none;">
@@ -2387,6 +2401,16 @@
                 element.style.display = showGreasingWork ? 'inline-block' : 'none';
             });
 
+            // Show Electrical Rating Info (Exclude Admin as requested, only for Sarezh/Electrical)
+            const electricalInfo = document.getElementById('electricalRatingInfo');
+            if (electricalInfo) {
+                if (currentUser.username === 'sarezh' || currentUser.department === 'electrical-ac') {
+                    electricalInfo.style.display = 'block';
+                } else {
+                    electricalInfo.style.display = 'none';
+                }
+            }
+
             applyFilters();
 
             // Load and display employees
@@ -2444,6 +2468,12 @@
 
         // Function to show the new Totals Page
         async function showTotalsPage() {
+            // Security Check
+            if (currentUser.role !== 'admin') {
+                showNotification('تەنها ئەدمین دەتوانێت ئەم بەشە ببینێت', 'danger');
+                return;
+            }
+
             // Hide Main Dashboard
             document.getElementById('dashboardPage').style.display = 'none';
 
@@ -3288,10 +3318,19 @@
 
                 // ✅ USE CACHED RATINGS - No database reads needed!
                 // Get cached ratings from employee document (set to 0 if not available)
-                const dailyRating = employee.dailyRating || 0;
+                let dailyRating = parseFloat(employee.dailyRating || 0);
                 const otherRating = employee.otherRating || 0;
-                const dailyWorkCount = employee.dailyWorkCount || 0;
+                const dailyWorkCount = parseInt(employee.dailyWorkCount || 0);
                 const otherWorkCount = employee.otherWorkCount || 0;
+
+                // SPECIAL RATING LOGIC FOR ELECTRICAL DEPARTMENT
+                // Formula: Average Rating + (Total Count * 0.20)
+                // Example: 50 (avg) + (100 (count) * 0.20) = 70
+                if (employee.department === 'electrical-ac') {
+                    dailyRating = dailyRating + (dailyWorkCount * 0.20);
+                    // Round to 1 decimal place
+                    dailyRating = Math.round(dailyRating * 10) / 10;
+                }
 
                 // Get rating class for styling
                 const dailyRatingClass = getRatingClass(dailyRating);
@@ -3438,8 +3477,16 @@
                         valueB = b.department.toLowerCase();
                         break;
                     case 'dailyRating':
-                        valueA = a.dailyRating || 0;
-                        valueB = b.dailyRating || 0;
+                        valueA = parseFloat(a.dailyRating || 0);
+                        valueB = parseFloat(b.dailyRating || 0);
+
+                        // SPECIAL SORT LOGIC FOR ELECTRICAL
+                        if (a.department === 'electrical-ac') {
+                            valueA += ((parseInt(a.dailyWorkCount || 0)) * 0.20);
+                        }
+                        if (b.department === 'electrical-ac') {
+                            valueB += ((parseInt(b.dailyWorkCount || 0)) * 0.20);
+                        }
                         break;
                     case 'otherRating':
                         valueA = a.otherRating || 0;
@@ -3571,6 +3618,12 @@
                 const dailySum = filteredDailyWork.reduce((sum, work) => sum + parseInt(work.rate), 0);
                 totalRating = dailySum / filteredDailyWork.length;
                 count = filteredDailyWork.length;
+            }
+
+            // SPECIAL RATING LOGIC FOR ELECTRICAL DEPARTMENT
+            // Formula: Average Rating + (Total Count * 0.20)
+            if (employee.department === 'electrical-ac' && count > 0) {
+                totalRating = totalRating + (count * 0.20);
             }
 
             // Return average or 0 if no ratings
