@@ -1304,13 +1304,37 @@
             }
         }
 
+        async function updateManualLink() {
+            let currentLink = document.getElementById('manualLinkDisplay').href;
+            const newLink = prompt("Enter PDF Link for " + currentEditingMold, currentLink);
+            if (newLink) {
+                if (typeof systemState.manualLink === 'string') {
+                    const oldDefault = systemState.manualLink;
+                    systemState.manualLink = { 'default': oldDefault };
+                }
+                if (!systemState.manualLink) systemState.manualLink = {};
+
+                systemState.manualLink[currentEditingMold] = newLink;
+                await saveState();
+                document.getElementById('manualLinkDisplay').href = newLink;
+            }
+        }
+
         let currentEditingMold = '';
         function openPartsDetails(moldName, logIdx = null) {
             currentEditingMold = moldName;
             editingLogIdx = logIdx;
             document.getElementById('partsModalTitle').innerText = logIdx !== null ? `Edit Maintenance - ${moldName}` : `${moldName} - Selection`;
             document.getElementById('savePartsBtn').innerText = logIdx !== null ? "Update Log" : "Save Changes";
-            document.getElementById('manualLinkDisplay').href = systemState.manualLink;
+
+            // Resolve Link (Per-Mold or Global)
+            let link = "https://drive.google.com";
+            if (typeof systemState.manualLink === 'string') {
+                link = systemState.manualLink;
+            } else if (systemState.manualLink) {
+                link = systemState.manualLink[moldName] || systemState.manualLink['default'] || "https://drive.google.com";
+            }
+            document.getElementById('manualLinkDisplay').href = link;
             const editBtn = document.getElementById('editManualLinkBtn');
             const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
             if (isAdmin) editBtn.classList.remove('d-none'); else editBtn.classList.add('d-none');
