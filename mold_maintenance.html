@@ -706,7 +706,8 @@
             parts: {},
             maintenanceLogs: [],
             manualLink: "https://drive.google.com",
-            partNames: {}
+            partNames: {},
+            lastUpdated: 0 // New field for sync resolution
         };
 
         let systemState = DEFAULT_STATE;
@@ -714,6 +715,7 @@
         let partStateSnapshot = null;
         let editingLogIdx = null;
         let showDetailedTime = false;
+        let unsubscribe = null; // To hold the snapshot listener
 
         // --- 3. Initialize/Sync State from Firestore ---
         async function initSystemState() {
@@ -729,8 +731,31 @@
                 } catch (e) { console.error("Local load error", e); }
             }
 
-            // 2. Initial Fetch from Cloud (One-time)
+            // 2. Initial Fetch from Cloud (One-time) to handle offline/online transition
             await syncFromCloud();
+
+            // 3. Setup Real-time Listener
+            setupRealtimeListener();
+        }
+
+        function setupRealtimeListener() {
+            if (unsubscribe) unsubscribe(); // Unsubscribe active listener if any
+
+            unsubscribe = moldStateDoc.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const cloudData = doc.data();
+                    const cloudLastUpdated = cloudData.lastUpdated || 0;
+                    const localLastUpdated = systemState.lastUpdated || 0;
+
+                    // If cloud has newer data than what we currently have
+                    if (cloudLastUpdated > localLastUpdated) {
+                        console.log("⚡ Real-time update received!");
+                        applyCloudState(cloudData);
+                    }
+                }
+            }, (error) => {
+                console.error("Real-time sync error:", error);
+            });
         }
 
         async function syncFromCloud() {
@@ -741,77 +766,112 @@
                 const doc = await moldStateDoc.get();
                 if (doc.exists) {
                     const cloudData = doc.data();
-                    const localData = systemState;
 
-                    // Smart merge: Compare timestamps to determine which data is newer
-                    const cloudTime = new Date(cloudData.currentSessionStart || 0).getTime();
-                    const localTime = new Date(localData.currentSessionStart || 0).getTime();
+                    // Conflict Resolution using lastUpdated
+                    const cloudLastUpdated = cloudData.lastUpdated || 0;
+                    const localLastUpdated = systemState.lastUpdated || 0;
 
-                    if (cloudTime > localTime) {
-                        // Cloud is newer, use it
-                        systemState = { ...DEFAULT_STATE, ...cloudData };
-                        console.log("✅ Cloud data is newer, synced from cloud");
-                    } else if (localTime > cloudTime) {
-                        // Local is newer, keep local and update cloud
-                        console.log("✅ Local data is newer, keeping local and syncing to cloud");
-                        await moldStateDoc.set(systemState);
+                    if (cloudLastUpdated >= localLastUpdated) {
+                        // Cloud is newer or equal, use it
+                        console.log("✅ Cloud data is authoritative.");
+                        applyCloudState(cloudData);
                     } else {
-                        // Same timestamp, use cloud (default behavior)
-                        systemState = { ...DEFAULT_STATE, ...cloudData };
-                        console.log("✅ Timestamps match, using cloud data");
+                        // Local is newer (e.g. offline changes), push to cloud
+                        console.log("✅ Local data is newer, pushing to cloud.");
+                        await saveState();
                     }
-
-                    ensureStateIntegrity();
-                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) viewingMold = systemState.activeMold;
-
-                    // Update Local & UI
-                    localStorage.setItem('moldMaintenanceState', JSON.stringify(systemState));
-                    renderDashboard();
-                    if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
-                    if (document.getElementById('historyModal').classList.contains('show')) renderHistoryTable();
                 } else {
-                    console.log("No cloud data found.");
-                    if (!localStorage.getItem('moldMaintenanceState')) {
-                        saveState(); // Initialize cloud if empty
-                    }
+                    console.log("No cloud data found. Initializing cloud.");
+                    await saveState();
                 }
             } catch (error) {
                 console.error("Sync Error:", error);
-                alert("Failed to sync with cloud. " + error.message);
+                // Don't alert on automatic syncs to avoid annoyance, just log
             } finally {
                 if (btn) { btn.innerHTML = '<i class="bi bi-cloud-check"></i> Sync'; btn.disabled = false; }
             }
         }
 
+        function applyCloudState(cloudData) {
+            systemState = { ...DEFAULT_STATE, ...cloudData };
+            ensureStateIntegrity();
+
+            // Refresh view
+            if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) viewingMold = systemState.activeMold;
+
+            // Update Local Storage to match
+            localStorage.setItem('moldMaintenanceState', JSON.stringify(systemState));
+
+            renderDashboard();
+            if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
+            if (document.getElementById('historyModal').classList.contains('show')) renderHistoryTable();
+
+            // If parts modal is open for selection (not editing log), refresh it carefully
+            if (document.getElementById('partsModal').classList.contains('show') && editingLogIdx === null) {
+                // Option: refresh parts grid if needed, or notify user. 
+                // For now, we update the underlying data, but might not force re-render of grid 
+                // to avoid disrupting user clicks unless we implemented a smart merge.
+            }
+        }
+
+        // --- Part Definitions (Editable from Code) ---
+        const MOLD_PARTS_DEFINITIONS = {
+            'FIL 155': ["155-FIL-03", "155-FIL-1A", "155-FIL-2", "155-FIL-3", "155-FIL-4", "155-FIL-5", "155-FIL-5A", "155-FIL-5B", "155-FIL-6A", "155-FIL-7D", "155-FIL-3F", "155-FIL-5D-OPT", "155-FIL-5C", "155-FIL-9B"],
+            'FIL 153': ["153-FIL-03", "153-FIL-1A", "153-FIL-2", "153-FIL-3", "153-FIL-30D-OPT", "153-FIL-30E-OPT", "153-FIL-3E", "153-FIL-5", "153-FIL-51-OPT", "153-FIL-52", "153-FIL-55-OPT", "153-FIL-5A", "153-FIL-5C", "153-FIL-5C-OPT", "153-FIL-5D", "153-FIL-6", "153-FIL-7A", "153-FIL-8A", "153-FIL-9A"],
+            'FIL 154': ["154-FIL-9A-T", "154-FIL-30AA", "154-FIL-1A", "154-FIL-2", "154-FIL-7A", "154-FIL-03", "154-FIL-5", "154-FIL-5C-OPT", "154-FIL-52-OPT", "154-FIL-5D", "154-FIL-54", "154-FIL-5C", "154-FIL-3E", "154-FIL-3", "154-FIL-8A", "154-FIL-2E", "154-FIL-2D", "154-FIL-6B"],
+            'FIL 445': ["445-FIL-5C", "445-FIL-4", "445-FIL-57-O", "445-FIL-58", "445-FIL-62-O", "445-FIL-63-O", "445-FIL-63", "445-FIL-31A", "445-FIL-57", "445-FIL-64", "445-FIL-5", "445-FIL-03", "445-FIL-3", "445-FIL-7D", "445-FIL-8B", "445-FIL-2", "445-FIL-1A", "445-FIL-9A", "445-FIL-6B"],
+            'FIL 535': ["535-FIL-5A", "535-FIL-58-O", "535-FIL-58A-O", "535-FIL-60B", "535-FIL-57-O", "535-FIL-4A", "535-FIL-55-O", "535-FIL-56-O", "535-FIL-62-O", "535-FIL-60-O", "535-FIL-59-O", "535-FIL-31", "535-FIL-31A", "535-FIL-61-O", "535-FIL-63", "535-FIL-60A", "BS-FIL-40", "535-FIL-6A", "BS-FIL-6", "535-FIL-1C", "535-FIL-30I", "535-FIL-9A", "535-FIL-1A", "535-FIL-2", "535-FIL-7A", "535-FIL-8A", "535-FIL-03", "535-FIL-3", "535-FIL-5B", "535-FIL-5", "535-FIL-5C"],
+            'FIL 678': ["678-FIL-4A", "678-FIL-31", "678-FIL-60B", "678-FIL-60A", "678-FIL-60C", "678-FIL-54B", "678-FIL-5E", "678-FIL-50B-0", "678-FIL-5A", "678-FIL-5B", "678-FIL-03", "678-FIL-3A", "678-FIL-3", "678-FIL-8A", "678-FIL-7A", "678-FIL-2", "678-FIL-9A", "678-FIL-30DD", "678-FIL-1C", "678-FIL-1A", "678-FIL-6A", "BS-FIL-40", "BS-FIL-6D", "BS-FIL-60", "678-FIL-5", "678-FIL-5D"]
+        };
+
         function ensureStateIntegrity() {
             ALL_MOLDS.forEach(m => {
-                if (!systemState.parts[m] || !Array.isArray(systemState.parts[m]) || systemState.parts[m].length !== 20) {
-                    const oldParts = systemState.parts[m] || [];
-                    systemState.parts[m] = Array(20).fill(false);
-                    for (let i = 0; i < Math.min(oldParts.length, 20); i++) systemState.parts[m][i] = oldParts[i];
-                }
-                if (!systemState.partNames[m] || !Array.isArray(systemState.partNames[m]) || systemState.partNames[m].length !== 20) {
-                    const oldNames = systemState.partNames[m] || [];
-                    systemState.partNames[m] = Array(20).fill(null).map((_, i) => oldNames[i] || `PART ${i + 1}`);
+                // 1. Ensure Names Match Code Definitions (Source of Truth)
+                const definedNames = MOLD_PARTS_DEFINITIONS[m];
 
-                    if (m === '155 FIL') {
-                        const specificNames = ["155-FIL-03", "155-FIL-2", "155-FIL-3", "155-FIL-4", "155-FIL-5", "155-FIL-5A", "155-FIL-5B", "155-FIL-7D", "155-FIL-3F", "155-FIL-5D-OPT", "155-FIL-6A", "155-FIL-5C", "155-FIL-9B", "155-FIL-1A"];
-                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
-                    } else if (m === '153 FIL') {
-                        const specificNames = ["153-FIL-03", "153-FIL-1A", "153-FIL-2", "153-FIL-3", "153-FIL-30D-OPT", "153-FIL-30E-OPT", "153-FIL-3E", "153-FIL-5", "153-FIL-51-OPT", "153-FIL-52", "153-FIL-55-OPT", "153-FIL-5A", "153-FIL-5C", "153-FIL-5C-OPT", "153-FIL-5D", "153-FIL-6", "153-FIL-7A", "153-FIL-8A", "153-FIL-9A"];
-                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
-                    } else if (m === '154 FIL') {
-                        const specificNames = ["154-FIL-9A-T", "154-FIL-30AA", "154-FIL-1A", "154-FIL-2", "154-FIL-7A", "154-FIL-03", "154-FIL-5", "154-FIL-5C-OPT", "154-FIL-52-OPT", "154-FIL-5D", "154-FIL-54", "154-FIL-5C", "154-FIL-3E", "154-FIL-3", "154-FIL-8A", "154-FIL-2E", "154-FIL-2D", "154-FIL-6B"];
-                        specificNames.forEach((name, i) => systemState.partNames[m][i] = name);
+                if (definedNames) {
+                    // If code has definitions, enforce them (allows updating from code)
+                    // We also merge with existing to avoid losing user-added parts if intended, 
+                    // BUT user asked to "change it from code", so code should be master for the base set.
+                    // We'll use the code definitions, plus any *extra* custom parts the user might have added dynamically.
+
+                    // Simple approach: Overwrite active names with Code definitions if they differ significantly or on init
+                    // To be safe and support "Add Part", we check if we already have these.
+
+                    if (!systemState.partNames[m] || systemState.partNames[m].length === 0) {
+                        systemState.partNames[m] = [...definedNames];
+                    } else {
+                        // Optional: Force update base names if they changed in code? 
+                        // Let's verify if the first N names match. If not, update them.
+                        for (let i = 0; i < definedNames.length; i++) {
+                            if (systemState.partNames[m][i] !== definedNames[i]) {
+                                systemState.partNames[m][i] = definedNames[i];
+                            }
+                        }
+                    }
+                } else {
+                    // Default fallback
+                    if (!systemState.partNames[m] || systemState.partNames[m].length === 0) {
+                        systemState.partNames[m] = Array(20).fill(null).map((_, i) => `PART ${i + 1}`);
                     }
                 }
-            });
 
-            if (!systemState.history) systemState.history = { ...DEFAULT_STATE.history };
-            if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
-            if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
-            if (!systemState.partNames) systemState.partNames = {};
+                // 2. Ensure Status Array matches Names Length
+                const currentLen = systemState.partNames[m].length;
+                if (!systemState.parts[m] || !Array.isArray(systemState.parts[m])) {
+                    systemState.parts[m] = Array(currentLen).fill(false);
+                } else if (systemState.parts[m].length !== currentLen) {
+                    while (systemState.parts[m].length < currentLen) systemState.parts[m].push(false);
+                    if (systemState.parts[m].length > currentLen) systemState.parts[m] = systemState.parts[m].slice(0, currentLen);
+                }
+            });
         }
+
+        if (!systemState.history) systemState.history = { ...DEFAULT_STATE.history };
+        if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
+        if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
+        if (!systemState.partNames) systemState.partNames = {};
+
 
         // --- 4. Auth ---
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -1270,52 +1330,10 @@
                 document.getElementById('maintenanceDateInput').value = localISOTime;
                 systemState.parts[moldName] = Array(20).fill(false);
             }
-            renderPartsGrid();
-            renderSpecificMoldHistory(moldName);
-            new bootstrap.Modal(document.getElementById('partsModal')).show();
-        }
-
-        function renderSpecificMoldHistory(moldName) {
-            const container = document.getElementById('specificMoldHistoryList');
-            container.innerHTML = '';
-
-            const logs = systemState.maintenanceLogs.filter(log => log.mold === moldName).reverse();
-
-            if (logs.length === 0) {
-                container.innerHTML = '<div class="text-center py-3 text-muted small"><i class="bi bi-info-circle me-1"></i> هیچ مێژوویەک بۆ ئەم قاڵبە نەدۆزرایەوە.</div>';
-                return;
-            }
-
-            logs.forEach(log => {
-                const date = new Date(log.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                const time = new Date(log.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-
-                const partsText = log.type === 'RESET' ? 'MOLD RESET' : (log.changes.length > 0 ? log.changes.join(', ') : 'Checked');
-
-                const logDiv = document.createElement('div');
-                logDiv.className = 'p-2 mb-1 border-bottom d-flex justify-content-between align-items-start';
-                logDiv.style.fontSize = '0.8rem';
-                logDiv.innerHTML = `
-                    <div style="flex: 1;">
-                        <div class="fw-bold">${partsText}</div>
-                        <div class="text-muted" style="font-size: 0.7rem;">${date} - ${time}</div>
-                    </div>
-                    <div class="text-end" style="min-width: 80px;">
-                        <span class="badge" style="background: var(--accent-primary); font-size: 0.65rem;">${log.user}</span>
-                    </div>
-                `;
-                container.appendChild(logDiv);
-            });
-        }
-
-        function updateManualLink() {
-            const newLink = prompt("Enter new Google Drive link for Parts Manual:", systemState.manualLink);
-            if (newLink !== null && newLink.trim() !== "") {
-                systemState.manualLink = newLink.trim();
-                saveState();
-                document.getElementById('manualLinkDisplay').href = systemState.manualLink;
-                alert("Manual link updated successfully.");
-            }
+            // Show modal explicitly
+            const partsModal = new bootstrap.Modal(document.getElementById('partsModal'));
+            partsModal.show();
+            renderPartsGrid(); // Initial render
         }
 
         function renderPartsGrid() {
@@ -1324,9 +1342,9 @@
             const names = systemState.partNames[currentEditingMold];
             const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
             grid.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
+
+            names.forEach((partName, i) => {
                 const isSelected = status[i];
-                const partName = names[i];
                 const div = document.createElement('div');
                 div.className = "p-2 border rounded text-center position-relative";
                 div.style.background = isSelected ? "rgba(31, 41, 55, 0.05)" : "white";
@@ -1340,10 +1358,28 @@
                 div.innerHTML = `
                     <div class="fw-bold" style="font-size: 0.8rem; ${isSelected ? 'color: var(--text-main)' : ''}">${partName}</div>
                     <div class="mt-1 text-muted small" style="font-size: 0.7rem;"><i class="bi bi-${isSelected ? 'check-square-fill text-dark' : 'square'}"></i></div>
-                    ${isAdmin ? `<button class="btn btn-sm btn-link text-secondary p-0 position-absolute" style="top: 2px; right: 5px;" onclick="event.stopPropagation(); renamePart(${i})"><i class="bi bi-pencil" style="font-size: 0.7rem;"></i></button>` : ''}
+                    ${isAdmin ? `
+                        <div class="position-absolute" style="top: 2px; right: 5px;">
+                            <button class="btn btn-sm btn-link text-secondary p-0 me-1" onclick="event.stopPropagation(); renamePart(${i})" title="Rename"><i class="bi bi-pencil" style="font-size: 0.7rem;"></i></button>
+                            <button class="btn btn-sm btn-link text-danger p-0" onclick="event.stopPropagation(); deletePart(${i})" title="Delete Completely"><i class="bi bi-trash" style="font-size: 0.7rem;"></i></button>
+                        </div>
+                    ` : ''}
                 `;
                 div.onclick = () => { status[i] = !status[i]; renderPartsGrid(); };
                 grid.appendChild(div);
+            });
+
+            // Add Part Button for Admins
+            if (isAdmin) {
+                const addDiv = document.createElement('div');
+                addDiv.className = "p-2 border rounded text-center d-flex align-items-center justify-content-center text-muted";
+                addDiv.style.borderStyle = "dashed";
+                addDiv.style.cursor = "pointer";
+                addDiv.style.background = "#f8fafc";
+                addDiv.style.minHeight = "80px";
+                addDiv.onclick = addPart;
+                addDiv.innerHTML = `<div><i class="bi bi-plus-circle mb-1" style="font-size: 1.2rem;"></i><div style="font-size: 0.75rem; font-weight: 600;">Add Part</div></div>`;
+                grid.appendChild(addDiv);
             }
         }
 
@@ -1354,7 +1390,25 @@
                 systemState.partNames[currentEditingMold][index] = newName.trim();
                 await saveState(); // Await save
                 renderPartsGrid(); // Re-render grid immediately
-                // Optional: Show a toast?
+            }
+        }
+
+        async function deletePart(index) {
+            if (confirm("Are you sure you want to DELETE this part completely?")) {
+                systemState.partNames[currentEditingMold].splice(index, 1);
+                systemState.parts[currentEditingMold].splice(index, 1);
+                await saveState();
+                renderPartsGrid();
+            }
+        }
+
+        async function addPart() {
+            const name = prompt("Enter new part name:");
+            if (name && name.trim()) {
+                systemState.partNames[currentEditingMold].push(name.trim());
+                systemState.parts[currentEditingMold].push(false);
+                await saveState();
+                renderPartsGrid();
             }
         }
 
@@ -1364,7 +1418,10 @@
             const changedParts = [];
             const selectedDate = document.getElementById('maintenanceDateInput').value;
             const finalTimestamp = selectedDate ? new Date(selectedDate).toISOString() : new Date().toISOString();
-            for (let i = 0; i < 20; i++) if (currentParts[i]) changedParts.push(partNames[i]);
+
+            // Dynamic Loop
+            for (let i = 0; i < currentParts.length; i++) if (currentParts[i]) changedParts.push(partNames[i]);
+
             if (changedParts.length > 0) {
                 if (editingLogIdx !== null) {
                     const log = systemState.maintenanceLogs[editingLogIdx];
@@ -1381,7 +1438,7 @@
                         user: currentUser.username
                     });
                 }
-                systemState.parts[currentEditingMold] = Array(20).fill(false);
+                systemState.parts[currentEditingMold] = Array(currentParts.length).fill(false); // Reset to false, keep length
             } else {
                 alert("No parts selected to save.");
                 return;
@@ -1393,7 +1450,7 @@
         function resetMoldHistoryInModal() {
             if (confirm("Reset everything for this mold? This resets its timer and clears any pending parts.")) {
                 systemState.history[currentEditingMold] = 0;
-                systemState.parts[currentEditingMold] = Array(20).fill(false);
+                systemState.parts[currentEditingMold] = Array(systemState.partNames[currentEditingMold].length).fill(false);
                 systemState.maintenanceLogs.push({
                     timestamp: new Date().toISOString(),
                     mold: currentEditingMold,
@@ -1408,6 +1465,7 @@
 
         async function saveState() {
             try {
+                systemState.lastUpdated = Date.now(); // Update timestamp
                 const stateToSave = { ...systemState };
                 localStorage.setItem('moldMaintenanceState', JSON.stringify(stateToSave));
                 await moldStateDoc.set(stateToSave);
@@ -1415,6 +1473,7 @@
                 console.error("Error saving state: ", error);
             }
         }
+
 
         setInterval(renderDashboard, 1000);
         document.addEventListener('DOMContentLoaded', () => {
