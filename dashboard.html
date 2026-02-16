@@ -543,7 +543,9 @@
             let allowedPages = [];
 
             // Special access for specific usernames (check these FIRST before role-based)
-            if (currentUser.username === 'cutemp') {
+            if (currentUser.username === 'mechanic') {
+                allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
+            } else if (currentUser.username === 'cutemp') {
                 allowedPages = ['employees', 'manuals', 'notes', 'reports', 'sop_report'];
             } else if (currentUser.username === 'unemp') {
                 allowedPages = ['employees', 'manuals', 'notes', 'sop_report'];
