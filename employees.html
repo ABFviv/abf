@@ -1956,6 +1956,12 @@
 
             // Add work record buttons
             document.getElementById('addRecordBtn').addEventListener('click', function () {
+                // Prevent mechanic from adding records
+                if (currentUser.username === 'mechanic') {
+                    showNotification('تۆ ڕێگەت پێ نەدراوە تۆمار زیاد بکەیت', 'warning');
+                    return;
+                }
+
                 const employee = employees.find(emp => emp.id === currentEmployeeId);
                 if (!employee) return;
 
@@ -1982,7 +1988,13 @@
             document.getElementById('specialDailyWorkBtn').addEventListener('click', openAddSpecialDailyWorkModal);
 
             // Quick record button
-            document.getElementById('quickRecordBtn').addEventListener('click', openQuickRecordModal);
+            document.getElementById('quickRecordBtn').addEventListener('click', function () {
+                if (currentUser.username === 'mechanic') {
+                    showNotification('تۆ ڕێگەت پێ نەدراوە تۆمار زیاد بکەیت', 'warning');
+                    return;
+                }
+                openQuickRecordModal();
+            });
 
             // Save work record buttons
             document.getElementById('saveDailyWorkBtn').addEventListener('click', saveDailyWorkRecord);
@@ -2362,7 +2374,7 @@
 
             // Show quick record button for specific departments - ADD 'klin' to the list
             const quickRecordElements = document.querySelectorAll('.quick-record-only');
-            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) && currentUser.username !== 'cutemp';
+            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) && currentUser.username !== 'cutemp' && currentUser.username !== 'mechanic';
             quickRecordElements.forEach(element => {
                 element.style.display = showQuickRecord ? 'inline-block' : 'none';
             });
