@@ -1533,7 +1533,8 @@
             samdar: { password: 'samdar7273', role: 'supervisor', department: 'unsetting', displayName: 'Samdar' },
             kiln: { password: 'kiln2626', role: 'supervisor', department: 'klin', displayName: 'Kiln Supervisor' },
             sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac', displayName: 'Sarezh' },
-            shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical', displayName: 'Shalaw' }
+            shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical', displayName: 'Shalaw' },
+            mechanic: { password: 'mechanic2026', role: 'supervisor', department: 'mechanical', displayName: 'Mechanic View' }
         };
 
         const USER_PERMISSIONS = {
@@ -2355,7 +2356,7 @@
             // Show electrical/mechanical only elements
             const electricalMechanicalElements = document.querySelectorAll('.electrical-mechanical-only');
             electricalMechanicalElements.forEach(element => {
-                element.style.display = (currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') ? 'inline-block' : 'none';
+                element.style.display = ((currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') && currentUser.username !== 'mechanic') ? 'inline-block' : 'none';
             });
 
 
@@ -2394,7 +2395,7 @@
 
             // Show Greasing Work button ONLY for Mechanical (and Admin)
             const greasingWorkElements = document.querySelectorAll('.greasing-work-only');
-            const showGreasingWork = currentUser.department === 'mechanical' || currentUser.role === 'admin';
+            const showGreasingWork = (currentUser.department === 'mechanical' && currentUser.username !== 'mechanic') || currentUser.role === 'admin';
             greasingWorkElements.forEach(element => {
                 element.style.display = showGreasingWork ? 'inline-block' : 'none';
             });
@@ -6657,7 +6658,7 @@
             let actionsHtml = '';
 
             // Actions for Admin or Supervisor
-            if (notification.status === 'pending' && (currentUser.role === 'admin' || currentUser.role === 'supervisor')) {
+            if (notification.status === 'pending' && (currentUser.role === 'admin' || (currentUser.role === 'supervisor' && currentUser.username !== 'mechanic'))) {
                 actionsHtml += `
                 <div class="notification-controls">
                         <button class="btn btn-sm btn-success confirm-notification-btn" data-id="${notification.id}" title="پەسەندکردن">
