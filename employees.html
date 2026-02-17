@@ -1534,7 +1534,7 @@
             kiln: { password: 'kiln2626', role: 'supervisor', department: 'klin', displayName: 'Kiln Supervisor' },
             sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac', displayName: 'Sarezh' },
             shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical', displayName: 'Shalaw' },
-            mechanic: { password: 'mechanic2026', role: 'supervisor', department: 'mechanical', displayName: 'Mechanic View' }
+            mechanic: { password: 'mech20', role: 'supervisor', department: 'mechanical', displayName: 'Mechanic View' }
         };
 
         const USER_PERMISSIONS = {
@@ -2696,7 +2696,8 @@
                     .orderBy('createdAt', 'desc');
 
                 // Filter by user role
-                if (currentUser.role === 'supervisor') {
+                // CHANGE: Exempt 'shalaw' and 'himat' from server-side filtering to allow multi-department view and avoid index errors
+                if (currentUser.role === 'supervisor' && currentUser.username !== 'shalaw' && currentUser.username !== 'himat') {
                     query = query.where('targetDepartment', '==', currentUser.department);
                 }
 
@@ -2757,7 +2758,8 @@
                     .orderBy('createdAt', 'desc');
 
                 // Filter by user role
-                if (currentUser.role === 'supervisor') {
+                // CHANGE: Exempt 'shalaw' and 'himat' from server-side filtering
+                if (currentUser.role === 'supervisor' && currentUser.username !== 'shalaw' && currentUser.username !== 'himat') {
                     query = query.where('targetDepartment', '==', currentUser.department);
                 }
 
@@ -6389,6 +6391,9 @@
 
                     // 2. Exception: Himat monitors Dryer
                     if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') return true;
+
+                    // 3. Exception: Shalaw monitors Maintenance (Saznga)
+                    if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') return true;
 
                     return false;
                 });
