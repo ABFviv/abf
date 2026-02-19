@@ -1564,7 +1564,7 @@
             'cutting': {
                 maxValue: 72,
                 equation: (x) => (x / 72) * 100,
-                employeeIds: ['006', '007', '008', '009', '010', '012', '013', '014', '015', '016']
+                employeeIds: ['006', '009', '008', '007', '010', '012', '013', '014', '015', '016']
             },
             // بارکردن (setting) - Employees 011,017,018,066
             'setting': {
@@ -2715,6 +2715,7 @@
                         oldestLoadedTimestamp = notification.createdAt;
                     }
                 });
+
 
                 // Pass to the main loadNotifications function to handle filtering and rendering
                 if (typeof loadNotifications === 'function') {
@@ -4068,12 +4069,12 @@
                     const recordDiv = document.createElement('div');
 
                     // Determine card class based on rating
-                    let cardClass = 'rating-average';
+                    let cardClass = 'status-average';
                     const rate = parseInt(work.rate);
-                    if (rate >= 80) cardClass = 'rating-high';
-                    else if (rate >= 50) cardClass = 'rating-medium';
-                    else if (rate >= 0) cardClass = 'rating-average';
-                    else cardClass = 'rating-low';
+                    if (rate >= 80) cardClass = 'status-high';
+                    else if (rate >= 50) cardClass = 'status-medium';
+                    else if (rate >= 0) cardClass = 'status-average';
+                    else cardClass = 'status-low';
 
                     recordDiv.className = `modern - record - card ${cardClass} `;
 
@@ -5219,7 +5220,22 @@
             employeesContainer.innerHTML = '';
 
             // Filter employees by current user's department
-            const departmentEmployees = employees.filter(emp => emp.department === currentUser.department);
+            let departmentEmployees = employees.filter(emp => emp.department === currentUser.department);
+
+            // CUSTOM SORT for cutting-setting (Handwritten Layout)
+            if (currentUser.department === 'cutting-setting') {
+                const customOrder = ['006', '009', '008', '007', '010', '012', '011', '017', '015', '018', '066', '016', '013', '014'];
+
+                departmentEmployees.sort((a, b) => {
+                    const indexA = customOrder.indexOf(a.id);
+                    const indexB = customOrder.indexOf(b.id);
+
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.id.localeCompare(b.id);
+                });
+            }
 
             if (departmentEmployees.length === 0) {
                 employeesContainer.innerHTML = '<p class="text-muted">هیچ کارمەندێک لەم بەشەدا نییە</p>';
@@ -7105,7 +7121,7 @@
             });
 
             // Create download link
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
 
