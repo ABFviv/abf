@@ -406,6 +406,7 @@
                 <h1>Mold Maintenance</h1>
                 <small style="opacity: 0.9; font-weight: 600;">چاکسازی قاڵب</small>
             </div>
+            <div id="headerActiveMold" class="d-none d-md-block ms-4"></div>
             <div class="d-flex gap-3 align-items-center">
                 <div class="d-none d-md-flex align-items-center gap-2"
                     style="background: rgba(255,255,255,0.8); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--glass-border);">
@@ -414,7 +415,7 @@
                 </div>
                 <button id="btnSync" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" onclick="syncFromCloud()"
                     style="border: 1px solid #e2e8f0; color: var(--accent-primary);">
-                    <i class="bi bi-cloud-arrow-down-fill me-2"></i> Sync
+                    <i class="bi bi-cloud-arrow-down-fill me-2"></i> نوێکردنەوە
                 </button>
                 <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openAnalysis()"
                     style="background: var(--accent-primary); border: none; box-shadow: 0 4px 12px rgba(91, 124, 153, 0.3);">
@@ -440,18 +441,19 @@
                     <div class="active-meta">سووڕی چالاکی قاڵب</div>
 
                     <div class="hero-stats">
-                        <div class="hero-stat-item">
-                            <h4 id="activeStarted">--</h4>
-                            <span>بەرواری دەستپێکردن</span>
+                        <div class="d-flex flex-column align-items-start gap-3">
+                            <div class="hero-stat-item">
+                                <h4 id="activeStarted">--</h4>
+                                <span>بەرواری دەستپێکردن</span>
+                            </div>
+                            <div id="actionButtons" class="mt-2">
+                                <!-- Buttons injected via JS -->
+                            </div>
                         </div>
                         <div class="hero-stat-item">
                             <h4 id="activeHealth">--%</h4>
                             <span>تەمەنی قاڵب</span>
                         </div>
-                    </div>
-
-                    <div class="mt-4 d-flex gap-3" id="actionButtons">
-                        <!-- Buttons injected via JS -->
                     </div>
                 </div>
                 <div class="hero-visual">
@@ -723,13 +725,14 @@
             const localData = localStorage.getItem('moldMaintenanceState');
             if (localData) {
                 try {
-                    console.log("Loaded state from LocalStorage");
                     systemState = { ...DEFAULT_STATE, ...JSON.parse(localData) };
                     ensureStateIntegrity();
-                    if (!viewingMold || !ALL_MOLDS.includes(viewingMold)) viewingMold = systemState.activeMold;
-                    renderDashboard();
-                } catch (e) { console.error("Local load error", e); }
+                } catch (e) {
+                    console.error("Local load error", e);
+                }
             }
+            viewingMold = systemState.activeMold;
+            renderDashboard();
 
             // 2. Initial Fetch from Cloud (One-time) to handle offline/online transition
             await syncFromCloud();
@@ -760,7 +763,7 @@
 
         async function syncFromCloud() {
             const btn = document.getElementById('btnSync');
-            if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Syncing...'; btn.disabled = true; }
+            if (btn) { btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> نوێکردنەوە...'; btn.disabled = true; }
 
             try {
                 const doc = await moldStateDoc.get();
@@ -788,7 +791,7 @@
                 console.error("Sync Error:", error);
                 // Don't alert on automatic syncs to avoid annoyance, just log
             } finally {
-                if (btn) { btn.innerHTML = '<i class="bi bi-cloud-check"></i> Sync'; btn.disabled = false; }
+                if (btn) { btn.innerHTML = '<i class="bi bi-cloud-check"></i> نوێکردنەوە'; btn.disabled = false; }
             }
         }
 
@@ -981,8 +984,27 @@
             document.getElementById('activeStarted').innerText = (isActiveSystem && systemState.isRunning) ? stats.startDateFormatted : '---';
             document.getElementById('activeHealth').innerText = stats.health + '%';
 
+            // Update Header Display
+            const headerDisplay = document.getElementById('headerActiveMold');
+            if (headerDisplay) {
+                if (systemState.isRunning) {
+                    headerDisplay.innerHTML = `<span class="badge bg-success rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.9rem;">
+                        <i class="bi bi-gear-wide-connected spin me-2"></i> ${systemState.activeMold} کاردەکات
+                    </span>`;
+                    headerDisplay.className = "d-none d-md-block ms-4";
+                } else if (!systemState.isRunning) {
+                    headerDisplay.innerHTML = `<span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.9rem;">
+                        <i class="bi bi-pause-circle me-2"></i> ${systemState.activeMold} (وەستاوە)
+                    </span>`;
+                    headerDisplay.className = "d-none d-md-block ms-4";
+                } else {
+                    headerDisplay.innerHTML = '';
+                    headerDisplay.className = "d-none";
+                }
+            }
+
             let displayValue = stats.days;
-            let displayLabel = "Days Running";
+            let displayLabel = "ڕۆژانی کارکردن";
 
             if (showDetailedTime) {
                 const totalSeconds = Math.floor(stats.totalMs / 1000);
@@ -992,7 +1014,7 @@
                 const s = Math.floor(totalSeconds % 60);
                 const pad = (n) => n.toString().padStart(2, '0');
                 displayValue = `${pad(d)}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
-                displayLabel = "Total Runtime";
+                displayLabel = "کۆی کاتی کارکردن";
                 document.getElementById('daysRunning').style.fontSize = "1.8rem";
             } else {
                 document.getElementById('daysRunning').style.fontSize = "4rem";
@@ -1038,10 +1060,10 @@
                             renderDashboard();
                         };
 
-                        let statusText = moldStats.days > 0 ? `Day ${moldStats.days}` : "New";
+                        let statusText = moldStats.days > 0 ? `ڕۆژی ${moldStats.days}` : "نوێ";
                         let statusColor = moldStats.days > 0 ? "text-secondary" : "text-success";
                         if (mold === systemState.activeMold && systemState.isRunning) {
-                            statusText = "RUNNING";
+                            statusText = "کار دەکات";
                             statusColor = "text-success fw-bold";
                         }
 
@@ -1066,7 +1088,7 @@
 
         // --- 7. Actions ---
         function switchMold(newMoldName) {
-            if (!canSwitch) return alert("Access Denied");
+            if (!canSwitch) return alert("ڕێگەپێدراو نییە");
             if (systemState.isRunning) {
                 const sessionStart = new Date(systemState.currentSessionStart).getTime();
                 const duration = Math.max(0, new Date().getTime() - sessionStart);
@@ -1076,31 +1098,34 @@
             systemState.currentSessionStart = new Date().toISOString();
             systemState.isRunning = true;
             saveState();
+            if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
         }
 
         function stopActiveMold() {
-            if (!canSwitch) return alert("Access Denied");
+            if (!canSwitch) return alert("ڕێگەپێدراو نییە");
             if (systemState.isRunning) {
                 const sessionStart = new Date(systemState.currentSessionStart).getTime();
                 systemState.history[systemState.activeMold] += Math.max(0, new Date().getTime() - sessionStart);
             }
             systemState.isRunning = false;
             saveState();
+            if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
         }
 
         function restartActiveMold(moldName) {
-            if (!canSwitch) return alert("Access Denied");
-            if (confirm(`RESTART CYCLE for [${moldName}]? This resets history to zero.`)) {
+            if (!canSwitch) return alert("ڕێگەپێدراو نییە");
+            if (confirm(`دڵنیای لە رێسێت کردنی سووڕی [${moldName}]? ئەمە مێژووەکەی سفر دەکاتەوە.`)) {
                 systemState.history[moldName] = 0;
                 if (moldName === systemState.activeMold) {
                     systemState.currentSessionStart = new Date().toISOString();
                 }
                 saveState();
+                if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
             }
         }
 
         function startSpecificMold(moldName) {
-            if (!canSwitch) return alert("Access Denied");
+            if (!canSwitch) return alert("ڕێگەپێدراو نییە");
             if (moldName === systemState.activeMold) {
                 systemState.currentSessionStart = new Date().toISOString();
                 systemState.isRunning = true;
@@ -1108,6 +1133,7 @@
                 switchMold(moldName);
             }
             saveState();
+            if (document.getElementById('analysisModal').classList.contains('show')) renderAnalysisTable();
         }
 
         function openAnalysis() {
@@ -1227,7 +1253,7 @@
 
                     let changesBadge = '';
                     if (log.type === 'RESET') {
-                        changesBadge = '<span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> MOLD RESET (ALL)</span>';
+                        changesBadge = '<span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> ڕیسیتی قاڵب (هەموو)</span>';
                     } else if (log.changes && log.changes.length > 0) {
                         changesBadge = log.changes.map(c => `
                             <span class="badge bg-white text-dark border-0 shadow-sm px-3 py-2 me-1 mb-1" style="border-radius: 8px;">
@@ -1235,7 +1261,7 @@
                             </span>
                         `).join('');
                     } else {
-                        changesBadge = '<span class="badge bg-secondary rounded-pill px-3 py-2">Checked (No changes)</span>';
+                        changesBadge = '<span class="badge bg-secondary rounded-pill px-3 py-2">پشکنین (گۆڕانکاری نییە)</span>';
                     }
 
                     const isAdmin = currentUser.username === 'admin' || currentUser.role === 'admin';
@@ -1253,7 +1279,7 @@
                         </td>
                         <td>
                             <div class="fw-bold" style="color: var(--accent-primary);">${log.mold}</div>
-                            <div class="small text-muted">Mold ID</div>
+                            <div class="small text-muted">ڤۆدی قاڵب</div>
                         </td>
                         <td style="max-width: 400px;">
                             <div class="d-flex flex-wrap gap-1 py-2">${changesBadge}</div>
@@ -1266,7 +1292,7 @@
                                 </div>
                                 <div class="small">
                                     <div class="fw-bold">${log.user}</div>
-                                    ${log.lastEditedBy ? `<div class="text-muted" style="font-size: 0.65rem;">Updated by ${log.lastEditedBy}</div>` : '<div class="text-muted" style="font-size: 0.65rem;">تۆمارکراوە</div>'}
+                                    ${log.lastEditedBy ? `<div class="text-muted" style="font-size: 0.65rem;">نوێکراوەتەوە لەلایەن ${log.lastEditedBy}</div>` : '<div class="text-muted" style="font-size: 0.65rem;">تۆمارکراوە</div>'}
                                 </div>
                             </div>
                         </td>
@@ -1275,11 +1301,11 @@
                                  ${isAdmin ?
                             `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm border-0 bg-white" 
                                               onclick="openPartsDetails('${log.mold}', ${originalIdx})" style="font-size: 0.75rem;">
-                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                        <i class="bi bi-pencil-square me-1"></i> دەستکاری
                                      </button>
                                      <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm border-0 bg-white" 
                                               onclick="deleteHistoryLogEntry(${originalIdx})" style="font-size: 0.75rem;">
-                                        <i class="bi bi-trash me-1"></i> Delete
+                                        <i class="bi bi-trash me-1"></i> سڕینەوە
                                      </button>` : ''
                         }
                              </div>
@@ -1306,7 +1332,7 @@
 
         async function updateManualLink() {
             let currentLink = document.getElementById('manualLinkDisplay').href;
-            const newLink = prompt("Enter PDF Link for " + currentEditingMold, currentLink);
+            const newLink = prompt("لینک ـی PDF بنووسە بۆ " + currentEditingMold, currentLink);
             if (newLink) {
                 if (typeof systemState.manualLink === 'string') {
                     const oldDefault = systemState.manualLink;
@@ -1324,8 +1350,8 @@
         function openPartsDetails(moldName, logIdx = null) {
             currentEditingMold = moldName;
             editingLogIdx = logIdx;
-            document.getElementById('partsModalTitle').innerText = logIdx !== null ? `Edit Maintenance - ${moldName}` : `${moldName} - Selection`;
-            document.getElementById('savePartsBtn').innerText = logIdx !== null ? "Update Log" : "Save Changes";
+            document.getElementById('partsModalTitle').innerText = logIdx !== null ? `دەستکاری چاکسازی - ${moldName}` : `${moldName} - دیاریکردن`;
+            document.getElementById('savePartsBtn').innerText = logIdx !== null ? "نوێکردنەوەی تۆمار" : "پاشەکەوتکردن";
 
             // Resolve Link (Per-Mold or Global)
             let link = "https://drive.google.com";
@@ -1384,8 +1410,8 @@
                     <div class="mt-1 text-muted small" style="font-size: 0.7rem;"><i class="bi bi-${isSelected ? 'check-square-fill text-dark' : 'square'}"></i></div>
                     ${isAdmin ? `
                         <div class="position-absolute" style="top: 2px; right: 5px;">
-                            <button class="btn btn-sm btn-link text-secondary p-0 me-1" onclick="event.stopPropagation(); renamePart(${i})" title="Rename"><i class="bi bi-pencil" style="font-size: 0.7rem;"></i></button>
-                            <button class="btn btn-sm btn-link text-danger p-0" onclick="event.stopPropagation(); deletePart(${i})" title="Delete Completely"><i class="bi bi-trash" style="font-size: 0.7rem;"></i></button>
+                            <button class="btn btn-sm btn-link text-secondary p-0 me-1" onclick="event.stopPropagation(); renamePart(${i})" title="گۆڕینی ناو"><i class="bi bi-pencil" style="font-size: 0.7rem;"></i></button>
+                            <button class="btn btn-sm btn-link text-danger p-0" onclick="event.stopPropagation(); deletePart(${i})" title="سڕینەوەی یەکجاری"><i class="bi bi-trash" style="font-size: 0.7rem;"></i></button>
                         </div>
                     ` : ''}
                 `;
@@ -1402,14 +1428,14 @@
                 addDiv.style.background = "#f8fafc";
                 addDiv.style.minHeight = "80px";
                 addDiv.onclick = addPart;
-                addDiv.innerHTML = `<div><i class="bi bi-plus-circle mb-1" style="font-size: 1.2rem;"></i><div style="font-size: 0.75rem; font-weight: 600;">Add Part</div></div>`;
+                addDiv.innerHTML = `<div><i class="bi bi-plus-circle mb-1" style="font-size: 1.2rem;"></i><div style="font-size: 0.75rem; font-weight: 600;">زیادکردنی پارچە</div></div>`;
                 grid.appendChild(addDiv);
             }
         }
 
         async function renamePart(index) {
             const currentName = systemState.partNames[currentEditingMold][index];
-            const newName = prompt(`Rename ${currentName} for ${currentEditingMold}:`, currentName);
+            const newName = prompt(`ناوی نوێ بنووسە بۆ ${currentName} لە قاڵبی ${currentEditingMold}:`, currentName);
             if (newName !== null && newName.trim() !== "") {
                 systemState.partNames[currentEditingMold][index] = newName.trim();
                 await saveState(); // Await save
@@ -1418,7 +1444,7 @@
         }
 
         async function deletePart(index) {
-            if (confirm("Are you sure you want to DELETE this part completely?")) {
+            if (confirm("دڵنیای لە سڕینەوەی ئەم پارچەیە بە یەکجاری؟")) {
                 systemState.partNames[currentEditingMold].splice(index, 1);
                 systemState.parts[currentEditingMold].splice(index, 1);
                 await saveState();
@@ -1427,7 +1453,7 @@
         }
 
         async function addPart() {
-            const name = prompt("Enter new part name:");
+            const name = prompt("ناوی پارچەی نوێ بنووسە:");
             if (name && name.trim()) {
                 systemState.partNames[currentEditingMold].push(name.trim());
                 systemState.parts[currentEditingMold].push(false);
@@ -1464,7 +1490,7 @@
                 }
                 systemState.parts[currentEditingMold] = Array(currentParts.length).fill(false); // Reset to false, keep length
             } else {
-                alert("No parts selected to save.");
+                alert("هیچ پارچەیەک دیاری نەکراوە.");
                 return;
             }
             saveState();
@@ -1472,14 +1498,14 @@
         }
 
         function resetMoldHistoryInModal() {
-            if (confirm("Reset everything for this mold? This resets its timer and clears any pending parts.")) {
+            if (confirm("سڕینەوەی هەموو شتێک بۆ ئەم قاڵبە؟ ئەمە کاتژمێرەکە سفر دەکاتەوە و پارچەکان پاک دەکاتەوە.")) {
                 systemState.history[currentEditingMold] = 0;
                 systemState.parts[currentEditingMold] = Array(systemState.partNames[currentEditingMold].length).fill(false);
                 systemState.maintenanceLogs.push({
                     timestamp: new Date().toISOString(),
                     mold: currentEditingMold,
                     type: 'RESET',
-                    changes: ['Full System Cycles Reset'],
+                    changes: ['رێسێتی تەواوەتی سووڕی قاڵب'],
                     user: currentUser.username
                 });
                 saveState();
