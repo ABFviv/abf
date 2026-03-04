@@ -444,7 +444,7 @@
                 <img src="logo.png" alt="ASOBRICK Logo" class="header-logo">
                 <div>
                     <h1 class="header-title">ASOBRICK FACTORY</h1>
-                    <p class="header-subtitle">سیستەمی سەرەکی</p>
+                    <p class="header-subtitle" id="headerSubtitle">سیستەمی سەرەکی</p>
                 </div>
             </div>
 
@@ -470,6 +470,7 @@
                 <div class="card-title">Manuals</div>
                 <div class="card-desc"> ڕێنماییەکان</div>
             </div>
+
             <div onclick="window.location.href='notes.html'" class="nav-card card-notes">
                 <div class="icon-box"><i class="bi bi-journal-check"></i></div>
                 <div class="card-title">Daily Notes</div>
@@ -514,6 +515,14 @@
                 <div class="card-title">Mold Maintenance</div>
                 <div class="card-desc">چاکسازی قاڵب</div>
             </div>
+            <div onclick="window.location.href='meeting.html'" class="nav-card">
+                <div class="icon-box"
+                    style="background: linear-gradient(135deg, #023b4e 0%, #556270 100%); color: white;">
+                    <i class="bi bi-calendar-event-fill"></i>
+                </div>
+                <div class="card-title">Meetings</div>
+                <div class="card-desc">کۆبوونەوەکان</div>
+            </div>
         </div>
 
         <div class="dashboard-footer">
@@ -531,13 +540,18 @@
         // Display User Info in Menu
         document.getElementById('menuUserInfo').textContent = `${currentUser.username} (${currentUser.role})`;
 
+        // Display Current Line
+        const lineText = currentUser.line === 'line1' ? 'هێڵی ١ - Line 1' : 'هێڵی ٢ - Line 2';
+        const lineBadgeColor = currentUser.line === 'line1' ? 'bg-success' : 'bg-primary';
+        document.getElementById('headerSubtitle').innerHTML += ` | <span class="badge ${lineBadgeColor}">${lineText}</span>`;
+
         // Role-based card access control
         document.addEventListener('DOMContentLoaded', () => {
             const rolePermissions = {
                 'hr': ['reports'],
-                'manager': ['employees', 'manuals', 'sop_report', 'annual_report'],
-                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report'], // annual_report removed found below
-                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report', 'mold_maintenance']
+                'manager': ['employees', 'manuals', 'sop_report', 'annual_report', 'meeting'],
+                'supervisor': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'meeting'], // annual_report removed found below
+                'admin': ['employees', 'maintenance', 'manuals', 'notes', 'reports', 'sop_report', 'annual_report', 'mold_maintenance', 'meeting']
             };
 
             let allowedPages = [];
