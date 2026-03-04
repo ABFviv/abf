@@ -1857,10 +1857,15 @@
                     document.getElementById('partCheckboxes').innerHTML = '<div class="text-muted small">هەڵبژێرە...</div>';
                 }
             } else {
+                const solutionVal = document.getElementById('recSolution').value.trim();
+                if (!solutionVal) {
+                    alert('پێویستە ناوی ئەو کارمەندانە بنووسیت کە کێشەکەیان چارەسەر کردووە');
+                    return;
+                }
                 baseData.problem = document.getElementById('recProblem').value;
                 baseData.storageCode = document.getElementById('recStorageCode').value;
                 baseData.downtime = timeToDecimal(document.getElementById('recDowntime').value);
-                baseData.solution = document.getElementById('recSolution').value;
+                baseData.solution = solutionVal;
                 baseData.rootCause = document.getElementById('recRootCause').value;
                 if (id) { baseData.last_updated = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('machine_logs').doc(id).update(baseData); }
                 else { baseData.createdAt = new Date().toISOString(); baseData.last_updated = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('machine_logs').add(baseData); }
