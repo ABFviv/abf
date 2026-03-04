@@ -1,0 +1,104 @@
+        body {
+            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Header Styling */
+        .header-bar {
+            background: rgba(3, 72, 92, 0.9);
+            /* #b7154e */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 24px 48px;
+            border-radius: 35px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 20px 40px -10px rgba(183, 21, 78, 0.3);
+        }
+
+        .header-title h1 {
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffe3e3 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem;
+        }
+
+        .header-title small {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            color: #1e293b;
+            padding: 12px 24px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-3px);
+            background: white;
+            color: #FF6B6B;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printableMeetingArea,
+            #printableMeetingArea * {
+                visibility: visible;
+            }
+
+            #printableMeetingArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .modal-dialog {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            /* Make textareas expand rather than scroll in print */
+            textarea.input-print {
+                height: auto !important;
+                border: none !important;
+                resize: none;
+                overflow: hidden;
+            }
+
+            .d-print-none {
+                display: none !important;
+            }
+        }
