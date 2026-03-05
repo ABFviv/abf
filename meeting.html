@@ -553,7 +553,7 @@
                 document.getElementById('v_id_num_input').value = meetingNum;
 
                 const btnEditPrimary = document.getElementById('btnEditPrimaryInfo');
-                if (isAdmin && !data.isComplete) {
+                if (isAdmin) {
                     document.getElementById('v_id_num_span').classList.add('d-none');
                     document.getElementById('v_id_num_input').classList.remove('d-none');
                     btnEditPrimary.classList.remove('d-none');
@@ -650,10 +650,10 @@
 
                     let topicsHtml = '';
                     att.topics.forEach((topic, tIndex) => {
-                        const questionReadonly = (isAdmin && !data.isComplete) ? '' : 'readonly';
-                        const answerReadonly = (canEditAnswer && !data.isComplete) ? '' : 'readonly';
-                        const qClass = (isAdmin && !data.isComplete) ? 'border-primary bg-light' : 'border-0 bg-transparent';
-                        const aClass = (canEditAnswer && !data.isComplete) ? 'border-success bg-white' : 'border-0 bg-transparent';
+                        const questionReadonly = isAdmin ? '' : 'readonly';
+                        const answerReadonly = (isAdmin || (canEditAnswer && !data.isComplete)) ? '' : 'readonly';
+                        const qClass = isAdmin ? 'border-primary bg-light' : 'border-0 bg-transparent';
+                        const aClass = (isAdmin || (canEditAnswer && !data.isComplete)) ? 'border-success bg-white' : 'border-0 bg-transparent';
 
                         topicsHtml += `
                             <tr>
@@ -664,12 +664,12 @@
                                     </div>
                                     <div class="d-flex align-items-start bg-warning bg-opacity-10 p-2 border border-warning rounded">
                                         <span class="badge bg-warning text-dark me-2 mt-1">وەڵام:</span>
-                                        <textarea class="form-control ${aClass} topic-a input-print bg-transparent" data-att="${attIndex}" data-topic="${tIndex}" rows="2" ${answerReadonly} placeholder="${isThisUser && !data.isComplete ? 'وەڵامەکەت لێرە بنووسە...' : (data.isComplete && !topic.answer ? 'بێ وەڵام' : 'چاوەڕێی وەڵام...')}">${topic.answer}</textarea>
+                                        <textarea class="form-control ${aClass} topic-a input-print bg-transparent" data-att="${attIndex}" data-topic="${tIndex}" rows="2" ${answerReadonly} placeholder="${(isThisUser || isAdmin) && !data.isComplete ? 'وەڵامەکەت لێرە بنووسە...' : (data.isComplete && !topic.answer && !isAdmin ? 'بێ وەڵام' : 'چاوەڕێی وەڵام...')}">${topic.answer}</textarea>
                                     </div>
                                 </td>
                                 ${tIndex === 0 ? `<td rowspan="${att.topics.length}" class="text-center align-middle fw-bold">
                                     <span class="d-block mb-2">${att.name}</span>
-                                    ${(isAdmin && !data.isComplete) ? `<button class="btn btn-sm btn-outline-primary mt-3 d-print-none" onclick="addTopic(${attIndex})"><i class="bi bi-plus"></i> پرسیار</button>` : ''}
+                                    ${isAdmin ? `<button class="btn btn-sm btn-outline-primary mt-3 d-print-none" onclick="addTopic(${attIndex})"><i class="bi bi-plus"></i> پرسیار</button>` : ''}
                                 </td>` : ''}
                             </tr>
                         `;
@@ -696,21 +696,26 @@
             const btnUpdate = document.getElementById('btnUpdateMeeting');
             const btnEnd = document.getElementById('btnEndMeeting');
 
-            if (data.isComplete) {
+            if (data.isComplete && !isAdmin) {
                 btnUpdate.style.display = 'none';
+                btnUpdate.classList.add('d-none');
                 btnEnd.style.display = 'none';
+                btnEnd.classList.add('d-none');
             } else {
-                if (isAdmin || isUserInvolved) {
+                if (isAdmin || (isUserInvolved && !data.isComplete)) {
                     btnUpdate.style.display = 'block';
+                    btnUpdate.classList.remove('d-none');
                 } else {
                     btnUpdate.style.display = 'none';
+                    btnUpdate.classList.add('d-none');
                 }
 
-                if (isAdmin) {
+                if (isAdmin && !data.isComplete) {
                     btnEnd.style.display = 'block';
                     btnEnd.classList.remove('d-none');
                 } else {
                     btnEnd.style.display = 'none';
+                    btnEnd.classList.add('d-none');
                 }
             }
         }
@@ -736,7 +741,7 @@
 
         async function updateMeetingDetails() {
             const id = document.getElementById('v_meetingId').value;
-            if (!id || !currentMeetingData) return;
+            if (!id || !currentMeetingData || (!isAdmin && currentMeetingData.isComplete)) return;
 
             const btnUpdate = document.getElementById('btnUpdateMeeting');
             btnUpdate.disabled = true;
@@ -770,6 +775,13 @@
             if (!confirm('دڵنیایت لە سڕینەوەی ئەم کۆبوونەوەیە؟')) return;
 
             try {
+                // Determine if user is allowed to delete
+                const doc = await db.collection('meetings').doc(id).get();
+                if (doc.exists && doc.data().isComplete && !isAdmin) {
+                    alert('ئەم کۆبوونەوەیە کۆتایی هاتووە و ناتوانرێت بسڕێتەوە.');
+                    return;
+                }
+
                 await db.collection('meetings').doc(id).delete();
                 loadMeetings();
             } catch (error) {
