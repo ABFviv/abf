@@ -627,20 +627,24 @@
 
     <!-- Projects Page -->
     <div class="dashboard-container" id="projectsPage" style="display: none;">
-        <div class="header">
-            <div class="header-brand">
+        <div class="header-bar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-briefcase-fill fs-5"></i>
+                </div>
                 <div>
-                    <h4 class="header-title"><span class="brand-red-text">ASOBRICK</span> <span
-                            class="brand-gray-text">FACTORY</span></h4>
-                    <p class="header-subtitle">بەڕێوبردنی پڕۆژەکان</p>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">بەڕێوبردنی پڕۆژەکان</h5>
+                    <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">PROJECTS MANAGEMENT</div>
                 </div>
             </div>
-            <div>
-                <button class="btn btn-light btn-sm" id="backToDashboardFromProjectsBtn">
-                    <i class="bi bi-arrow-left"></i> گەڕانەوە بۆ پەڕەی سەرەکی
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-header btn-sm admin-only" id="addProjectBtn">
+                    <i class="bi bi-plus-circle fs-5"></i>
+                    <span>زیادکردنی پڕۆژەی نوێ</span>
                 </button>
-                <button class="btn btn-success btn-sm ms-2 admin-only" id="addProjectBtn">
-                    <i class="bi bi-plus-circle"></i> زیادکردنی پڕۆژەی نوێ
+                <button class="btn btn-header btn-sm" id="backToDashboardFromProjectsBtn">
+                    <i class="bi bi-arrow-right-short fs-4"></i>
+                    <span>گەڕانەوە</span>
                 </button>
             </div>
         </div>
@@ -693,6 +697,9 @@
             <button class="btn btn-outline-primary" id="loadOlderBtn" onclick="loadOlderNotifications()">
                 <i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر
             </button>
+            <div class="text-muted small mt-2 d-flex align-items-center justify-content-center opacity-75">
+                <i class="bi bi-info-circle me-1"></i> پێویستە کرتە لە دوگمەکە بکەیت تا ئاگادارکردنەوەکانی دیکە ببینیت
+            </div>
         </div>
     </div>
 
@@ -1490,6 +1497,17 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const originalCollection = db.collection.bind(db);
+        db.collection = function (path) {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const line = (currentUser && currentUser.line) ? currentUser.line : 'line2';
+            if (line === 'line1') {
+                const parts = path.split('/');
+                parts[0] = parts[0] + '_line1';
+                return originalCollection(parts.join('/'));
+            }
+            return originalCollection(path);
+        };
 
         // Data storage
         let employees = [];
@@ -1825,7 +1843,8 @@
         async function saveEmployeeToFirebase(employee) {
             try {
                 console.log('💾 Saving employee to Firebase:', employee);
-                await db.collection('employees').doc(employee.id).set(employee);
+                const dataToSave = { ...employee, last_updated: firebase.firestore.FieldValue.serverTimestamp() };
+                await db.collection('employees').doc(employee.id).set(dataToSave);
                 console.log('✅ Employee saved successfully to Firebase!');
                 return true;
             } catch (error) {
@@ -1837,7 +1856,8 @@
         async function saveProjectToFirebase(project) {
             try {
                 console.log('💾 Saving project to Firebase:', project);
-                await db.collection('projects').doc(project.id).set(project);
+                const dataToSave = { ...project, last_updated: firebase.firestore.FieldValue.serverTimestamp() };
+                await db.collection('projects').doc(project.id).set(dataToSave);
                 console.log('✅ Project saved successfully to Firebase!');
                 return true;
             } catch (error) {
@@ -1849,7 +1869,8 @@
         async function saveNotificationToFirebase(notification) {
             try {
                 console.log('💾 Saving notification to Firebase:', notification);
-                await db.collection('notifications').doc(notification.id).set(notification);
+                const dataToSave = { ...notification, last_updated: firebase.firestore.FieldValue.serverTimestamp() };
+                await db.collection('notifications').doc(notification.id).set(dataToSave);
                 console.log('✅ Notification saved successfully to Firebase!');
                 return true;
             } catch (error) {
@@ -2627,37 +2648,53 @@
         }
 
         // Update notification count
+        // Real-time listener instance
+        let notificationListener = null;
+
         function updateNotificationCount() {
             if (!currentUser) return;
 
-            let count = 0;
+            // Prevent multiple listeners
+            if (notificationListener) return;
 
-            if (currentUser.role === 'admin') {
-                // Admin sees all pending notifications
-                count = notifications.filter(n => n.status === 'pending').length;
-            } else if (currentUser.role === 'supervisor') {
-                // Supervisor sees notifications for their department
-                count = notifications.filter(n =>
-                    n.status === 'pending' &&
-                    n.targetDepartment === currentUser.department
-                ).length;
-            }
+            console.log("🔔 Initializing real-time notification badge listener...");
 
-            const notificationCount = document.getElementById('notificationCount');
-            if (count > 0) {
-                notificationCount.textContent = count;
-                notificationCount.style.display = 'flex';
+            let notificationsQuery = db.collection('notifications').where('status', '==', 'pending');
 
-                // Show browser notification if there are new notifications
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification('ئاگادارکردنەوەی نوێ', {
-                        body: `تۆ ${count} ئاگادارکردنەوەی نوێت هەیە`,
-                        icon: 'https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg'
-                    });
+            notificationListener = notificationsQuery.onSnapshot(snapshot => {
+                let count = 0;
+
+                snapshot.forEach(doc => {
+                    const n = doc.data();
+                    if (currentUser.role === 'admin') {
+                        count++;
+                    } else if (currentUser.role === 'supervisor') {
+                        if (n.targetDepartment === currentUser.department) count++;
+                        else if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') count++;
+                        else if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') count++;
+                    }
+                });
+
+                const notificationCount = document.getElementById('notificationCount');
+                if (notificationCount) {
+                    if (count > 0) {
+                        notificationCount.innerHTML = '<i class="bi bi-exclamation-lg"></i>';
+                        notificationCount.style.display = 'flex';
+
+                        // Show browser notification if there are new notifications and this is an update
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('ئاگادارکردنەوەی نوێ', {
+                                body: `ئاگادارکردنەوەی نوێت هەیە!`,
+                                icon: 'https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg'
+                            });
+                        }
+                    } else {
+                        notificationCount.style.display = 'none';
+                    }
                 }
-            } else {
-                notificationCount.style.display = 'none';
-            }
+            }, error => {
+                console.error("Error listening to notifications:", error);
+            });
         }
 
         // 📊 DASHBOARD TOTALS - CALCULATED FROM CACHED AGGREGATES
@@ -2994,7 +3031,8 @@
 
                         // New Totals for Daily Work (Carts/Tons)
                         totalCarts: Math.round(totalCarts * 100) / 100,
-                        totalClayTons: Math.round(totalClayTons * 100) / 100
+                        totalClayTons: Math.round(totalClayTons * 100) / 100,
+                        last_updated: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
                     // Update local employee object
@@ -3089,7 +3127,8 @@
                 // Update employee document with new cached values
                 const updateData = {
                     [isDaily ? 'dailyRating' : 'otherRating']: newRating,
-                    [isDaily ? 'dailyWorkCount' : 'otherWorkCount']: newCount
+                    [isDaily ? 'dailyWorkCount' : 'otherWorkCount']: newCount,
+                    last_updated: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 await employeeRef.update(updateData);
@@ -4376,6 +4415,7 @@
                         if (record.endTime) updateData.endTime = record.endTime;
                     }
 
+                    updateData.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                     await db.collection('employees').doc(employee.id).collection('workRecords').doc(record.id).update(updateData);
                     console.log('✅ Work record updated in subcollection:', record.id);
 
@@ -4933,6 +4973,7 @@
 
             // New Subcollection Logic
             workRecord.type = 'daily';
+            workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
             const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
@@ -5005,6 +5046,7 @@
 
             // Subcollection Save
             workRecord.type = 'other';
+            workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
             const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
             if (success) {
@@ -5150,6 +5192,7 @@
 
                 // Subcollection Save
                 workRecord.type = 'daily';
+                workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                 const success = await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
 
                 if (success) {
@@ -5317,6 +5360,7 @@
 
                 // Subcollection Save
                 workRecord.type = 'daily';
+                workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                 await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
@@ -6038,6 +6082,7 @@
                     employee.otherWork.push(projectRecord);
 
                     // Save to subcollection
+                    projectRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                     await db.collection('employees').doc(employee.id).collection('workRecords').add(projectRecord);
                     console.log('✅ Project record added to subcollection for employee:', employeeId);
                 }
@@ -6106,10 +6151,10 @@
                 });
 
                 projectDiv.innerHTML = `
-                < div class="project-header" >
+                <div class="project-header">
                 <div class="project-title">${project.name}</div>
                 <div class="project-date">${formatDate(project.createdAt)}</div>
-            </div >
+            </div>
             <div class="project-rating ${ratingClass}">هەڵسەنگاندنی ناوەند: ${averageRating.toFixed(1)}</div>
             <div class="project-details"><strong>وردەکاری:</strong> ${project.details || 'وردەکاری نییە'}</div>
             <div class="project-employees"><strong>کارمەندان:</strong> ${employeeDetails.join(', ')}</div>
@@ -6270,6 +6315,7 @@
                     employee.otherWork.push(projectRecord);
 
                     // Add to subcollection
+                    projectRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                     await db.collection('employees').doc(employee.id).collection('workRecords').add(projectRecord);
                     console.log('✅ Project record added for new employee:', employeeId);
                 }
@@ -6421,6 +6467,17 @@
             const totalPending = notificationsToShow.filter(n => n.status === 'pending').length;
             const countBadge = document.getElementById('totalNotificationCount');
             if (countBadge) countBadge.textContent = totalPending;
+
+            // Update badge on the header bell
+            const bellBadge = document.getElementById('notificationCount');
+            if (bellBadge) {
+                if (totalPending > 0) {
+                    bellBadge.innerHTML = '<i class="bi bi-exclamation-lg"></i>';
+                    bellBadge.style.display = 'flex';
+                } else {
+                    bellBadge.style.display = 'none';
+                }
+            }
 
             console.log('🔔 Final notifications available for user:', notificationsToShow.length);
 
@@ -7436,6 +7493,7 @@
 
                 // Subcollection Save
                 workRecord.type = 'daily';
+                workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                 await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
@@ -7556,6 +7614,7 @@
 
                 // Subcollection Save
                 workRecord.type = 'daily';
+                workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
                 await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
             }
 
