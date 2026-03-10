@@ -780,12 +780,7 @@
         };
 
         const defaultPartsConfig = {
-            'relay': { label: 'ڕیڵەی (Relays)', parts: [{ name: 'سکراپەر', freq: 1 }, { name: 'باڵ', freq: 1 }, { name: 'سەرپەنجە', freq: 1 }, { name: 'زەنجیر', freq: 1 }, { name: 'گێڕ', freq: 1 }] },
-            'bearing': { label: 'بەرینە (Bearings)', parts: [{ name: 'بەرینەی ڕۆڵە', freq: 1 }, { name: 'بەرینەی سەرەکی', freq: 1 }, { name: 'بەرینەی ماتۆڕ', freq: 1 }, { name: 'هاوسینگ', freq: 1 }] },
-            'lining': { label: 'بەطانە (Lining)', parts: [{ name: 'بەطانەی ناوەوە', freq: 1 }, { name: 'بەطانەی دەرەوە', freq: 1 }, { name: 'پلێتی بەطانە', freq: 1 }] },
-            'knife': { label: 'چەقۆ (Knives)', parts: [{ name: 'چەقۆی بڕین', freq: 1 }, { name: 'چەقۆی پاککردنەوە', freq: 1 }, { name: 'چەقۆی لاوەکی', freq: 1 }] },
-            'electrical': { label: 'کارەبایی', parts: [{ name: 'کۆنتێکتەر', freq: 1 }, { name: 'فیوز', freq: 1 }, { name: 'هەستەوەر', freq: 1 }, { name: 'ماتۆڕ', freq: 1 }] },
-            'general': { label: 'گشتی', parts: [{ name: 'ڕۆن', freq: 1 }, { name: 'فیلتەر', freq: 1 }, { name: 'قاییش', freq: 1 }, { name: 'هیتر', freq: 1 }] }
+            'general': { label: 'گشتی', parts: [{ name: 'هیتر', freq: 'N/A' }] }
         };
 
         // --- AUTH & RBAC CONFIGURATION ---
@@ -795,7 +790,7 @@
             'kiln': ['firn'],
             'samdar': ['dagrtn'],
             'sarezh': ['kareba'],
-            'shalaw': ['mechanical'],
+            'shalaw': ['brin', 'barkrdn', 'dryer', 'haarin', 'amadakrdn', 'firn', 'dagrtn', 'kareba', 'mechanical'],
             'admin': ['ALL'],
             'manager': ['ALL']
         };
@@ -867,13 +862,27 @@
                 // Also hide checkboxes and edit/delete icons in tables via CSS logic or JS rendering
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
             }
-
+            // 1. shalaw: Read-Only (Hide all action buttons)
+            if (role === 'shalaw') {
+                buttons.forEach(btn => btn.style.display = 'none');
+                // Also hide checkboxes and edit/delete icons in tables via CSS logic or JS rendering
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            }
             // 2. SUPERVISOR: Restricted
             else if (role === 'supervisor') {
                 // Hide "Add Machine", "Manage Machine"
                 document.getElementById('btnAddMachine').style.display = 'none';
                 document.getElementById('btnManageMachines').style.display = 'none';
                 // Supervisors can now manage parts
+                document.getElementById('machineControls').style.display = 'block';
+                document.getElementById('btnDeptTotals').style.display = 'none';
+            }
+            // 2. SUPERVISOR: Restricted
+            else if (role === 'shalaw') {
+                // Hide "Add Machine", "shalaw Machine"
+                document.getElementById('btnAddMachine').style.display = 'none';
+                document.getElementById('btnManageMachines').style.display = 'none';
+                // Supervisors can now shalaw parts
                 document.getElementById('machineControls').style.display = 'block';
                 document.getElementById('btnDeptTotals').style.display = 'none';
             }
@@ -888,11 +897,11 @@
             deptFilter.innerHTML = '<option value="">-- هەموو --</option>';
 
             const userPerms = USER_PERMISSIONS[currentUser.username] || [];
-            const isAdminOrManager = (currentUser.role === 'admin' || currentUser.role === 'manager');
+            const isAdminOrManagerorshalaw = (currentUser.role === 'admin' || currentUser.role === 'manager' || currentUser.role === 'shalaw');
 
             Object.keys(departments).forEach(key => {
                 // Show if Admin/Manager OR if User has this permission
-                if (isAdminOrManager || userPerms.includes(key)) {
+                if (isAdminOrManagerorshalaw || userPerms.includes(key)) {
                     const opt = `<option value="${departments[key]}">${departments[key]}</option>`;
                     deptSelect.innerHTML += `<option value="${departments[key]}">${departments[key]}</option>`;
                     deptFilter.innerHTML += opt;
@@ -923,13 +932,13 @@
                 select.innerHTML = '<option value="">-- ئامێرێک دیاری بکە --</option>';
 
                 const userPerms = USER_PERMISSIONS[currentUser.username] || [];
-                const isAdminOrManager = (currentUser.role === 'admin' || currentUser.role === 'manager');
+                const isAdminOrManagerOrshalaw = (currentUser.role === 'admin' || currentUser.role === 'manager' || currentUser.role === 'shalaw');
 
                 snap.forEach(doc => {
                     const m = doc.data();
 
                     let isAllowed = false;
-                    if (isAdminOrManager) isAllowed = true;
+                    if (isAdminOrManagerOrshalaw) isAllowed = true;
                     else {
                         userPerms.forEach(key => {
                             if (departments[key] === m.department) isAllowed = true;
@@ -1479,7 +1488,7 @@
                 const checkbox = canDelete ? `<input type="checkbox" class="log-checkbox" value="${log.id}" onchange="updateDeleteButton()">` : '';
                 const deleteBtn = canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>` : '';
                 // Edit button allowed for Admin & Supervisor (but not Manager)
-                const canEdit = currentUser.role !== 'manager';
+                const canEdit = currentUser.role !== 'managerorshalaw';
                 const editBtn = canEdit ? `<button class="btn btn-sm btn-outline-primary me-1" onclick="editLog('${log.id}')"><i class="bi bi-pencil"></i></button>` : '';
 
                 const catLabel = (currentPartsConfig && currentPartsConfig[log.partCategory]) ? currentPartsConfig[log.partCategory].label : log.partCategory;
@@ -1499,7 +1508,7 @@
             const tbody = document.getElementById('problemLogBody');
             tbody.innerHTML = '';
             const canDelete = (currentUser.role === 'admin');
-            const canEdit = currentUser.role !== 'manager';
+            const canEdit = currentUser.role !== 'managerorshalaw';
 
             logs.forEach(log => {
                 const deleteBtn = canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${log.id}')"><i class="bi bi-trash"></i></button>` : '';
