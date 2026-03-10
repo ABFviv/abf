@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سیستەمی پاداشت و سزا</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --primary: #000000;
+      --primary-hover: #10b910;
+      --bg-color: #f6f3f3;
+      --surface: #FFFFFF;
+      --text-primary: #1F2937;
+      --text-secondary: #000000;
+      --border: #000000;
+
+      --warning: #f7f309;
+      --warning-bg: #f7f309;
+      --punishment: #f11010;
+      --punishment-bg: #f11010;
+      --reward: #10b910;
+      --reward-bg: #10b910;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+
+
+    /* Form Controls */
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      margin: 8px 0;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background-color: #afdae7;
+      font-family: inherit;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      background-color: var(--surface);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: rgb(255, 255, 255);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Dashboard */
+    .dashboard {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* --- Universal Premium Header --- */
+    .page-header {
+      background: #775619e8;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 24px 48px;
+      border-radius: 35px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-title h1 {
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.2rem;
+    }
+
+    /* Section Containers */
+    .section-container {
+      background: var(--surface);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--bg-color);
+      padding-bottom: 10px;
+    }
+
+    /* Cards */
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      padding: 24px;
+      border-radius: 16px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card span {
+      font-size: 42px;
+      font-weight: 800;
+      margin-top: 15px;
+      line-height: 1;
+    }
+
+    .warning-card {
+      background: var(--warning-bg);
+      color: #000000;
+      border: 3px solid #000000;
+    }
+
+    .punishment-card {
+      background: var(--punishment-bg);
+      color: #000000;
+      border: 3px solid #000000;
+    }
+
+    .reward-card {
+      background: var(--reward-bg);
+      color: #000000;
+      border: 3px solid #000000;
+    }
+
+    /* Inputs Group Inline */
+    .input-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .input-group>* {
+      margin: 0;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Table */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: center;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #7fdbf1;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      border: 2px solid #333;
+
+    }
+
+
+    th:first-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+
+    th:last-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #F9FAFB;
+    }
+
+    tr.warning td:first-child {
+      border-right: 4px solid var(--warning);
+      border-radius: 0 8px 8px 0;
+    }
+
+    tr.punishment td:first-child {
+      border-right: 4px solid var(--punishment);
+      border-radius: 0 8px 8px 0;
+    }
+
+    tr.reward td:first-child {
+      border-right: 4px solid var(--reward);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .delete-btn {
+      background: #FEE2E2;
+      color: var(--punishment);
+      padding: 6px 12px;
+      width: auto;
+      font-size: 14px;
+      border-radius: 8px;
+      margin: 0;
+      box-shadow: none;
+    }
+
+    .delete-btn:hover {
+      background: var(--punishment);
+      color: white;
+    }
+
+    /* Details Section */
+    #detailsSection {
+      display: none;
+    }
+
+    .back-btn {
+      background: #E5E7EB;
+      color: #374151;
+      width: auto;
+      padding: 8px 16px;
+      margin-bottom: 16px;
+      box-shadow: none;
+    }
+
+    .back-btn:hover {
+      background: #D1D5DB;
+      box-shadow: var(--shadow-sm);
+    }
+
+    @media(max-width: 600px) {
+      .dashboard {
+        padding: 10px;
+      }
+
+      .section-container {
+        padding: 16px;
+      }
+
+      #header {
+        padding: 16px;
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast-container position-fixed top-0 start-0 p-3" style="z-index: 2000;"></div>
+
+  <div class="container py-4" style="max-width: 1200px;">
+    <!-- Universal Header -->
+    <div class="page-header">
+      <div class="header-title">
+        <h1>Punishment & Reward</h1>
+        <small style="color: #ffffff; opacity: 0.9; font-weight: 600;">سیستەمی پاداشت و سزا</small>
+      </div>
+      <div class="d-flex gap-3 align-items-center">
+        <!-- Category Badge moved to header. You can change font-size and padding here -->
+        <div id="headerCategoryBadge"
+          style="display:none; align-items:center; justify-content:center; border:3px solid #000; border-radius:50px; padding:8px 24px; font-weight:900; font-size:1.1rem; color:#000; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+        </div>
+        <div class="d-none d-md-flex align-items-center gap-2"
+          style="background: rgb(255, 255, 255); padding: 8px 16px; border-radius: 50px; border: 3px solid rgb(3, 3, 3);">
+          <i class="bi bi-person-circle text-secondary"></i>
+          <span id="userInfoDisplay" class="fw-bold" style="font-size: 0.9rem;">User</span>
+        </div>
+        <a href="dashboard.html" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm"
+          style="border: 3px solid #000000; color: #000000;">
+          <i class="bi bi-arrow-left-circle-fill me-2"></i> گەڕانەوە بۆ داشبۆرد
+        </a>
+      </div>
+    </div>
+
+    <div class="dashboard" id="dashboard" style="padding: 0;">
+
+      <div class="section-container" id="mainSection">
+        <h3>هەڵبژاردنی بەش</h3>
+        <select id="departmentSelect" onchange="loadEmployees()">
+          <option value="">-- بەش هەڵبژێرە --</option>
+          <option value="crushing-prep">هاڕین و ئامادەکردن</option>
+          <option value="cutting-setting">بڕین و بارکردن</option>
+          <option value="klin">فڕن</option>
+          <option value="unsetting">داگرتن</option>
+          <option value="mechanical">میکانیک</option>
+          <option value="electrical-ac">کارەبا</option>
+          <option value="management">بەشی لێپرسراوەکان</option>
+        </select>
+      </div>
+
+      <div class="section-container" id="addRecordSection">
+        <h3>زیادکردنی تۆمار</h3>
+        <div class="input-group">
+          <select id="employeeSelect">
+            <option value="">-- کارمەند هەڵبژێرە --</option>
+          </select>
+          <select id="type" onchange="checkAmount()">
+            <option value="">-- جۆر هەڵبژێرە --</option>
+            <option value="warning">🟡 ئاگادارکردنەوە</option>
+            <option value="punishment">🔴 سزا</option>
+            <option value="reward">🟢 پاداشت</option>
+          </select>
+          <input type="number" id="amount" placeholder="بڕی پارە IQD" style="display:none">
+          <input type="date" id="date">
+        </div>
+        <textarea id="note" class="full-width" placeholder="تێبینی" rows="2"></textarea>
+        <button onclick="addRecord()">زیادکردن</button>
+      </div>
+
+      <div class="section-container" id="cardsSection">
+        <h3>پوختەی تۆمارەکان</h3>
+        <div class="card-container">
+          <div class="card warning-card" onclick="showDetails('warning', 'ئاگادارکردنەوە')">
+            ئاگادارکردنەوە
+            <span id="warningCount">0</span>
+          </div>
+          <div class="card punishment-card" onclick="showDetails('punishment', 'سزا')">
+            سزا
+            <span id="punishmentCount">0</span>
+          </div>
+          <div class="card reward-card" onclick="showDetails('reward', 'پاداشت')">
+            پاداشت
+            <span id="rewardCount">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="detailsSection" style="display:none;">
+        <!-- Detail Dashboard: unified stat cards -->
+        <div id="detailHeaderBar"
+          style="display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:24px;"></div>
+        <!-- Records Table -->
+        <div class="section-container" style="margin-bottom:0;">
+          <div class="table-responsive">
+            <table id="detailsTable">
+              <thead id="detailsTableHead"></thead>
+              <tbody id="detailsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentUser = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const userData = localStorage.getItem('currentUser');
+        if (!userData) {
+          window.location.href = 'index.html';
+          return;
+        }
+        currentUser = JSON.parse(userData);
+
+        if (currentUser.role === 'supervisor' || currentUser.role === 'employee') {
+          document.getElementById('departmentSelect').value = currentUser.department;
+          document.getElementById('departmentSelect').disabled = true;
+        }
+
+        const userInfoDisplay = document.getElementById('userInfoDisplay');
+        if (userInfoDisplay) {
+          userInfoDisplay.textContent = currentUser.username;
+        }
+
+        loadEmployees();
+      });
+
+      // کارمەندەکان
+      const employees = {
+        "crushing-prep": ["شەماڵ ستار", "کاروان عەدنان", "هەرێم حمەصاڵح", "ئوسامە علی", "نادر عبداللە"],
+        "cutting-setting": ["ئامانج محمود", "ئەژوان نعمان", "جەمال جمعە", "بادینان نەوشیروان", "محمد نعمان", "سامی عمر", "نەهرەوان حسین", "هارون ئازاد", "هۆشیمان عثمان", "پەیڕەو جەلیل", "مەولود قادر", "إسماعیل أکرم", "محمد ستار", "ئارا أحمد"],
+        "klin": ["ئومێد عبدالله", "دروست علی", "شکار عثمان", "عبدالجبار حسن", "دیارکۆ دڵشاد", "دێرین ڕەئوف", "زانا حسن", "سیراون ڕێبوار", "لوقمان غفور", "محمد فەرهاد", "هاوڕێ بیلال"],
+        "unsetting": ["محمد مصطفی", "بەرزان مظهر", "ئاسۆ أحمد", "ئاسۆ عثمان", "محمد إبراهیم", "هاوبەش محمد", "هوشیار عبدالله", "کۆسرەت ڕەئوف"],
+        "mechanical": ["بەهێز بابا ڕەسوڵ", "دابان علی", "مەریوان کەریم", "محمد بورهان", "نجات حمەرشید", "گۆران محمد", "رێباز ئەسکەندەر"],
+        "electrical-ac": ["ئومید إسماعیل", "هەڵکەوت إسماعیل", "ئومێد جمعە", "توانا حسن", "دانا خیرالله", "سۆران لقمان"],
+        "management": ["هێمن جبار", "هیمەت جمعە", "هێمن حسن", "سامدار محمود", "شاڵاو مصطفی", "ساڕێژ سالار"]
+      };
+
+      function getRecords() {
+        let dept = departmentSelect.value;
+        if (!dept) return [];
+        let data = localStorage.getItem(dept);
+        return data ? JSON.parse(data) : [];
+      }
+      function saveRecords(records) {
+        let dept = departmentSelect.value;
+        if (dept) {
+          localStorage.setItem(dept, JSON.stringify(records));
+        }
+      }
+
+      function loadEmployees() {
+        employeeSelect.innerHTML = "<option value=''>-- کارمەند هەڵبژێرە --</option>";
+        let dept = departmentSelect.value;
+
+        if (!dept) {
+          loadTable();
+          return;
+        }
+
+        if (employees[dept]) {
+          employees[dept].forEach(emp => {
+            let option = document.createElement("option");
+            option.text = emp;
+            option.value = emp;
+            employeeSelect.add(option);
+          });
+        }
+
+        loadTable();
+      }
+
+      function checkAmount() {
+        if (document.getElementById("type").value == "punishment" || document.getElementById("type").value == "reward") {
+          amount.style.display = "block";
+        } else {
+          amount.style.display = "none";
+        }
+      }
+
+      function addRecord() {
+        let name = employeeSelect.value;
+        let typeVal = document.getElementById("type").value;
+        let dateVal = date.value;
+        let noteVal = note.value;
+        let amountVal = amount.value;
+
+        // Validation
+        if (!name || !typeVal || !dateVal) {
+          showAlert('زانیاری پڕ بکەوە — کارمەند، جۆر و بەروار پێویستن', 'error');
+          return;
+        }
+        if ((typeVal === 'punishment' || typeVal === 'reward') && !amountVal) {
+          showAlert('تکایە بڕی پارەکە بنیسە — بۆ سزا و پاداشت بڕی پارە پێویستە', 'error');
+          return;
+        }
+
+        let records = getRecords();
+        let typeLabel = "";
+        if (typeVal == "warning") typeLabel = "ئاگادارکردنەوە";
+        if (typeVal == "punishment") typeLabel = "سزا";
+        if (typeVal == "reward") typeLabel = "پاداشت";
+
+        let depSelect = document.getElementById("departmentSelect");
+        let departmentName = depSelect.value ? depSelect.options[depSelect.selectedIndex].text : "-";
+
+        records.push({ name, department: departmentName, type: typeVal, typeLabel, amount: amountVal || '-', date: dateVal, note: noteVal });
+        saveRecords(records);
+        loadTable();
+
+        // Reset form
+        employeeSelect.value = '';
+        document.getElementById('type').value = '';
+        amount.value = '';
+        amount.style.display = 'none';
+        date.value = '';
+        note.value = '';
+
+        showAlert('تۆمارەکە بە سەرکەوتویی زیاد کرا', 'success');
+      }
+
+      function showAlert(msg, type) {
+        const colors = { success: '#10b910', error: '#f11010' };
+        const div = document.createElement('div');
+        div.innerText = msg;
+        div.style.cssText = `position:fixed; top:24px; right:24px; z-index:9999; background:${colors[type]}; color:#fff; padding:14px 28px; border-radius:16px; font-weight:700; font-size:1rem; box-shadow:0 8px 24px rgba(0,0,0,0.18); transition:opacity 0.5s;`;
+        document.body.appendChild(div);
+        setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 2500);
+      }
+
+      let currentFilterType = null;
+
+      function loadTable() {
+        let records = getRecords();
+        let w = 0, p = 0, r = 0;
+        records.forEach((rec) => {
+          if (rec.type === "warning") w++;
+          if (rec.type === "punishment") p++;
+          if (rec.type === "reward") r++;
+        });
+        document.getElementById('warningCount').innerText = w;
+        document.getElementById('punishmentCount').innerText = p;
+        document.getElementById('rewardCount').innerText = r;
+
+        if (currentFilterType) {
+          renderFilteredTable(currentFilterType);
+        }
+      }
+
+      function showDetails(type, title) {
+        currentFilterType = type;
+        // Hide main sections, show detail dashboard
+        document.getElementById('mainSection').style.display = 'none';
+        document.getElementById('addRecordSection').style.display = 'none';
+        document.getElementById('cardsSection').style.display = 'none';
+        document.getElementById('detailsSection').style.display = 'block';
+
+        // Color map
+        const colorMap = { warning: '#f7f309', punishment: '#f11010', reward: '#10b910' };
+        const labelMap = { warning: 'ئاگادارکردنەوە', punishment: 'سزا', reward: 'پاداشت' };
+        const bgColor = colorMap[type];
+
+        // Compute stats
+        const records = getRecords();
+        const filtered = records.filter(r => r.type === type);
+        const totalAmount = filtered.reduce((sum, r) => {
+          const n = parseFloat(String(r.amount).replace(/[^0-9.]/g, ''));
+          return sum + (isNaN(n) ? 0 : n);
+        }, 0);
+
+        // Shared card style
+        const cardBase = `background:white; border:3px solid ${bgColor}; border-radius:20px; padding:14px 26px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:140px; text-align:center; cursor:default;`;
+
+        // Build unified header bar (no back button here - it's in the top header now)
+        let headerHTML = '';
+
+        // Update badge in the top header
+        const badge = document.getElementById('headerCategoryBadge');
+        badge.style.display = 'flex';
+        badge.style.backgroundColor = bgColor;
+        badge.innerText = labelMap[type];
+
+        // 1. Count card (now first card in the row)
+        headerHTML += `<div style="${cardBase}">
+          <span id="filteredCountInfo" style="font-size:1.6rem; font-weight:900;">${filtered.length}</span>
+          <span style="font-size:0.85rem; color:#555; font-weight:600;border-radius:20px; padding:3px 3px;">کۆی تۆمارەکان</span>
+        </div>`;
+
+        // 3. Total amount card - admin only + only for punishment/reward
+        if (type !== 'warning' && currentUser && currentUser.role === 'admin') {
+          headerHTML += `<div style="${cardBase}">
+            <span id="filteredAmountInfo" style="font-size:1.6rem; font-weight:900;">${totalAmount.toLocaleString()}</span>
+            <span style="font-size:0.85rem; color:#555; font-weight:600;border-radius:20px; padding:3px 3px;">کۆی پارە (IQD)</span>
+          </div>`;
+        }
+
+        let empOptions = '<option value="">هەموو کارمەندەکان</option>';
+        [...new Set(filtered.map(r => r.name))].forEach(name => {
+          empOptions += `<option value="${name}">${name}</option>`;
+        });
+
+        // Add filter inputs
+        let filterHTML = `
+          <div style="display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+            <select id="filterEmployee" onchange="renderFilteredTable('${type}')" style="width: 200px; height: 97px; border-radius: 20px; border: 3px solid #000; padding: 0 10px; font-weight: bold; font-family: inherit; background: #fff; cursor: pointer; outline: none; margin: 0;">
+              ${empOptions}
+            </select>
+            <input type="date" id="filterDateFrom" onchange="renderFilteredTable('${type}')" style="width: 180px; height: 97px; border-radius: 20px; border: 3px solid #000; padding: 0 10px; font-weight: bold; font-family: inherit; background: #fff; outline: none; margin: 0;">
+            <span style="font-weight: bold; font-size: 20px;">بۆ</span>
+            <input type="date" id="filterDateTo" onchange="renderFilteredTable('${type}')" style="width: 180px; height: 97px; border-radius: 20px; border: 3px solid #000; padding: 0 10px; font-weight: bold; font-family: inherit; background: #fff; outline: none; margin: 0;">
+          </div>
+        `;
+
+        // Wrap all stat cards and filters in a group (RTL = group on right side)
+        headerHTML = `<div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; flex-shrink:0;">${headerHTML} ${filterHTML}</div>`;
+
+        // Back button LAST = far LEFT in RTL space-between (under Dashboard back button)
+        headerHTML += `<button onclick="hideDetails()" style="border:3px solid #000; background:#fff; color:#000; border-radius:20px; padding:32px 32px; font-weight:800; font-size:1rem; cursor:pointer; white-space:nowrap; flex-shrink:0; width:max-content; align-self:center;">
+          <i class="bi bi-arrow-right"></i> گەڕانەوە
+        </button>`;
+
+        document.getElementById('detailHeaderBar').innerHTML = headerHTML;
+
+        renderFilteredTable(type);
+      }
+
+      function hideDetails() {
+        currentFilterType = null;
+        document.getElementById('detailsSection').style.display = 'none';
+        document.getElementById('mainSection').style.display = 'block';
+        document.getElementById('addRecordSection').style.display = 'block';
+        document.getElementById('cardsSection').style.display = 'block';
+        document.getElementById('headerCategoryBadge').style.display = 'none';
+      }
+
+      function renderFilteredTable(type) {
+        const tableHead = document.getElementById('detailsTableHead');
+        const tableBody = document.getElementById('detailsTableBody');
+        tableBody.innerHTML = '';
+        const records = getRecords();
+        const showAmount = (type !== 'warning');
+
+        // Apply UI filters if present
+        const empFilter = document.getElementById('filterEmployee');
+        const dateFromFilter = document.getElementById('filterDateFrom');
+        const dateToFilter = document.getElementById('filterDateTo');
+
+        const empName = empFilter ? empFilter.value : '';
+        const dateFrom = dateFromFilter ? dateFromFilter.value : '';
+        const dateTo = dateToFilter ? dateToFilter.value : '';
+
+        let finalCount = 0;
+        let finalAmount = 0;
+
+        // Build thead
+        let headRow = '<tr>';
+        headRow += '<th style="width:160px;">کارمەند</th>';
+        headRow += '<th style="width:140px;">بەش</th>'; // New Department Column
+        if (showAmount) headRow += '<th style="width:120px;">بڕی پارە</th>';
+        headRow += '<th style="width:110px;">بەروار</th>';
+        headRow += '<th>تێبینی</th>';  // wide – grows
+        headRow += '<th style="width:100px;">سڕینەوە</th>';
+        headRow += '</tr>';
+        tableHead.innerHTML = headRow;
+
+        records.forEach((rec, index) => {
+          if (rec.type === type) {
+            // Apply Filters
+            if (empName && rec.name !== empName) return;
+            if (dateFrom && rec.date < dateFrom) return;
+            if (dateTo && rec.date > dateTo) return;
+
+            finalCount++;
+            if (showAmount) {
+              const n = parseFloat(String(rec.amount).replace(/[^0-9.]/g, ''));
+              finalAmount += isNaN(n) ? 0 : n;
+            }
+
+            let row = tableBody.insertRow();
+            row.className = rec.type;
+            row.insertCell(0).innerText = rec.name;
+
+            // Insert Department Note: Handle old records that don't have department
+            row.insertCell(row.cells.length).innerText = rec.department || '-';
+
+            if (showAmount) {
+              row.insertCell(row.cells.length).innerText = rec.amount;
+            }
+
+            let dateCell = row.insertCell(row.cells.length);
+            dateCell.innerText = rec.date;
+            let noteCell = row.insertCell(row.cells.length);
+            noteCell.innerText = rec.note;
+            noteCell.style.textAlign = 'right';
+            noteCell.style.whiteSpace = 'pre-wrap';
+            noteCell.style.maxWidth = '400px';
+            let delCell = row.insertCell(row.cells.length);
+            delCell.innerHTML = `<button class='delete-btn' style='padding:4px 10px; font-size:12px;' onclick='showDeleteConfirm(${index})'>✕</button>`;
+          }
+        });
+
+        // Update stat cards dynamically
+        const countSpan = document.getElementById('filteredCountInfo');
+        if (countSpan) countSpan.innerText = finalCount;
+        const amountSpan = document.getElementById('filteredAmountInfo');
+        if (amountSpan) amountSpan.innerText = finalAmount.toLocaleString();
+      }
+
+      let recordToDeleteIndex = null;
+
+      function showDeleteConfirm(index) {
+        recordToDeleteIndex = index;
+        document.getElementById('deleteConfirmModal').style.display = 'flex';
+      }
+
+      function hideDeleteConfirm() {
+        recordToDeleteIndex = null;
+        document.getElementById('deleteConfirmModal').style.display = 'none';
+      }
+
+      function executeDelete() {
+        if (recordToDeleteIndex !== null) {
+          let records = getRecords();
+          records.splice(recordToDeleteIndex, 1);
+          saveRecords(records);
+          loadTable();
+          if (currentFilterType) renderFilteredTable(currentFilterType);
+          showAlert('تۆمارەکە سڕدرایەوە', 'success');
+        }
+        hideDeleteConfirm();
+      }
+
+      function deleteRecord(index) {
+        // Obsolete, replaced by showDeleteConfirm/executeDelete
+      }
+
+    </script>
+
+    <!-- Custom Delete Confirmation Modal -->
+    <div id="deleteConfirmModal"
+      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+      <div
+        style="background:#fff; padding:30px; border-radius:20px; text-align:center; max-width:400px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.2); border: 3px solid #000;">
+        <h3 style="margin-top:0; border-bottom:none; color:#f11010; font-size: 24px;">سڕینەوەی تۆمار</h3>
+        <p style="font-size:18px; font-weight:bold; margin-bottom:24px;">ئایا دڵنیای لە سڕینەوەی ئەم تۆمارە؟</p>
+        <div style="display:flex; justify-content:center; gap:16px;">
+          <button onclick="executeDelete()"
+            style="background:#f11010; color:#fff; width:auto; padding:10px 24px; margin:0; border: 2px solid #000;">بەڵێ،
+            بیسڕەوە</button>
+          <button onclick="hideDeleteConfirm()"
+            style="background:#E5E7EB; color:#000; width:auto; padding:10px 24px; margin:0; border: 2px solid #000;">نەخێر،
+            پەشیمان بوومەوە</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+
+</html>
