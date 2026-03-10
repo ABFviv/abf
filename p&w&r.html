@@ -8,6 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <style>
     :root {
       --primary: #000000;
@@ -424,7 +428,21 @@
       </div>
     </div>
 
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+      // --- Firebase Init ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyDNodAq9MikVHaQRr4EZVfsbXp4SOfxDKQ",
+        authDomain: "abf6-96dcf.firebaseapp.com",
+        projectId: "abf6-96dcf",
+        storageBucket: "abf6-96dcf.firebasestorage.app",
+        messagingSenderId: "405357996484",
+        appId: "1:405357996484:web:b335cdf768ba415f3e9c91"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
       let currentUser = null;
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -459,25 +477,44 @@
         "management": ["هێمن جبار", "هیمەت جمعە", "هێمن حسن", "سامدار محمود", "شاڵاو مصطفی", "ساڕێژ سالار"]
       };
 
-      function getRecords() {
-        let dept = departmentSelect.value;
-        if (!dept) return [];
-        let data = localStorage.getItem(dept);
-        return data ? JSON.parse(data) : [];
-      }
-      function saveRecords(records) {
-        let dept = departmentSelect.value;
-        if (dept) {
-          localStorage.setItem(dept, JSON.stringify(records));
+      let allRecords = [];
+      let recordsListener = null;
+
+      function startRecordsListener() {
+        let dept = document.getElementById("departmentSelect").value;
+        if (!dept) {
+          allRecords = [];
+          loadTable();
+          return;
         }
+
+        if (recordsListener) recordsListener(); // Unsubscribe prev
+
+        recordsListener = db.collection('p_w_r')
+          .where('dept_key', '==', dept)
+          .onSnapshot((snapshot) => {
+            allRecords = [];
+            snapshot.forEach(doc => {
+              allRecords.push({ id: doc.id, ...doc.data() });
+            });
+            loadTable();
+            if (currentFilterType) showDetails(currentFilterType);
+          }, (error) => {
+            console.error("Error listening to records: ", error);
+          });
+      }
+
+      function getRecords() {
+        return allRecords;
       }
 
       function loadEmployees() {
         employeeSelect.innerHTML = "<option value=''>-- کارمەند هەڵبژێرە --</option>";
         let dept = departmentSelect.value;
 
+        startRecordsListener();
+
         if (!dept) {
-          loadTable();
           return;
         }
 
@@ -518,18 +555,35 @@
           return;
         }
 
-        let records = getRecords();
+        let depSelect = document.getElementById("departmentSelect");
+        let departmentName = depSelect.value ? depSelect.options[depSelect.selectedIndex].text : "-";
+        let deptKey = depSelect.value;
+
         let typeLabel = "";
         if (typeVal == "warning") typeLabel = "ئاگادارکردنەوە";
         if (typeVal == "punishment") typeLabel = "سزا";
         if (typeVal == "reward") typeLabel = "پاداشت";
 
-        let depSelect = document.getElementById("departmentSelect");
-        let departmentName = depSelect.value ? depSelect.options[depSelect.selectedIndex].text : "-";
+        const newRecord = {
+          name,
+          department: departmentName,
+          dept_key: deptKey,
+          type: typeVal,
+          typeLabel,
+          amount: amountVal || '-',
+          date: dateVal,
+          note: noteVal,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        records.push({ name, department: departmentName, type: typeVal, typeLabel, amount: amountVal || '-', date: dateVal, note: noteVal });
-        saveRecords(records);
-        loadTable();
+        db.collection('p_w_r').add(newRecord)
+          .then(() => {
+            showAlert('تۆمارەکە بە سەرکەوتویی زیاد کرا', 'success');
+          })
+          .catch(err => {
+            console.error(err);
+            showAlert('هەڵەیەک ڕوویدا لە کاتی پاشەکەوتکردن', 'error');
+          });
 
         // Reset form
         employeeSelect.value = '';
@@ -538,8 +592,6 @@
         amount.style.display = 'none';
         date.value = '';
         note.value = '';
-
-        showAlert('تۆمارەکە بە سەرکەوتویی زیاد کرا', 'success');
       }
 
       function showAlert(msg, type) {
@@ -718,7 +770,7 @@
             noteCell.style.whiteSpace = 'pre-wrap';
             noteCell.style.maxWidth = '400px';
             let delCell = row.insertCell(row.cells.length);
-            delCell.innerHTML = `<button class='delete-btn' style='padding:4px 10px; font-size:12px;' onclick='showDeleteConfirm(${index})'>✕</button>`;
+            delCell.innerHTML = `<button class='delete-btn' style='padding:4px 10px; font-size:12px;' onclick='showDeleteConfirm("${rec.id}")'>✕</button>`;
           }
         });
 
@@ -743,12 +795,15 @@
 
       function executeDelete() {
         if (recordToDeleteIndex !== null) {
-          let records = getRecords();
-          records.splice(recordToDeleteIndex, 1);
-          saveRecords(records);
-          loadTable();
-          if (currentFilterType) renderFilteredTable(currentFilterType);
-          showAlert('تۆمارەکە سڕدرایەوە', 'success');
+          const recordId = recordToDeleteIndex; // In Firestore implementation, we pass the doc ID
+          db.collection('p_w_r').doc(recordId).delete()
+            .then(() => {
+              showAlert('تۆمارەکە سڕدرایەوە', 'success');
+            })
+            .catch(err => {
+              console.error(err);
+              showAlert('هەڵەیەک ڕوویدا لە کاتی سڕینەوە', 'error');
+            });
         }
         hideDeleteConfirm();
       }
