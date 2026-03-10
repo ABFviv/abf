@@ -1299,8 +1299,8 @@
                         <div class="mb-3" id="quickRecordFieldContainer">
                             <label for="quickRecordField" class="form-label text-center w-100"
                                 id="quickRecordFieldLabel">ژمارەی عەرەبانەکان</label>
-                            <input type="number" class="form-control text-center" id="quickRecordField" min="0"
-                                step="0.1" required>
+                            <!-- Changed from type="number" to type="text" to allow text input for kiln -->
+                            <input type="text" class="form-control text-center" id="quickRecordField" required>
                         </div>
                         <div class="mb-3">
                             <label for="quickRecordRating" class="form-label text-center w-100">
@@ -1586,20 +1586,20 @@
             },
             // بارکردن (setting) - Employees 011,017,018,066
             'setting': {
-                maxValue: 11,
-                equation: (x) => (x / 11) * 100,
+                maxValue: 12,
+                equation: (x) => (x / 12) * 100,
                 employeeIds: ['011', '017', '018', '066']
             },
             // داگرتن (unsetting)
             'unsetting': {
-                maxValue: 11,
-                equation: (x) => (x / 11) * 100,
+                maxValue: 12,
+                equation: (x) => (x / 12) * 100,
                 employeeIds: [] // All employees in unsetting department
             },
             // Update the klin configuration
             'klin': {
-                maxValue: 11, // Change from 26 to 11
-                equation: (x) => (x / 11) * 100,
+                maxValue: 12, // Change from 26 to 11
+                equation: (x) => (x / 12) * 100,
                 employeeIds: [] // This needs to be populated with the 4 employees who should have cart numbers
             }
         };
@@ -4180,6 +4180,11 @@
                         recordContent += `<div class="record-note">"${work.note}"</div>`;
                     }
 
+                    // Added By
+                    if (work.addedByName || work.addedBy) {
+                        recordContent += `<div class="mt-2 text-muted small"><i class="bi bi-person ms-1"></i>لایەن: ${work.addedByName || work.addedBy}</div>`;
+                    }
+
                     // Actions
                     if (currentUser.role === 'admin' || currentUser.role === 'supervisor') {
                         recordContent += `
@@ -4946,7 +4951,9 @@
                 date,
                 rate,
                 note,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                addedBy: currentUser ? currentUser.username : 'admin',
+                addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
             };
 
             // --- NEW SAVING LOGIC START ---
@@ -5031,6 +5038,8 @@
                 rate,
                 note,
                 createdAt: new Date().toISOString(),
+                addedBy: currentUser ? currentUser.username : 'admin',
+                addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین',
                 needsConfirmation: !(employee.department === 'electrical-ac' || employee.department === 'mechanical')
             };
 
@@ -5136,7 +5145,9 @@
                     endTime: endTime || null,
                     isSpecial: true,
                     createdBy: currentUser.username,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    addedBy: currentUser ? currentUser.username : 'admin',
+                    addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
                 };
 
                 // Check if this work needs confirmation
@@ -5240,10 +5251,21 @@
 
             // Set field label based on department
             const fieldLabel = document.getElementById('quickRecordFieldLabel');
+            const fieldInput = document.getElementById('quickRecordField');
+
+            // Default input type is number
+            fieldInput.type = 'number';
+            fieldInput.min = '0';
+            fieldInput.step = '0.1';
+
             if (currentUser.department === 'crushing-prep') {
                 fieldLabel.textContent = 'ژمارەی طەنی خۆڵ';
             } else if (currentUser.department === 'klin') {
-                fieldLabel.textContent = 'ناوی کار'; // For klin department, show "ناوی کار"
+                fieldLabel.textContent = 'ناوی کار / ژمارەی عەرەبانەکان';
+                // Allow text input for klin department
+                fieldInput.type = 'text';
+                fieldInput.removeAttribute('min');
+                fieldInput.removeAttribute('step');
             } else {
                 fieldLabel.textContent = 'ژمارەی عەرەبانەکان';
             }
@@ -5326,17 +5348,24 @@
 
                 // Special handling for klin department
                 let finalRating = rate;
+                // If it's a number, calculate automatic rating (unless klin without cart)
+                const inputValue = parseFloat(fieldValue);
+
                 if (currentUser.department === 'klin') {
-                    // For klin, don't calculate automatic rating
-                    // Use the rating provided by the user
-                } else {
-                    // Calculate automatic rating for other departments
-                    const inputValue = parseFloat(fieldValue);
-                    if (!isNaN(inputValue)) {
+                    // For klin, check if the employee is in the cart list
+                    const klinCartEmployees = ['020', '021', '022', '023']; // Specific employees who handle carts
+                    if (klinCartEmployees.includes(employee.id) && !isNaN(inputValue)) {
+                        // Try to get automatic rating if cart employee
                         const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
                         if (automaticRating !== null) {
                             finalRating = automaticRating;
                         }
+                    }
+                } else if (!isNaN(inputValue)) {
+                    // Calculate automatic rating for other departments
+                    const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
+                    if (automaticRating !== null) {
+                        finalRating = automaticRating;
                     }
                 }
 
@@ -5344,7 +5373,9 @@
                     date,
                     rate: finalRating,
                     note,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    addedBy: currentUser ? currentUser.username : 'admin',
+                    addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
                 };
 
                 // Add field based on department
@@ -6076,7 +6107,9 @@
                         note: details,
                         createdAt: new Date().toISOString(),
                         projectId: projectId,
-                        type: 'other'
+                        type: 'other',
+                        addedBy: currentUser ? currentUser.username : 'admin',
+                        addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
                     };
 
                     employee.otherWork.push(projectRecord);
@@ -6533,8 +6566,30 @@
             return `مانگی ${monthIndex + 1} `;
         }
 
+        // Helper: Determine Category (Electrical, Mechanical, or Department)
+        function getNotificationCategory(n) {
+            // For Admin, always use strict Department grouping
+            if (currentUser.role === 'admin') {
+                return n.targetDepartment || 'other';
+            }
 
+            if (n.relatedEmployees && n.relatedEmployees.length > 0) {
+                const empId = n.relatedEmployees[0].employeeId;
+                const employee = employees.find(e => e.id === empId);
+                if (employee) {
+                    if (employee.department === 'electrical-ac') return 'electrical-work';
+                    if (employee.department === 'mechanical') return 'mechanical-work';
+                }
+            }
+            return n.targetDepartment || 'other';
+        }
 
+        // Helper: Get Display Name
+        function getCategoryDisplayName(key) {
+            if (key === 'electrical-work') return 'کارەبا';
+            if (key === 'mechanical-work') return 'میکانیک';
+            return getDepartmentDisplayName(key);
+        }
 
         // Render notifications with folder structure (Navigation Style)
         function renderNotifications() {
@@ -6582,30 +6637,6 @@
 
             // 3. Navigation Logic
 
-            // Helper: Determine Category (Electrical, Mechanical, or Department)
-            function getNotificationCategory(n) {
-                // For Admin, always use strict Department grouping
-                if (currentUser.role === 'admin') {
-                    return n.targetDepartment || 'other';
-                }
-
-                if (n.relatedEmployees && n.relatedEmployees.length > 0) {
-                    const empId = n.relatedEmployees[0].employeeId;
-                    const employee = employees.find(e => e.id === empId);
-                    if (employee) {
-                        if (employee.department === 'electrical-ac') return 'electrical-work';
-                        if (employee.department === 'mechanical') return 'mechanical-work';
-                    }
-                }
-                return n.targetDepartment || 'other';
-            }
-
-            // Helper: Get Display Name
-            function getCategoryDisplayName(key) {
-                if (key === 'electrical-work') return 'کارەبا';
-                if (key === 'mechanical-work') return 'میکانیک';
-                return getDepartmentDisplayName(key);
-            }
 
             // --- LEVEL 0: WORK CATEGORIES ---
             if (currentNotificationPath.length === 0) {
@@ -6644,6 +6675,11 @@
                         <div class="folder-icon"><i class="bi ${data.icon}"></i></div>
                         <div class="folder-name">${data.displayName}</div>
                         <div class="folder-meta">${data.total} ئاگادارکردنەوە</div>
+                        ${data.pending > 0 && (currentUser.role === 'admin' || (currentUser.role === 'supervisor' && currentUser.username !== 'mechanic')) ? `
+                            <button class="btn btn-sm btn-success w-100 mt-2" onclick="event.stopPropagation(); acceptAllInLevel(0, '${catKey}')">
+                                <i class="bi bi-check-all"></i> پەسەندکردنی هەمووی
+                            </button>
+                        ` : ''}
             `;
                     grid.appendChild(folder);
                 });
@@ -6683,6 +6719,11 @@
                         <div class="folder-icon"><i class="bi bi-calendar-event"></i></div>
                         <div class="folder-name">${mName}</div>
                         <div class="folder-meta">${data.total} دانە</div>
+                        ${data.pending > 0 && (currentUser.role === 'admin' || (currentUser.role === 'supervisor' && currentUser.username !== 'mechanic')) ? `
+                            <button class="btn btn-sm btn-success w-100 mt-2" onclick="event.stopPropagation(); acceptAllInLevel(1, '${mName}')">
+                                <i class="bi bi-check-all"></i> پەسەندکردنی هەمووی
+                            </button>
+                        ` : ''}
             `;
                     grid.appendChild(folder);
                 });
@@ -6711,6 +6752,18 @@
                 list.className = 'notifications-list-container';
 
                 if (finalNotifs.length > 0) {
+                    const pendingCountInView = finalNotifs.filter(n => n.status === 'pending').length;
+                    if (pendingCountInView > 0 && (currentUser.role === 'admin' || (currentUser.role === 'supervisor' && currentUser.username !== 'mechanic'))) {
+                        const acceptAllDiv = document.createElement('div');
+                        acceptAllDiv.className = 'mb-3 text-end';
+                        acceptAllDiv.innerHTML = `
+                            <button class="btn btn-success" onclick="acceptAllInLevel(2, null)">
+                                <i class="bi bi-check-all"></i> پەسەندکردنی هەمووی (${pendingCountInView})
+                            </button>
+                        `;
+                        container.appendChild(acceptAllDiv);
+                    }
+
                     finalNotifs.forEach(notif => {
                         list.appendChild(createNotificationDiv(notif));
                     });
@@ -6944,6 +6997,119 @@
 
 
 
+
+        // Accept all pending notifications in a specific level/folder
+        async function acceptAllInLevel(level, value) {
+            let notifsToAccept = [];
+
+            if (level === 0) {
+                notifsToAccept = allFilteredNotifications.filter(n => getNotificationCategory(n) === value && n.status === 'pending');
+            } else if (level === 1) {
+                const selectedCat = currentNotificationPath[0];
+                notifsToAccept = allFilteredNotifications.filter(n => {
+                    if (n.status !== 'pending') return false;
+                    const cat = getNotificationCategory(n);
+                    const date = new Date(n.createdAt);
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()} `;
+                    return cat === selectedCat && mName === value;
+                });
+            } else if (level === 2) {
+                const selectedCat = currentNotificationPath[0];
+                const selectedMonth = currentNotificationPath[1];
+                notifsToAccept = allFilteredNotifications.filter(n => {
+                    if (n.status !== 'pending') return false;
+                    const cat = getNotificationCategory(n);
+                    const date = new Date(n.createdAt);
+                    const mName = isNaN(date.getTime()) ? 'بەرواری نادیار' : `${getKurdishMonthName(date.getMonth())} ${date.getFullYear()} `;
+                    return cat === selectedCat && mName === selectedMonth;
+                });
+            }
+
+            if (notifsToAccept.length === 0) {
+                showNotification('هیچ ئاگادارکردنەوەیەکی چاوەڕێکراو نییە', 'info');
+                return;
+            }
+
+            if (!confirm(`دڵنیایت لە پەسەندکردنی ${notifsToAccept.length} ئاگادارکردنەوە بەکۆمەڵ؟`)) {
+                return;
+            }
+
+            const actorUsername = currentUser ? currentUser.username : 'admin';
+            const actorDisplayName = currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین';
+            const note = 'پەسەندکرا بەکۆمەڵ';
+            const now = new Date().toISOString();
+
+            showNotification('خەریکی پەسەندکردنی ئاگادارکردنەوەکان...', 'info');
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const n of notifsToAccept) {
+                try {
+                    n.status = 'confirmed';
+                    n.resolvedAt = now;
+                    n.resolvedBy = actorUsername;
+                    n.resolvedByDisplayName = actorDisplayName;
+                    n.confirmedBy = actorUsername;
+                    n.confirmedByDisplayName = actorDisplayName;
+                    n.confirmationNote = note;
+
+                    // Update corresponding work records
+                    if (n.relatedEmployees) {
+                        for (const employee of n.relatedEmployees) {
+                            const emp = employees.find(e => e.id === employee.employeeId);
+                            if (emp && emp.dailyWork) {
+                                const workRecord = emp.dailyWork.find(work =>
+                                    work.isSpecial &&
+                                    work.date === n.workDetails.date &&
+                                    work.name === n.workDetails.name
+                                );
+                                if (workRecord) {
+                                    workRecord.confirmationStatus = 'confirmed';
+                                    workRecord.confirmationNote = note;
+                                    await saveEmployeeToFirebase(emp);
+                                }
+                            }
+                        }
+                    } else {
+                        const employee = employees.find(emp => emp.id === n.relatedEmployeeId);
+                        if (employee && employee.dailyWork) {
+                            const workRecord = employee.dailyWork.find(work =>
+                                work.isSpecial &&
+                                work.date === n.relatedWorkRecord.date &&
+                                work.name === n.relatedWorkRecord.name
+                            );
+                            if (workRecord) {
+                                workRecord.confirmationStatus = 'confirmed';
+                                workRecord.confirmationNote = note;
+                                await saveEmployeeToFirebase(employee);
+                            }
+                        }
+                    }
+
+                    // Update the local notifications array
+                    const notificationIndex = notifications.findIndex(localN => localN.id === n.id);
+                    if (notificationIndex !== -1) {
+                        notifications[notificationIndex] = n;
+                    }
+
+                    await saveNotificationToFirebase(n);
+                    successCount++;
+                } catch (error) {
+                    console.error('Error confirming notification:', n.id, error);
+                    errorCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                await loadNotifications();
+                updateNotificationCount();
+                showNotification(`${successCount} ئاگادارکردنەوە پەسەندکرا بەکۆمەڵ`, 'success');
+            }
+            if (errorCount > 0) {
+                showNotification(`هەڵە لە پەسەندکردنی ${errorCount} ئاگادارکردنەوە`, 'danger');
+            }
+        }
 
         // Confirm notification
         function confirmNotification(notificationId) {
@@ -7486,7 +7652,9 @@
                     rate: rate,
                     note: note,
                     createdAt: new Date().toISOString(),
-                    isCleaning: true // Optional flag if you want to filter later
+                    isCleaning: true, // Optional flag if you want to filter later
+                    addedBy: currentUser ? currentUser.username : 'admin',
+                    addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
                 };
 
                 employee.dailyWork.push(workRecord);
@@ -7607,7 +7775,9 @@
                     rate: rate,
                     note: note,
                     createdAt: new Date().toISOString(),
-                    isGreasing: true
+                    isGreasing: true,
+                    addedBy: currentUser ? currentUser.username : 'admin',
+                    addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
                 };
 
                 employee.dailyWork.push(workRecord);
@@ -7779,4 +7949,5 @@
     </script>
 </body>
 
+    
 </html>
