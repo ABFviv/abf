@@ -2578,24 +2578,39 @@
             try {
                 console.log('📥 Loading notifications...');
 
+                // NOTE: Don't chain .where() after .orderBy() — Firestore needs a composite index.
+                // Instead, fetch all (limited) and filter client-side.
                 let query = db.collection('notifications')
                     .orderBy('createdAt', 'desc')
-                    .limit(50);
-
-                // Filter by user role
-                if (currentUser.role === 'supervisor') {
-                    query = query.where('targetDepartment', '==', currentUser.department);
-                }
+                    .limit(100);
 
                 const snapshot = await query.get();
 
-                console.log(`✅ Loaded ${snapshot.size} notifications`);
+                console.log(`✅ Loaded ${snapshot.size} notifications from Firebase`);
 
                 notifications = [];
                 snapshot.forEach(doc => {
-                    notifications.push({ id: doc.id, ...doc.data() });
+                    const n = { id: doc.id, ...doc.data() };
+
+                    // Client-side role filtering
+                    if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+                        notifications.push(n);
+                    } else if (currentUser.role === 'supervisor') {
+                        const userDept = currentUser.department;
+                        if (n.targetDepartment === userDept) {
+                            notifications.push(n);
+                        } else if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') {
+                            notifications.push(n);
+                        } else if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') {
+                            notifications.push(n);
+                        }
+                    } else {
+                        // For other roles, push all notifications (or implement specific filtering if needed)
+                        notifications.push(n);
+                    }
                 });
 
+                console.log(`✅ Showing ${notifications.length} notifications after filtering`);
                 renderNotifications();
 
             } catch (error) {
@@ -2604,33 +2619,7 @@
             }
         }
 
-        // Render notifications
-        function renderNotifications() {
-            const container = document.getElementById('notificationsContainer');
-            if (!container) return;
-
-            container.innerHTML = '';
-
-            if (notifications.length === 0) {
-                container.innerHTML = '<p class="text-center text-muted py-5">هیچ ئاگادارکردنەوەیەک نییە</p>';
-                return;
-            }
-
-            notifications.forEach(notification => {
-                const notifDiv = document.createElement('div');
-                notifDiv.className = 'notification-item';
-                notifDiv.innerHTML = `
-                    <div class="notification-header">
-                        <strong>${notification.title || 'ئاگادارکردنەوە'}</strong>
-                        <span class="text-muted small">${notification.createdAt || ''}</span>
-                    </div>
-                    <div class="notification-body">
-                        ${notification.message || notification.description || ''}
-                    </div>
-                `;
-                container.appendChild(notifDiv);
-            });
-        }
+        // NOTE: renderNotifications is defined further below with grouped-by-date layout
 
         // Back to dashboard from notifications
         async function backToDashboardFromNotifications() {
@@ -2708,60 +2697,57 @@
         let oldestLoadedTimestamp = null; // Track oldest loaded notification for pagination
         const DAYS_TO_LOAD = 4; // Load 4 days at a time
 
-        // Show notifications page and load recent notifications
-        async function showNotificationsPage() {
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('notificationsPage').style.display = 'block';
+        // NOTE: showNotificationsPage is defined above at line ~2560 - this is the ONLY version
 
-            // Reset and load last 4 days of notifications
-            notifications = [];
-            oldestLoadedTimestamp = null;
-            await loadRecentNotifications();
-        }
-
-        // Load last 4 days of notifications
+        // Load recent notifications (last N days) - client-side filtering avoids Firestore index errors
         async function loadRecentNotifications() {
             try {
-                // Calculate 4 days ago
                 const daysAgo = new Date();
                 daysAgo.setDate(daysAgo.getDate() - DAYS_TO_LOAD);
+                const daysAgoISO = daysAgo.toISOString();
 
                 console.log(`📥 Loading notifications from last ${DAYS_TO_LOAD} days...`);
 
-                let query = db.collection('notifications')
-                    .where('createdAt', '>=', daysAgo.toISOString())
-                    .orderBy('createdAt', 'desc');
+                // Simple query - no composite index needed
+                const snapshot = await db.collection('notifications')
+                    .orderBy('createdAt', 'desc')
+                    .limit(100)
+                    .get();
 
-                // Filter by user role
-                // CHANGE: Exempt 'shalaw' and 'himat' from server-side filtering to allow multi-department view and avoid index errors
-                if (currentUser.role === 'supervisor' && currentUser.username !== 'shalaw' && currentUser.username !== 'himat') {
-                    query = query.where('targetDepartment', '==', currentUser.department);
-                }
-
-                const snapshot = await query.get();
-
-                console.log(`✅ Loaded ${snapshot.size} notifications (${DAYS_TO_LOAD} days)`);
+                console.log(`✅ Loaded ${snapshot.size} total notifications`);
 
                 notifications = [];
                 snapshot.forEach(doc => {
-                    const notification = { id: doc.id, ...doc.data() };
-                    notifications.push(notification);
+                    const n = { id: doc.id, ...doc.data() };
+
+                    // Client-side date filter
+                    if (n.createdAt && n.createdAt < daysAgoISO) return;
+
+                    // Client-side role filter
+                    if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+                        notifications.push(n);
+                    } else if (currentUser.role === 'supervisor') {
+                        if (n.targetDepartment === currentUser.department) {
+                            notifications.push(n);
+                        } else if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') {
+                            notifications.push(n);
+                        } else if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') {
+                            notifications.push(n);
+                        }
+                    } else {
+                        notifications.push(n);
+                    }
 
                     // Track oldest timestamp for pagination
-                    if (!oldestLoadedTimestamp || notification.createdAt < oldestLoadedTimestamp) {
-                        oldestLoadedTimestamp = notification.createdAt;
+                    if (!oldestLoadedTimestamp || n.createdAt < oldestLoadedTimestamp) {
+                        oldestLoadedTimestamp = n.createdAt;
                     }
                 });
 
+                console.log(`✅ Showing ${notifications.length} notifications after filtering`);
+                renderNotifications();
 
-                // Pass to the main loadNotifications function to handle filtering and rendering
-                if (typeof loadNotifications === 'function') {
-                    loadNotifications();
-                } else {
-                    renderNotifications();
-                }
-
-                // Show "Load Older" button if we got notifications (there might be more)
+                // Show "Load Older" button if we got notifications
                 document.getElementById('loadOlderContainer').style.display =
                     notifications.length > 0 ? 'block' : 'none';
 
@@ -2771,74 +2757,94 @@
             }
         }
 
-        // Load older notifications (next 4 days)
+        // Load older notifications (next 50 by cursor)
         async function loadOlderNotifications() {
             if (!oldestLoadedTimestamp) {
-                console.log('No more notifications to load');
+                console.log('No older notifications to load');
                 return;
             }
 
+            const loadBtn = document.getElementById('loadOlderBtn');
+
             try {
-                const loadBtn = document.getElementById('loadOlderBtn');
                 loadBtn.disabled = true;
                 loadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> بارکردن...';
 
-                // Calculate 4 days before the oldest loaded timestamp
-                const oldestDate = new Date(oldestLoadedTimestamp);
-                const fourDaysEarlier = new Date(oldestDate);
-                fourDaysEarlier.setDate(fourDaysEarlier.getDate() - DAYS_TO_LOAD);
+                console.log(`📥 Loading older notifications before ${oldestLoadedTimestamp}...`);
 
-                console.log(`📥 Loading older notifications (${DAYS_TO_LOAD} more days)...`);
+                // Fetch all, filter client-side for records older than current oldest
+                const snapshot = await db.collection('notifications')
+                    .limit(500)
+                    .get();
 
-                let query = db.collection('notifications')
-                    .where('createdAt', '>=', fourDaysEarlier.toISOString())
-                    .where('createdAt', '<', oldestLoadedTimestamp)
-                    .orderBy('createdAt', 'desc');
+                // Collect all docs older than our current oldest, sorted
+                let olderDocs = [];
+                const existingIds = new Set(notifications.map(n => n.id));
 
-                // Filter by user role
-                // CHANGE: Exempt 'shalaw' and 'himat' from server-side filtering
-                if (currentUser.role === 'supervisor' && currentUser.username !== 'shalaw' && currentUser.username !== 'himat') {
-                    query = query.where('targetDepartment', '==', currentUser.department);
-                }
+                snapshot.forEach(doc => {
+                    const n = { id: doc.id, ...doc.data() };
+                    if (!n.createdAt) return;
+                    if (n.createdAt >= oldestLoadedTimestamp) return; // not older
+                    if (existingIds.has(n.id)) return;                // duplicate
+                    olderDocs.push(n);
+                });
 
-                const snapshot = await query.get();
+                // Sort newest-first among older docs, take next 50
+                olderDocs.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+                const nextBatch = olderDocs.slice(0, 50);
 
-                console.log(`✅ Loaded ${snapshot.size} older notifications`);
+                console.log(`✅ Found ${nextBatch.length} older notifications to add`);
 
-                if (snapshot.size === 0) {
-                    // No more notifications
+                let addedCount = 0;
+                nextBatch.forEach(n => {
+                    // Role filter
+                    let shouldInclude = false;
+                    if (currentUser.role === 'admin') {
+                        shouldInclude = true;
+                    } else if (currentUser.role === 'supervisor') {
+                        if (n.targetDepartment === currentUser.department) shouldInclude = true;
+                        else if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') shouldInclude = true;
+                        else if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') shouldInclude = true;
+                    }
+
+                    if (shouldInclude) {
+                        notifications.push(n);
+                        allFilteredNotifications.push(n);
+                        addedCount++;
+                        if (n.createdAt < oldestLoadedTimestamp) {
+                            oldestLoadedTimestamp = n.createdAt;
+                        }
+                    }
+                });
+
+                // Update header badge
+                const totalPending = allFilteredNotifications.filter(n => n.status === 'pending').length;
+                const countBadge = document.getElementById('totalNotificationCount');
+                if (countBadge) countBadge.textContent = totalPending;
+
+                if (addedCount === 0) {
                     loadBtn.innerHTML = '<i class="bi bi-check-circle"></i> هەموو ئاگادارکردنەوەکان بارکران';
                     setTimeout(() => {
-                        document.getElementById('loadOlderContainer').style.display = 'none';
+                        const c = document.getElementById('loadOlderContainer');
+                        if (c) c.style.display = 'none';
                     }, 2000);
                     return;
                 }
 
-                // Append older notifications
-                snapshot.forEach(doc => {
-                    const notification = { id: doc.id, ...doc.data() };
-                    notifications.push(notification);
-
-                    // Update oldest timestamp
-                    if (notification.createdAt < oldestLoadedTimestamp) {
-                        oldestLoadedTimestamp = notification.createdAt;
-                    }
-                });
-
                 renderNotifications();
-
                 loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
                 loadBtn.disabled = false;
 
             } catch (error) {
                 console.error('❌ Error loading older notifications:', error);
                 showNotification('هەڵە لە بارکردنی ئاگادارکردنەوەکان', 'danger');
-
-                const loadBtn = document.getElementById('loadOlderBtn');
-                loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
-                loadBtn.disabled = false;
+                if (loadBtn) {
+                    loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
+                    loadBtn.disabled = false;
+                }
             }
         }
+
 
         // Render notifications in the UI
         function renderNotifications() {
@@ -6468,40 +6474,73 @@
         let currentNotificationPath = []; // [deptId, monthName]
         let allFilteredNotifications = []; // Buffer for current user's available notifications
 
-        function loadNotifications() {
+        async function loadNotifications() {
             const notificationsContainer = document.getElementById('notificationsContainer');
-            notificationsContainer.innerHTML = '';
+            notificationsContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-danger" role="status"></div></div>';
 
-            let notificationsToShow = [];
+            // Reset pagination state
+            oldestLoadedTimestamp = null;
+            currentNotificationPath = [];
 
             console.log('🔔 Loading notifications for user:', currentUser);
 
-            // Filter notifications based on user role and permissions
+            try {
+                // No orderBy — Firestore orderBy silently drops docs without that field.
+                // Fetch all, sort client-side, take the most recent 50.
+                const snapshot = await db.collection('notifications')
+                    .limit(500)
+                    .get();
+
+                console.log(`✅ Fetched ${snapshot.size} total docs from Firebase`);
+
+                // Collect all, sort newest first
+                let allDocs = [];
+                snapshot.forEach(doc => {
+                    allDocs.push({ id: doc.id, ...doc.data() });
+                });
+
+                allDocs.sort((a, b) => {
+                    const ta = a.createdAt || '';
+                    const tb = b.createdAt || '';
+                    return tb.localeCompare(ta);
+                });
+
+                // Show the most recent 50 (no date cutoff — user can load older with the button)
+                notifications = allDocs.slice(0, 50);
+
+                // Track oldest for "Load Older" pagination
+                if (notifications.length > 0) {
+                    oldestLoadedTimestamp = notifications[notifications.length - 1].createdAt || null;
+                }
+
+                console.log(`✅ Showing ${notifications.length} most recent notifications`);
+            } catch (error) {
+                console.error('❌ Error fetching notifications:', error);
+                notificationsContainer.innerHTML = '<p class="text-center text-danger py-4">هەڵە لە بارکردنی ئاگادارکردنەوەکان</p>';
+                return;
+            }
+
+            let notificationsToShow = [];
+
+            // Filter based on user role
             if (currentUser.role === 'admin') {
                 notificationsToShow = notifications;
             } else if (currentUser.role === 'supervisor') {
                 notificationsToShow = notifications.filter(n => {
-                    // 1. Basic Rule: Notifications targeted at my department
                     if (n.targetDepartment === currentUser.department) return true;
-
-                    // 2. Exception: Himat monitors Dryer
                     if (currentUser.username === 'himat' && n.targetDepartment === 'dryer') return true;
-
-                    // 3. Exception: Shalaw monitors Maintenance (Saznga)
                     if (currentUser.username === 'shalaw' && n.targetDepartment === 'mechanical') return true;
-
                     return false;
                 });
             } else {
                 notificationsToShow = [];
             }
 
-            // Update total pending count badge in header
+            // Update header badge
             const totalPending = notificationsToShow.filter(n => n.status === 'pending').length;
             const countBadge = document.getElementById('totalNotificationCount');
             if (countBadge) countBadge.textContent = totalPending;
 
-            // Update badge on the header bell
             const bellBadge = document.getElementById('notificationCount');
             if (bellBadge) {
                 if (totalPending > 0) {
@@ -6512,11 +6551,24 @@
                 }
             }
 
-            console.log('🔔 Final notifications available for user:', notificationsToShow.length);
+            console.log('🔔 Final notifications for user:', notificationsToShow.length);
 
             allFilteredNotifications = notificationsToShow;
+
+            // Show "Load Older" button
+            const loadOlderContainer = document.getElementById('loadOlderContainer');
+            if (loadOlderContainer) {
+                loadOlderContainer.style.display = 'block';
+                const loadBtn = document.getElementById('loadOlderBtn');
+                if (loadBtn) {
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = '<i class="bi bi-arrow-down-circle"></i> بارکردنی کۆنتر';
+                }
+            }
+
             renderNotifications();
         }
+
 
         // Navigation helpers for folders
         function openNotificationFolder(level, value) {
@@ -7949,5 +8001,4 @@
     </script>
 </body>
 
-    
 </html>
