@@ -613,6 +613,23 @@
                         <!-- 20 parts injected here -->
                     </div>
 
+                    <div class="mold-notes-section border-top pt-4 mb-4">
+                        <h6 class="fw-bold text-secondary small text-uppercase mb-3">
+                            <i class="bi bi-journal-text me-1"></i> تێبینییەکان
+                        </h6>
+                        <div class="d-flex gap-2 mb-3">
+                            <input type="text" id="newNoteInput" class="form-control form-control-sm rounded-3 border-2"
+                                placeholder="تێبینی نوێ بنووسە..." onkeypress="if(event.key === 'Enter') addMoldNote()">
+                            <button class="btn btn-sm btn-primary rounded-3 px-3 fw-bold" onclick="addMoldNote()">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <div id="moldNotesList" class="d-flex flex-column gap-2"
+                            style="max-height: 200px; overflow-y: auto;">
+                            <!-- Notes will be injected here -->
+                        </div>
+                    </div>
+
                     <div class="specific-history-section border-top pt-4">
                         <h6 class="fw-bold text-secondary small text-uppercase mb-3">
                             <i class="bi bi-clock-history me-1"></i> مێژووی چاکسازی ئەم قاڵبە
@@ -650,6 +667,17 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const originalCollection = db.collection.bind(db);
+        db.collection = function (path) {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const line = (currentUser && currentUser.line) ? currentUser.line : 'line2';
+            if (line === 'line1') {
+                const parts = path.split('/');
+                parts[0] = parts[0] + '_line1';
+                return originalCollection(parts.join('/'));
+            }
+            return originalCollection(path);
+        };
         const moldStateDoc = db.collection('settings').doc('moldMaintenance');
 
         // --- 2. State Management ---
@@ -709,6 +737,7 @@
             maintenanceLogs: [],
             manualLink: "https://drive.google.com",
             partNames: {},
+            notes: {},
             lastUpdated: 0 // New field for sync resolution
         };
 
@@ -874,6 +903,7 @@
         if (!systemState.maintenanceLogs) systemState.maintenanceLogs = [];
         if (!systemState.manualLink) systemState.manualLink = DEFAULT_STATE.manualLink;
         if (!systemState.partNames) systemState.partNames = {};
+        if (!systemState.notes) systemState.notes = {};
 
 
         // --- 4. Auth ---
@@ -1384,6 +1414,8 @@
             const partsModal = new bootstrap.Modal(document.getElementById('partsModal'));
             partsModal.show();
             renderPartsGrid(); // Initial render
+            renderMoldNotes();
+            renderSpecificMoldHistory();
         }
 
         function renderPartsGrid() {
@@ -1431,6 +1463,95 @@
                 addDiv.innerHTML = `<div><i class="bi bi-plus-circle mb-1" style="font-size: 1.2rem;"></i><div style="font-size: 0.75rem; font-weight: 600;">زیادکردنی پارچە</div></div>`;
                 grid.appendChild(addDiv);
             }
+        }
+
+        function renderMoldNotes() {
+            const list = document.getElementById('moldNotesList');
+            list.innerHTML = '';
+            const moldNotes = systemState.notes[currentEditingMold] || [];
+
+            if (moldNotes.length === 0) {
+                list.innerHTML = '<div class="text-muted small text-center py-2">هیچ تێبینییەک نییە</div>';
+                return;
+            }
+
+            // Show newest notes first
+            [...moldNotes].reverse().forEach((note, reversedIdx) => {
+                const actualIdx = moldNotes.length - 1 - reversedIdx;
+                const d = new Date(note.timestamp);
+                const dateStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+                const deleteBtn = (currentUser.username === 'admin' || currentUser.role === 'admin' || currentUser.username === note.author)
+                    ? `<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteMoldNote(${actualIdx})"><i class="bi bi-trash"></i></button>`
+                    : '';
+
+                list.innerHTML += `
+                    <div class="bg-light rounded-3 p-2 border position-relative">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="fw-bold text-primary" style="font-size: 0.75rem;"><i class="bi bi-person-fill"></i> ${note.author}</div>
+                            <div class="text-muted d-flex align-items-center gap-2" style="font-size: 0.7rem;">
+                                <span>${dateStr}</span>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                        <div class="text-dark" style="font-size: 0.85rem; word-break: break-word;">${note.text}</div>
+                    </div>
+                `;
+            });
+        }
+
+        async function addMoldNote() {
+            const input = document.getElementById('newNoteInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!systemState.notes[currentEditingMold]) {
+                systemState.notes[currentEditingMold] = [];
+            }
+
+            systemState.notes[currentEditingMold].push({
+                text: text,
+                author: currentUser.username,
+                timestamp: new Date().toISOString()
+            });
+
+            input.value = '';
+            await saveState();
+            renderMoldNotes();
+        }
+
+        async function deleteMoldNote(idx) {
+            if (confirm("سڕینەوەی ئەم تێبینییە؟")) {
+                systemState.notes[currentEditingMold].splice(idx, 1);
+                await saveState();
+                renderMoldNotes();
+            }
+        }
+
+        function renderSpecificMoldHistory() {
+            const list = document.getElementById('specificMoldHistoryList');
+            list.innerHTML = '';
+            const logs = systemState.maintenanceLogs.filter(l => l.mold === currentEditingMold).reverse();
+
+            if (logs.length === 0) {
+                list.innerHTML = '<div class="text-muted small text-center py-2">هیچ مێژوویەک نییە</div>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const dateObj = new Date(log.timestamp);
+                const dateStr = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                const changes = log.changes && log.changes.length > 0 ? log.changes.join('، ') : 'پشکنین';
+                list.innerHTML += `
+                    <div class="border-bottom pb-2 mb-2" style="border-color: #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-secondary" style="font-size: 0.75rem;">${dateStr}</span>
+                            <span class="badge bg-white text-dark border shadow-sm" style="font-size: 0.7rem;">${log.user}</span>
+                        </div>
+                        <div class="text-dark mt-2" style="font-size: 0.8rem; line-height: 1.5;">${changes}</div>
+                    </div>
+                `;
+            });
         }
 
         async function renamePart(index) {
@@ -1516,8 +1637,8 @@
         async function saveState() {
             try {
                 systemState.lastUpdated = Date.now(); // Update timestamp
-                const stateToSave = { ...systemState };
-                localStorage.setItem('moldMaintenanceState', JSON.stringify(stateToSave));
+                const stateToSave = { ...systemState, last_updated: firebase.firestore.FieldValue.serverTimestamp() };
+                localStorage.setItem('moldMaintenanceState', JSON.stringify(systemState));
                 await moldStateDoc.set(stateToSave);
             } catch (error) {
                 console.error("Error saving state: ", error);
