@@ -456,6 +456,9 @@
         if (currentUser.role === 'supervisor' || currentUser.role === 'employee') {
           document.getElementById('departmentSelect').value = currentUser.department;
           document.getElementById('departmentSelect').disabled = true;
+
+          const addSection = document.getElementById('addRecordSection');
+          if (addSection) addSection.style.display = 'none';
         }
 
         const userInfoDisplay = document.getElementById('userInfoDisplay');
@@ -703,7 +706,9 @@
         currentFilterType = null;
         document.getElementById('detailsSection').style.display = 'none';
         document.getElementById('mainSection').style.display = 'block';
-        document.getElementById('addRecordSection').style.display = 'block';
+        if (currentUser && currentUser.role === 'admin') {
+          document.getElementById('addRecordSection').style.display = 'block';
+        }
         document.getElementById('cardsSection').style.display = 'block';
         document.getElementById('headerCategoryBadge').style.display = 'none';
       }
@@ -734,7 +739,9 @@
         if (showAmount) headRow += '<th style="width:120px;">بڕی پارە</th>';
         headRow += '<th style="width:110px;">بەروار</th>';
         headRow += '<th>تێبینی</th>';  // wide – grows
-        headRow += '<th style="width:100px;">سڕینەوە</th>';
+        if (currentUser && currentUser.role === 'admin') {
+          headRow += '<th style="width:100px;">سڕینەوە</th>';
+        }
         headRow += '</tr>';
         tableHead.innerHTML = headRow;
 
@@ -769,8 +776,10 @@
             noteCell.style.textAlign = 'right';
             noteCell.style.whiteSpace = 'pre-wrap';
             noteCell.style.maxWidth = '400px';
-            let delCell = row.insertCell(row.cells.length);
-            delCell.innerHTML = `<button class='delete-btn' style='padding:4px 10px; font-size:12px;' onclick='showDeleteConfirm("${rec.id}")'>✕</button>`;
+            if (currentUser && currentUser.role === 'admin') {
+              let delCell = row.insertCell(row.cells.length);
+              delCell.innerHTML = `<button class='delete-btn' style='padding:4px 10px; font-size:12px;' onclick='showDeleteConfirm("${rec.id}")'>✕</button>`;
+            }
           }
         });
 
