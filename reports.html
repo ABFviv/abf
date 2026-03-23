@@ -257,6 +257,17 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
+            const originalCollection = db.collection.bind(db);
+            db.collection = function (path) {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                const line = (currentUser && currentUser.line) ? currentUser.line : 'line2';
+                if (line === 'line1') {
+                    const parts = path.split('/');
+                    parts[0] = parts[0] + '_line1';
+                    return originalCollection(parts.join('/'));
+                }
+                return originalCollection(path);
+            };
 
             // --- CENTRAL EMPLOYEE CONFIGURATION ---
             // Edit these lists to change who appears in the dropdowns for each department
@@ -968,7 +979,7 @@
                         document.getElementById('historyLoading').style.display = 'none';
 
                         if (snapshot.empty) {
-                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">هیچ ڕیپۆڕتێک دروست نەکراوە لە ${fullDate}.</p>`;
+                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">هیچ ڕاپۆڕتێک دروست نەکراوە بۆ ${fullDate}.</p>`;
                             return;
                         }
 
@@ -2248,7 +2259,7 @@
                          <div class="p-3 bg-light rounded">
                             <h6 class="text-center fw-bold pb-2">پوختەی ڕۆژانە</h6>
                             <div class="row text-center">
-                             <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="p_total_hours" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
+                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="p_total_hours" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
                                 <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی خۆڵی ئامادەکراو (طەن)</div><input type="number" id="p_total_tons" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
                             </div>
                         </div>
@@ -2409,9 +2420,7 @@
                 document.querySelectorAll('tr.row-s2 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s2c++; });
                 document.querySelectorAll('tr.row-s3 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s3c++; });
 
-                const s1Input = document.getElementById('s1_carts');
-                const s2Input = document.getElementById('s2_carts');
-                const s3Input = document.getElementById('s3_carts');
+
 
                 if (s1Input && !s1Input.dataset.manual) s1Input.value = s1c;
                 if (s2Input && !s2Input.dataset.manual) s2Input.value = s2c;
@@ -2427,111 +2436,111 @@
             // --- CRUSHING (هاڕین) - UPDATED COLORFUL LAYOUT ---
             function renderCrushingTable(wrapper) {
                 const crushingEmps = REPORT_CONFIG.crushing || [];
-                let empOptions = `<option value="">Select...</option>`;
+                let empOptions = `<option value="">...</option>`;
                 crushingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
                 let percentOptions = `<option value="">%</option>`;
                 for (let i = 0; i <= 100; i += 5) percentOptions += `<option value="${i}%">${i}%</option>`;
                 const dateValue = document.getElementById('reportDate').value;
 
-                // CHANGED: Redesigned to use Shift Boxes (Cards) instead of one big table
+                // CHANGED: Redesigned to use Shift Boxes (Cards) instead of one big table, matching preparation UI
                 const html = `
                 <div class="print-full-height">
                 ${REPORT_HEADER_TEMPLATE('بەشی هاڕین', dateValue)}
 
-                <div class="row g-2 crushing-container">
+                <div class="row g-3 crushing-container">
                     <div class="col-12">
-                        <div class="shift-box bg-s1 h-100">
-                            <div class="shift-header">شیفتی یەکەم (08-16)</div>
+                        <div class="shift-box bg-s1">
+                            <div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td class="fw-bold">کارمەند</td>
-                                    <td><select id="c_s1_emp">${empOptions}</select></td>
+                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
+                                    <td colspan="3"><select id="c_s1_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td><input type="number" id="c_s1_speed" placeholder="%"></td>
+                                    <td colspan="3"><input type="number" id="c_s1_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوە (HH:MM)</td>
-                                    <td><input type="text" id="c_s1_dur" onchange="calcCrush()" placeholder="0:00"></td>
+                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
+                                    <td colspan="3"><input type="text" id="c_s1_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
-                                    <td><input type="number" id="c_s1_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td colspan="3"><input type="number" id="c_s1_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2"><textarea id="c_s1_note" rows="3" placeholder="تێبینی..."></textarea></td>
+                                    <td class="fw-bold">تێبینی</td>
+                                    <td colspan="3"><textarea id="c_s1_note" rows="5"></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="shift-box bg-s2 h-100">
-                            <div class="shift-header">شیفتی دووەم (16-24)</div>
+                        <div class="shift-box bg-s2">
+                            <div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td class="fw-bold">کارمەند</td>
-                                    <td><select id="c_s2_emp">${empOptions}</select></td>
+                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
+                                    <td colspan="3"><select id="c_s2_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td><input type="number" id="c_s2_speed" placeholder="%"></td>
+                                    <td colspan="3"><input type="number" id="c_s2_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوە (HH:MM)</td>
-                                    <td><input type="text" id="c_s2_dur" onchange="calcCrush()" placeholder="0:00"></td>
+                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
+                                    <td colspan="3"><input type="text" id="c_s2_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">بڕ (طەن)</td>
-                                    <td><input type="number" id="c_s2_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
+                                    <td colspan="3"><input type="number" id="c_s2_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2"><textarea id="c_s2_note" rows="3" placeholder="تێبینی..."></textarea></td>
+                                    <td class="fw-bold">تێبینی</td>
+                                    <td colspan="3"><textarea id="c_s2_note" rows="5"></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="shift-box bg-s3 h-100">
-                            <div class="shift-header">شیفتی سێیەم (24-08)</div>
+                        <div class="shift-box bg-s3">
+                            <div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td class="fw-bold">کارمەند</td>
-                                    <td><select id="c_s3_emp">${empOptions}</select></td>
+                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
+                                    <td colspan="3"><select id="c_s3_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td><input type="number" id="c_s3_speed" placeholder="%"></td>
+                                    <td colspan="3"><input type="number" id="c_s3_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوە (HH:MM)</td>
-                                    <td><input type="text" id="c_s3_dur" onchange="calcCrush()" placeholder="0:00"></td>
+                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
+                                    <td colspan="3"><input type="text" id="c_s3_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">بڕ (طەن)</td>
-                                    <td><input type="number" id="c_s3_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
+                                    <td colspan="3"><input type="number" id="c_s3_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2"><textarea id="c_s3_note" rows="3" placeholder="تێبینی..."></textarea></td>
+                                    <td class="fw-bold">تێبینی</td>
+                                    <td colspan="3"><textarea id="c_s3_note" rows="5"></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-3 p-2 bg-white rounded">
-                    <table class="report-table">
-                        <tr class="bg-light fw-bold">
-                            <td class="text-end" style="width:50%">کۆی گشتی کاتژمێر:</td>
-                            <td><input type="text" id="c_total_dur" readonly class="fw-bold"></td>
-                        </tr>
-                        <tr class="bg-light fw-bold">
-                            <td class="text-end">کۆی گشتی طەن:</td>
-                            <td><input type="number" id="c_total_ton" readonly class="fw-bold"></td>
-                        </tr>
-                    </table>
+                    <div class="col-12 mt-3">
+                         <div class="p-3 bg-light rounded">
+                            <h6 class="text-center fw-bold pb-2">پوختەی ڕۆژانە</h6>
+                            <div class="row text-center">
+                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="c_total_dur" class="form-control text-center fw-bold fs-5 bg-transparent border-0" readonly></div>
+                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی خۆڵی هاڕدراو (طەن)</div><input type="number" id="c_total_ton" class="form-control text-center fw-bold fs-5 bg-transparent border-0" readonly></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Modern Signature -->
@@ -2995,6 +3004,3 @@
 </body>
 
 </html>
-
-
-
