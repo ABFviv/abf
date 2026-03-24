@@ -2420,7 +2420,9 @@
                 document.querySelectorAll('tr.row-s2 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s2c++; });
                 document.querySelectorAll('tr.row-s3 input[id$="_cart"]').forEach(inp => { if (inp.value.trim() !== '') s3c++; });
 
-
+                const s1Input = document.getElementById('s1_carts');
+                const s2Input = document.getElementById('s2_carts');
+                const s3Input = document.getElementById('s3_carts');
 
                 if (s1Input && !s1Input.dataset.manual) s1Input.value = s1c;
                 if (s2Input && !s2Input.dataset.manual) s2Input.value = s2c;
