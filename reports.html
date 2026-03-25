@@ -1529,8 +1529,8 @@
                         // Left Cart Column
                         cartsCol1 += `
                         <tr id="cut_${shift.id}_c${i}_row">
-                            <td style="width:18px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${i}')">
-                                <span id="cut_${shift.id}_c${i}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-bottom:1px;"></span><br>${i}
+                            <td style="width:25px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center; white-space:nowrap; padding: 2px 0;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${i}')">
+                                <span id="cut_${shift.id}_c${i}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:3px; vertical-align:middle;"></span>${i}
                                 <input type="checkbox" id="cut_${shift.id}_c${i}_flagged" style="display:none;">
                             </td>
                             <td><input type="time" id="cut_${shift.id}_c${i}_time" class="time-input" style="font-size:0.75rem;"></td>
@@ -1557,8 +1557,8 @@
                         if (j <= totalCarts) {
                             cartsCol2 += `
                             <tr id="cut_${shift.id}_c${j}_row">
-                                <td style="width:18px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${j}')">
-                                    <span id="cut_${shift.id}_c${j}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-bottom:1px;"></span><br>${j}
+                                <td style="width:25px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center; white-space:nowrap; padding: 2px 0;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${j}')">
+                                    <span id="cut_${shift.id}_c${j}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:3px; vertical-align:middle;"></span>${j}
                                     <input type="checkbox" id="cut_${shift.id}_c${j}_flagged" style="display:none;">
                                 </td>
                                 <td><input type="time" id="cut_${shift.id}_c${j}_time" class="time-input" style="font-size:0.75rem;"></td>
