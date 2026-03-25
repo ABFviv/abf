@@ -1528,10 +1528,13 @@
                     for (let i = 1; i <= halfCarts; i++) {
                         // Left Cart Column
                         cartsCol1 += `
-                        <tr>
-                            <td style="width:15px; background:#f0f0f0; color:#555;">${i}</td>
+                        <tr id="cut_${shift.id}_c${i}_row">
+                            <td style="width:18px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${i}')">
+                                <span id="cut_${shift.id}_c${i}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-bottom:1px;"></span><br>${i}
+                                <input type="checkbox" id="cut_${shift.id}_c${i}_flagged" style="display:none;">
+                            </td>
                             <td><input type="time" id="cut_${shift.id}_c${i}_time" class="time-input" style="font-size:0.75rem;"></td>
-                            <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                            <td id="cut_${shift.id}_c${i}_notd"><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
                         // After every 8 carts, add a check row with only time (highlighted)
@@ -1553,10 +1556,13 @@
                         let j = i + halfCarts;
                         if (j <= totalCarts) {
                             cartsCol2 += `
-                             <tr>
-                                <td style="width:15px; background:#f0f0f0; color:#555;">${j}</td>
+                            <tr id="cut_${shift.id}_c${j}_row">
+                                <td style="width:18px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${j}')">
+                                    <span id="cut_${shift.id}_c${j}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-bottom:1px;"></span><br>${j}
+                                    <input type="checkbox" id="cut_${shift.id}_c${j}_flagged" style="display:none;">
+                                </td>
                                 <td><input type="time" id="cut_${shift.id}_c${j}_time" class="time-input" style="font-size:0.75rem;"></td>
-                                <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                                <td id="cut_${shift.id}_c${j}_notd"><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
                             // After every 8 carts in this column, add a check row
@@ -1726,20 +1732,20 @@
                 }, 50);
             }
 
-            // Real-time listener for any input in cutting table
-            function attachCuttingEventListeners() {
-                const wrapper = document.getElementById('tableWrapper');
-                if (!wrapper) return;
+            // Toggle red flag on a cart row manually (click on the row number cell)
+            function toggleCartFlag(baseId) {
+                const checkbox = document.getElementById(`${baseId}_flagged`);
+                if (!checkbox) return;
+                checkbox.checked = !checkbox.checked;
+                applyCartFlag(baseId, checkbox.checked);
+            }
 
-                // Add listener to all time and number inputs in cutting
-                wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
-                    input.addEventListener('input', (e) => {
-                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
-                        if (idParts.length >= 2) {
-                            updateCuttingCount(idParts[1]); // shiftId
-                        }
-                    });
-                });
+            // Apply visual red flag to a cart row based on state
+            function applyCartFlag(baseId, flagged) {
+                const noTd = document.getElementById(`${baseId}_notd`);
+                const dot  = document.getElementById(`${baseId}_dot`);
+                if (noTd) noTd.style.backgroundColor = flagged ? '#ffcccc' : '';
+                if (dot)  dot.style.background = flagged ? '#e53935' : '#ccc';
             }
 
             // Update the display for "عەرەبانەی دەرکەوتوو" and the total field
@@ -1747,32 +1753,36 @@
                 let count = 0;
                 for (let i = 1; i <= 72; i++) {
                     const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
-                    const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
+                    const noInput   = document.getElementById(`cut_${shiftId}_c${i}_no`);
                     if ((timeInput && timeInput.value) || (noInput && noInput.value)) {
                         count++;
                     }
                 }
-
                 const disp = document.getElementById(`cut_${shiftId}_count_display`);
                 if (disp) disp.innerText = count;
-
                 const totalField = document.getElementById(`cut_${shiftId}_total_filled`);
                 if (totalField) totalField.value = count;
             }
 
-            // Real-time listener for any input in cutting table
+            // Real-time listener for cutting table inputs + restore flags after data load
             function attachCuttingEventListeners() {
                 const wrapper = document.getElementById('tableWrapper');
                 if (!wrapper) return;
 
-                // Add listener to all time and number inputs in cutting
                 wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
                     input.addEventListener('input', (e) => {
-                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
-                        if (idParts.length >= 2) {
-                            updateCuttingCount(idParts[1]); // shiftId: s1, s2, or s3
-                        }
+                        const idParts = e.target.id.split('_');
+                        if (idParts.length >= 2) updateCuttingCount(idParts[1]);
                     });
+                });
+
+                // Restore flag visuals for all rows (applies saved checkbox state)
+                ['s1','s2','s3'].forEach(s => {
+                    for (let i = 1; i <= 72; i++) {
+                        const baseId  = `cut_${s}_c${i}`;
+                        const checkbox = document.getElementById(`${baseId}_flagged`);
+                        if (checkbox) applyCartFlag(baseId, checkbox.checked);
+                    }
                 });
             }
 
@@ -1842,10 +1852,16 @@
                     else if (i <= s1Count + s2Count) rowClass = 'row-s2';
                     else rowClass = 'row-s3';
 
+                    // Checkbox value needs to be tracked if preserving state
+                    const valFlagged = (preserveState && savedData[`${rid}_flagged`]) ? 'checked' : '';
+
                     rowsHtml += `
-                <tr class="${rowClass} compact-rows">
-                    <td style="width:5%">${i}</td>
-                    <td style="width:15%"><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
+                <tr class="${rowClass} compact-rows" id="${rid}_row">
+                    <td style="width:5%; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleSettingFlag('${rid}')">
+                        <span id="${rid}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:2px; margin-bottom:1px;"></span>${i}
+                        <input type="checkbox" id="${rid}_flagged" style="display:none;" ${valFlagged}>
+                    </td>
+                    <td style="width:15%" id="${rid}_notd"><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
                     <td style="width:15%"><input type="time" id="${timeId}" value="${valTime}" class="time-input" style="text-align:center;"></td>
 
                     <td><input type="number" id="${rid}_d1" value="${valD1}"></td>
@@ -2007,13 +2023,38 @@
                         }
                         calcSettingTotals();
                         attachAutoSaveListeners();
+                        restoreSettingFlags();
                     }, 0);
                 } else {
                     // Initialize totals even if no preserved state
                     setTimeout(() => {
                         calcSettingTotals();
                         attachAutoSaveListeners();
+                        restoreSettingFlags();
                     }, 0);
+                }
+            }
+
+            // Click-to-flag functions for Setting department
+            function toggleSettingFlag(baseId) {
+                const checkbox = document.getElementById(`${baseId}_flagged`);
+                if (!checkbox) return;
+                checkbox.checked = !checkbox.checked;
+                applySettingFlag(baseId, checkbox.checked);
+            }
+
+            function applySettingFlag(baseId, flagged) {
+                const noTd = document.getElementById(`${baseId}_notd`);
+                const dot  = document.getElementById(`${baseId}_dot`);
+                if (noTd) noTd.style.backgroundColor = flagged ? '#ffcccc' : '';
+                if (dot)  dot.style.background = flagged ? '#e53935' : '#ccc';
+            }
+
+            function restoreSettingFlags() {
+                for (let i = 1; i <= 33; i++) {
+                    const baseId = `set_r${i}`;
+                    const checkbox = document.getElementById(`${baseId}_flagged`);
+                    if (checkbox) applySettingFlag(baseId, checkbox.checked);
                 }
             }
 
