@@ -257,17 +257,6 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-            const originalCollection = db.collection.bind(db);
-            db.collection = function (path) {
-                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-                const line = (currentUser && currentUser.line) ? currentUser.line : 'line2';
-                if (line === 'line1') {
-                    const parts = path.split('/');
-                    parts[0] = parts[0] + '_line1';
-                    return originalCollection(parts.join('/'));
-                }
-                return originalCollection(path);
-            };
 
             // --- CENTRAL EMPLOYEE CONFIGURATION ---
             // Edit these lists to change who appears in the dropdowns for each department
@@ -979,7 +968,7 @@
                         document.getElementById('historyLoading').style.display = 'none';
 
                         if (snapshot.empty) {
-                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">هیچ ڕاپۆڕتێک دروست نەکراوە بۆ ${fullDate}.</p>`;
+                            container.innerHTML = `<p class="text-muted text-center w-100 py-5">هیچ ڕیپۆڕتێک دروست نەکراوە لە ${fullDate}.</p>`;
                             return;
                         }
 
@@ -1528,13 +1517,16 @@
                     for (let i = 1; i <= halfCarts; i++) {
                         // Left Cart Column
                         cartsCol1 += `
-                        <tr id="cut_${shift.id}_c${i}_row">
-                            <td style="width:25px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center; white-space:nowrap; padding: 2px 0;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${i}')">
-                                <span id="cut_${shift.id}_c${i}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:3px; vertical-align:middle;"></span>${i}
-                                <input type="checkbox" id="cut_${shift.id}_c${i}_flagged" style="display:none;">
+                        <tr>
+                            <td style="width:25px; background:#f0f0f0; color:#555; position:relative; cursor:pointer;" onclick="toggleRedState('cut_${shift.id}_c${i}')">
+                                <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+                                    <span id="dot_cut_${shift.id}_c${i}" style="display:inline-block; width:6px; height:6px; border-radius:50%; background-color:#ccc;"></span>
+                                    <span>${i}</span>
+                                </div>
+                                <input type="checkbox" id="chk_cut_${shift.id}_c${i}" style="display:none;" onchange="applyRedState('cut_${shift.id}_c${i}')">
                             </td>
                             <td><input type="time" id="cut_${shift.id}_c${i}_time" class="time-input" style="font-size:0.75rem;"></td>
-                            <td id="cut_${shift.id}_c${i}_notd"><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                            <td><input type="text" id="cut_${shift.id}_c${i}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                         </tr>`;
 
                         // After every 8 carts, add a check row with only time (highlighted)
@@ -1556,13 +1548,16 @@
                         let j = i + halfCarts;
                         if (j <= totalCarts) {
                             cartsCol2 += `
-                            <tr id="cut_${shift.id}_c${j}_row">
-                                <td style="width:25px; background:#f0f0f0; color:#555; cursor:pointer; user-select:none; text-align:center; white-space:nowrap; padding: 2px 0;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleCartFlag('cut_${shift.id}_c${j}')">
-                                    <span id="cut_${shift.id}_c${j}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:3px; vertical-align:middle;"></span>${j}
-                                    <input type="checkbox" id="cut_${shift.id}_c${j}_flagged" style="display:none;">
+                             <tr>
+                                <td style="width:25px; background:#f0f0f0; color:#555; position:relative; cursor:pointer;" onclick="toggleRedState('cut_${shift.id}_c${j}')">
+                                    <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+                                        <span id="dot_cut_${shift.id}_c${j}" style="display:inline-block; width:6px; height:6px; border-radius:50%; background-color:#ccc;"></span>
+                                        <span>${j}</span>
+                                    </div>
+                                    <input type="checkbox" id="chk_cut_${shift.id}_c${j}" style="display:none;" onchange="applyRedState('cut_${shift.id}_c${j}')">
                                 </td>
                                 <td><input type="time" id="cut_${shift.id}_c${j}_time" class="time-input" style="font-size:0.75rem;"></td>
-                                <td id="cut_${shift.id}_c${j}_notd"><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
+                                <td><input type="text" id="cut_${shift.id}_c${j}_no" placeholder="ژمارە" class="fw-bold text-primary"></td>
                             </tr>`;
 
                             // After every 8 carts in this column, add a check row
@@ -1635,47 +1630,59 @@
                                 </table>
 
                                 <div class="mt-2 p-1 border rounded bg-light" style="border: 1px solid #aaa !important;">
-                                    <table class="report-table" style="font-size:0.65rem">
+                                    <table class="report-table text-center" style="font-size:0.65rem">
                                         <thead class="table-secondary">
                                             <tr>
-                                                <th style="width: 30%">ژمارەی سایلۆ</th>
-                                                <th style="width: 35%">خشت/عەرەبانە</th>
-                                                <th style="width: 35%">جۆری خشت</th>
+                                                <th style="width: 33%">کاتی گواستنەوە</th>
+                                                <th style="width: 34%">ژمارەی سایلۆ</th>
+                                                <th style="width: 33%">جۆری خشت</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td><input type="number" id="cut_${shift.id}_silo"></td>
-                                                <td><input type="number" id="cut_${shift.id}_total_brick"></td>
+                                                <td><input type="time" id="cut_${shift.id}_transfer_time" class="time-input no-ampm" onchange="updateSiloFormat('${shift.id}')"></td>
+                                                <td id="silo_cell_${shift.id}" style="position:relative; vertical-align:middle; padding:0;">
+                                                    <input type="text" id="cut_${shift.id}_silo" class="text-center fw-bold text-primary form-control form-control-sm border-0" placeholder="ژمارەی سایلۆ" style="width:100%; background:transparent; transition:opacity 0.2s;" oninput="this.dataset.manual='true'">
+                                                    
+                                                    <div id="silo_dual_${shift.id}" class="d-none align-items-center justify-content-center" style="position:absolute; top:0; left:0; right:0; bottom:0; background:#f8f9fa; z-index:5;">
+                                                        <input type="text" id="cut_${shift.id}_silo_from" class="text-center fw-bold text-primary form-control form-control-sm border-0 px-1 py-0 my-0 mx-1" style="width:35%; background:transparent; box-shadow:none; outline:none;" placeholder="..." oninput="syncDualSilo('${shift.id}')">
+                                                        <span style="font-size:0.65rem; color:#555; pointer-events:none;">بۆ</span>
+                                                        <input type="text" id="cut_${shift.id}_silo_to" class="text-center fw-bold text-primary form-control form-control-sm border-0 px-1 py-0 my-0 mx-1" style="width:35%; background:transparent; box-shadow:none; outline:none;" placeholder="..." oninput="syncDualSilo('${shift.id}')">
+                                                    </div>
+                                                </td>
                                                 <td>
-                                                    <select id="cut_${shift.id}_type" style="font-size:0.65rem">
+                                                    <select id="cut_${shift.id}_type" style="font-size:0.65rem; border:none; background:transparent;">
                                                         <option value="">-</option>
                                                         <option value="بلۆکی 20" selected>بلۆکی 20</option>
                                                         <option value="بلۆکی 10">بلۆکی 10</option>
                                                         <option value="بلۆکی 15">بلۆکی 15</option>
-                                                        <option value="بلۆکی 20">بلۆکی 20</option>
                                                         <option value="بلۆکی 24">بلۆکی 24</option>
                                                         <option value="10 قواطع">10 قواطع</option>
-                                        <option value="15 قواطع">15 قواطع</option>
-                                        <option value="20 قواطع">15 قواطع</option>
-                                        <option value="24 قواطع">24 قواطع</option>
+                                                        <option value="15 قواطع">15 قواطع</option>
+                                                        <option value="20 قواطع">20 قواطع</option>
+                                                        <option value="24 قواطع">24 قواطع</option>
                                                     </select>
                                                 </td>
                                             </tr>
                                             <tr class="table-secondary">
-                                                <th>کێشی ١ (Kg)</th>
-                                                <th>کێشی ٢ (Kg)</th>
+                                                <th>خشت / عەرەبانە</th>
+                                                <th>کۆی عەرەبانە</th>
                                                 <th style="background-color: #ffebee; color: #c62828;">خشتی بەفیڕۆچوو</th>
                                             </tr>
                                             <tr>
-                                                <td><input type="number" step="0.1" id="cut_${shift.id}_w1" placeholder="کێشی ١"></td>
-                                                <td><input type="number" step="0.1" id="cut_${shift.id}_scrap" placeholder="کێشی ٢"></td>
-                                                <td><input type="number" id="cut_${shift.id}_waste_brick" style="background-color: #fffde7;" placeholder="ژمارەی خشتی بەفیڕۆچوو"></td>
+                                                <td><input type="number" id="cut_${shift.id}_total_brick" class="text-center form-control form-control-sm border-0" style="background:transparent;"></td>
+                                                <td><input type="number" id="cut_${shift.id}_total_filled" readonly class="text-center fw-bold form-control form-control-sm border-0" style="color:#1e88e5; background:transparent;"></td>
+                                                <td><input type="number" id="cut_${shift.id}_waste_brick" class="text-center form-control form-control-sm border-0" style="background-color: #fffde7;" placeholder="ژمارەی خشتی بەفیڕۆچوو"></td>
                                             </tr>
-                                            <!-- NEW TOTALS ROW -->
-                                            <tr class="table-info border-top border-dark">
-                                                <td class="fw-bold small text-end" style="font-size: 0.65rem !important;">کۆی عەرەبانە:</td>
-                                                <td colspan="2"><input type="number" id="cut_${shift.id}_total_filled" readonly class="fw-bold" style="color:#1e88e5; text-align: center; background: transparent;"></td>
+                                            <tr class="table-secondary">
+                                                <th></th>
+                                                <th>کێشی ٢ (Kg)</th>
+                                                <th>کێشی ١ (Kg)</th>
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td><input type="number" step="0.1" id="cut_${shift.id}_scrap" class="text-center form-control form-control-sm border-0" placeholder="کێشی ٢" style="background:transparent;"></td>
+                                                <td><input type="number" step="0.1" id="cut_${shift.id}_w1" class="text-center form-control form-control-sm border-0" placeholder="کێشی ١" style="background:transparent;"></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1732,20 +1739,20 @@
                 }, 50);
             }
 
-            // Toggle red flag on a cart row manually (click on the row number cell)
-            function toggleCartFlag(baseId) {
-                const checkbox = document.getElementById(`${baseId}_flagged`);
-                if (!checkbox) return;
-                checkbox.checked = !checkbox.checked;
-                applyCartFlag(baseId, checkbox.checked);
-            }
+            // Real-time listener for any input in cutting table
+            function attachCuttingEventListeners() {
+                const wrapper = document.getElementById('tableWrapper');
+                if (!wrapper) return;
 
-            // Apply visual red flag to a cart row based on state
-            function applyCartFlag(baseId, flagged) {
-                const noTd = document.getElementById(`${baseId}_notd`);
-                const dot  = document.getElementById(`${baseId}_dot`);
-                if (noTd) noTd.style.backgroundColor = flagged ? '#ffcccc' : '';
-                if (dot)  dot.style.background = flagged ? '#e53935' : '#ccc';
+                // Add listener to all time and number inputs in cutting
+                wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
+                        if (idParts.length >= 2) {
+                            updateCuttingCount(idParts[1]); // shiftId
+                        }
+                    });
+                });
             }
 
             // Update the display for "عەرەبانەی دەرکەوتوو" and the total field
@@ -1753,36 +1760,32 @@
                 let count = 0;
                 for (let i = 1; i <= 72; i++) {
                     const timeInput = document.getElementById(`cut_${shiftId}_c${i}_time`);
-                    const noInput   = document.getElementById(`cut_${shiftId}_c${i}_no`);
+                    const noInput = document.getElementById(`cut_${shiftId}_c${i}_no`);
                     if ((timeInput && timeInput.value) || (noInput && noInput.value)) {
                         count++;
                     }
                 }
+
                 const disp = document.getElementById(`cut_${shiftId}_count_display`);
                 if (disp) disp.innerText = count;
+
                 const totalField = document.getElementById(`cut_${shiftId}_total_filled`);
                 if (totalField) totalField.value = count;
             }
 
-            // Real-time listener for cutting table inputs + restore flags after data load
+            // Real-time listener for any input in cutting table
             function attachCuttingEventListeners() {
                 const wrapper = document.getElementById('tableWrapper');
                 if (!wrapper) return;
 
+                // Add listener to all time and number inputs in cutting
                 wrapper.querySelectorAll('input[id^="cut_"][id$="_time"], input[id^="cut_"][id$="_no"]').forEach(input => {
                     input.addEventListener('input', (e) => {
-                        const idParts = e.target.id.split('_');
-                        if (idParts.length >= 2) updateCuttingCount(idParts[1]);
+                        const idParts = e.target.id.split('_'); // cut_s1_c1_time or cut_s1_c1_no
+                        if (idParts.length >= 2) {
+                            updateCuttingCount(idParts[1]); // shiftId: s1, s2, or s3
+                        }
                     });
-                });
-
-                // Restore flag visuals for all rows (applies saved checkbox state)
-                ['s1','s2','s3'].forEach(s => {
-                    for (let i = 1; i <= 72; i++) {
-                        const baseId  = `cut_${s}_c${i}`;
-                        const checkbox = document.getElementById(`${baseId}_flagged`);
-                        if (checkbox) applyCartFlag(baseId, checkbox.checked);
-                    }
                 });
             }
 
@@ -1803,6 +1806,73 @@
                 }
                 // If all are visible, show a message
                 alert('هەموو تێبینیەکان بەکارهێنراون');
+            };
+
+            window.updateSiloFormat = function(shiftId) {
+                const timeInp = document.getElementById(`cut_${shiftId}_transfer_time`);
+                const mainInp = document.getElementById(`cut_${shiftId}_silo`);
+                const dualWrap = document.getElementById(`silo_dual_${shiftId}`);
+                const fromInp = document.getElementById(`cut_${shiftId}_silo_from`);
+                const toInp = document.getElementById(`cut_${shiftId}_silo_to`);
+                
+                if (timeInp && timeInp.value) {
+                    // Show dual
+                    if (mainInp) {
+                        mainInp.style.opacity = '0';
+                        mainInp.style.pointerEvents = 'none';
+                    }
+                    if (dualWrap) {
+                        dualWrap.classList.remove('d-none');
+                        dualWrap.classList.add('d-flex');
+                    }
+                    
+                    // Initial Parse
+                    if (mainInp && mainInp.value.includes('بۆ')) {
+                        const parts = mainInp.value.split('بۆ');
+                        if (fromInp) fromInp.value = parts[0].trim().replace(/\.+/g, ''); 
+                        if (toInp) toInp.value = parts[1] ? parts[1].trim().replace(/\.+/g, '') : '';
+                    } else if (mainInp && mainInp.value && !mainInp.value.includes('بۆ')) {
+                        if (fromInp) fromInp.value = mainInp.value.replace(/\.+/g, '');
+                    }
+                } else {
+                    // Revert to single
+                    if (dualWrap) {
+                        dualWrap.classList.remove('d-flex');
+                        dualWrap.classList.add('d-none');
+                    }
+                    if (mainInp) {
+                        mainInp.style.opacity = '1';
+                        mainInp.style.pointerEvents = 'auto';
+                        if (mainInp.value.includes('بۆ') || mainInp.value.includes('...')) {
+                            mainInp.value = ''; // clear if reverting and was dual
+                            if (mainInp.onchange) mainInp.onchange();
+                            else if (mainInp.oninput) mainInp.oninput();
+                            else { const ev = new Event('input'); mainInp.dispatchEvent(ev); }
+                        }
+                    }
+                }
+            };
+
+            window.syncDualSilo = function(shiftId) {
+                const fromInp = document.getElementById(`cut_${shiftId}_silo_from`);
+                const toInp = document.getElementById(`cut_${shiftId}_silo_to`);
+                const mainInp = document.getElementById(`cut_${shiftId}_silo`);
+                
+                if (!mainInp || !fromInp || !toInp) return;
+                
+                const from = fromInp.value.trim();
+                const to = toInp.value.trim();
+                
+                if (from || to) {
+                    mainInp.value = `${from} بۆ ${to}`;
+                } else {
+                    mainInp.value = "";
+                }
+                
+                // trigger auto save handlers attached to mainInp
+                if (mainInp.onchange) mainInp.onchange();
+                else if (mainInp.oninput) mainInp.oninput();
+                else { const ev = new Event('change'); mainInp.dispatchEvent(ev); }
             };
 
             // ====================================================================
@@ -1852,16 +1922,16 @@
                     else if (i <= s1Count + s2Count) rowClass = 'row-s2';
                     else rowClass = 'row-s3';
 
-                    // Checkbox value needs to be tracked if preserving state
-                    const valFlagged = (preserveState && savedData[`${rid}_flagged`]) ? 'checked' : '';
-
                     rowsHtml += `
-                <tr class="${rowClass} compact-rows" id="${rid}_row">
-                    <td style="width:5%; cursor:pointer; user-select:none; text-align:center;" title="کلیک بکە بۆ نیشانکردن" onclick="toggleSettingFlag('${rid}')">
-                        <span id="${rid}_dot" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#ccc; margin-left:2px; margin-bottom:1px;"></span>${i}
-                        <input type="checkbox" id="${rid}_flagged" style="display:none;" ${valFlagged}>
+                <tr class="${rowClass} compact-rows">
+                    <td style="width:5%; position:relative; cursor:pointer;" onclick="toggleRedState('${rid}')">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+                            <span id="dot_${rid}" style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:#ccc;"></span>
+                            <span>${i}</span>
+                        </div>
+                        <input type="checkbox" id="chk_${rid}" style="display:none;" onchange="applyRedState('${rid}')">
                     </td>
-                    <td style="width:15%" id="${rid}_notd"><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
+                    <td style="width:15%"><input type="number" id="${rid}_kilncar" value="${valKilncar}" class="fw-bold text-center" onchange="calcSettingTotals()" placeholder="-"></td>
                     <td style="width:15%"><input type="time" id="${timeId}" value="${valTime}" class="time-input" style="text-align:center;"></td>
 
                     <td><input type="number" id="${rid}_d1" value="${valD1}"></td>
@@ -2023,38 +2093,13 @@
                         }
                         calcSettingTotals();
                         attachAutoSaveListeners();
-                        restoreSettingFlags();
                     }, 0);
                 } else {
                     // Initialize totals even if no preserved state
                     setTimeout(() => {
                         calcSettingTotals();
                         attachAutoSaveListeners();
-                        restoreSettingFlags();
                     }, 0);
-                }
-            }
-
-            // Click-to-flag functions for Setting department
-            function toggleSettingFlag(baseId) {
-                const checkbox = document.getElementById(`${baseId}_flagged`);
-                if (!checkbox) return;
-                checkbox.checked = !checkbox.checked;
-                applySettingFlag(baseId, checkbox.checked);
-            }
-
-            function applySettingFlag(baseId, flagged) {
-                const noTd = document.getElementById(`${baseId}_notd`);
-                const dot  = document.getElementById(`${baseId}_dot`);
-                if (noTd) noTd.style.backgroundColor = flagged ? '#ffcccc' : '';
-                if (dot)  dot.style.background = flagged ? '#e53935' : '#ccc';
-            }
-
-            function restoreSettingFlags() {
-                for (let i = 1; i <= 33; i++) {
-                    const baseId = `set_r${i}`;
-                    const checkbox = document.getElementById(`${baseId}_flagged`);
-                    if (checkbox) applySettingFlag(baseId, checkbox.checked);
                 }
             }
 
@@ -2300,7 +2345,7 @@
                          <div class="p-3 bg-light rounded">
                             <h6 class="text-center fw-bold pb-2">پوختەی ڕۆژانە</h6>
                             <div class="row text-center">
-                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="p_total_hours" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
+                             <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="p_total_hours" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
                                 <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی خۆڵی ئامادەکراو (طەن)</div><input type="number" id="p_total_tons" class="form-control text-center fw-bold fs-5 bg-transparent border-0"></div>
                             </div>
                         </div>
@@ -2479,111 +2524,111 @@
             // --- CRUSHING (هاڕین) - UPDATED COLORFUL LAYOUT ---
             function renderCrushingTable(wrapper) {
                 const crushingEmps = REPORT_CONFIG.crushing || [];
-                let empOptions = `<option value="">...</option>`;
+                let empOptions = `<option value="">Select...</option>`;
                 crushingEmps.forEach(name => empOptions += `<option value="${name}">${name}</option>`);
                 let percentOptions = `<option value="">%</option>`;
                 for (let i = 0; i <= 100; i += 5) percentOptions += `<option value="${i}%">${i}%</option>`;
                 const dateValue = document.getElementById('reportDate').value;
 
-                // CHANGED: Redesigned to use Shift Boxes (Cards) instead of one big table, matching preparation UI
+                // CHANGED: Redesigned to use Shift Boxes (Cards) instead of one big table
                 const html = `
                 <div class="print-full-height">
                 ${REPORT_HEADER_TEMPLATE('بەشی هاڕین', dateValue)}
 
-                <div class="row g-3 crushing-container">
+                <div class="row g-2 crushing-container">
                     <div class="col-12">
-                        <div class="shift-box bg-s1">
-                            <div class="shift-header">شیفتی یەکەم (08:00 - 16:00)</div>
+                        <div class="shift-box bg-s1 h-100">
+                            <div class="shift-header">شیفتی یەکەم (08-16)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
-                                    <td colspan="3"><select id="c_s1_emp">${empOptions}</select></td>
+                                    <td class="fw-bold">کارمەند</td>
+                                    <td><select id="c_s1_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td colspan="3"><input type="number" id="c_s1_speed" placeholder="%"></td>
+                                    <td><input type="number" id="c_s1_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
-                                    <td colspan="3"><input type="text" id="c_s1_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
+                                    <td class="fw-bold">ماوە (HH:MM)</td>
+                                    <td><input type="text" id="c_s1_dur" onchange="calcCrush()" placeholder="0:00"></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
-                                    <td colspan="3"><input type="number" id="c_s1_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td><input type="number" id="c_s1_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">تێبینی</td>
-                                    <td colspan="3"><textarea id="c_s1_note" rows="5"></textarea></td>
+                                    <td colspan="2"><textarea id="c_s1_note" rows="3" placeholder="تێبینی..."></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="shift-box bg-s2">
-                            <div class="shift-header">شیفتی دووەم (16:00 - 00:00)</div>
+                        <div class="shift-box bg-s2 h-100">
+                            <div class="shift-header">شیفتی دووەم (16-24)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
-                                    <td colspan="3"><select id="c_s2_emp">${empOptions}</select></td>
+                                    <td class="fw-bold">کارمەند</td>
+                                    <td><select id="c_s2_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td colspan="3"><input type="number" id="c_s2_speed" placeholder="%"></td>
+                                    <td><input type="number" id="c_s2_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
-                                    <td colspan="3"><input type="text" id="c_s2_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
+                                    <td class="fw-bold">ماوە (HH:MM)</td>
+                                    <td><input type="text" id="c_s2_dur" onchange="calcCrush()" placeholder="0:00"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
-                                    <td colspan="3"><input type="number" id="c_s2_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td class="fw-bold">بڕ (طەن)</td>
+                                    <td><input type="number" id="c_s2_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">تێبینی</td>
-                                    <td colspan="3"><textarea id="c_s2_note" rows="5"></textarea></td>
+                                    <td colspan="2"><textarea id="c_s2_note" rows="3" placeholder="تێبینی..."></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="shift-box bg-s3">
-                            <div class="shift-header">شیفتی سێیەم (00:00 - 08:00)</div>
+                        <div class="shift-box bg-s3 h-100">
+                            <div class="shift-header">شیفتی سێیەم (24-08)</div>
                             <table class="report-table expanded-rows" style="border:none;">
                                 <tr>
-                                    <td style="width:15%" class="fw-bold">ناوى کارمەند</td>
-                                    <td colspan="3"><select id="c_s3_emp">${empOptions}</select></td>
+                                    <td class="fw-bold">کارمەند</td>
+                                    <td><select id="c_s3_emp">${empOptions}</select></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">خێرایی بۆکسفیدەر</td>
-                                    <td colspan="3"><input type="number" id="c_s3_speed" placeholder="%"></td>
+                                    <td><input type="number" id="c_s3_speed" placeholder="%"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">ماوەی کارکردن (کاتژمێر)</td>
-                                    <td colspan="3"><input type="text" id="c_s3_dur" onchange="calcCrush()" style="font-weight:bold;"></td>
+                                    <td class="fw-bold">ماوە (HH:MM)</td>
+                                    <td><input type="text" id="c_s3_dur" onchange="calcCrush()" placeholder="0:00"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">بڕی خۆڵی هاڕدراو (طەن)</td>
-                                    <td colspan="3"><input type="number" id="c_s3_ton" onchange="calcCrush()" placeholder="0"></td>
+                                    <td class="fw-bold">بڕ (طەن)</td>
+                                    <td><input type="number" id="c_s3_ton" onchange="calcCrush()" placeholder="0"></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">تێبینی</td>
-                                    <td colspan="3"><textarea id="c_s3_note" rows="5"></textarea></td>
+                                    <td colspan="2"><textarea id="c_s3_note" rows="3" placeholder="تێبینی..."></textarea></td>
                                 </tr>
                             </table>
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-12 mt-3">
-                         <div class="p-3 bg-light rounded">
-                            <h6 class="text-center fw-bold pb-2">پوختەی ڕۆژانە</h6>
-                            <div class="row text-center">
-                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی کاتژمێری کارکردن</div><input type="text" id="c_total_dur" class="form-control text-center fw-bold fs-5 bg-transparent border-0" readonly></div>
-                                <div class="col-6"><div class="text-muted small fw-bold">کۆی گشتی خۆڵی هاڕدراو (طەن)</div><input type="number" id="c_total_ton" class="form-control text-center fw-bold fs-5 bg-transparent border-0" readonly></div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="mt-3 p-2 bg-white rounded">
+                    <table class="report-table">
+                        <tr class="bg-light fw-bold">
+                            <td class="text-end" style="width:50%">کۆی گشتی کاتژمێر:</td>
+                            <td><input type="text" id="c_total_dur" readonly class="fw-bold"></td>
+                        </tr>
+                        <tr class="bg-light fw-bold">
+                            <td class="text-end">کۆی گشتی طەن:</td>
+                            <td><input type="number" id="c_total_ton" readonly class="fw-bold"></td>
+                        </tr>
+                    </table>
                 </div>
                 
                 <!-- Modern Signature -->
@@ -3038,6 +3083,39 @@
                     // For now, let's just let it save whatever (robustness > strictness) because user complained about deleting data.
                 }
             });
+
+            function toggleRedState(baseId) {
+                const chk = document.getElementById('chk_' + baseId);
+                if (!chk) return;
+                chk.checked = !chk.checked;
+                // Dispatch event to trigger the visual update AND auto-save listeners
+                chk.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function applyRedState(baseId) {
+                const chk = document.getElementById('chk_' + baseId);
+                const dot = document.getElementById('dot_' + baseId);
+                // The input to turn red could be either _no (Cutting) or _kilncar (Setting)
+                let input = document.getElementById(baseId + '_no') || document.getElementById(baseId + '_kilncar'); 
+                if (!chk || !dot || !input) return;
+                
+                const td = input.parentElement;
+                
+                if (chk.checked) {
+                    dot.style.backgroundColor = '#dc3545'; // red
+                    input.style.color = '#fff';
+                    input.style.fontWeight = 'bold';
+                    input.style.backgroundColor = 'transparent';
+                    input.classList.remove('text-primary');
+                    if (td) td.style.backgroundColor = '#dc3545';
+                } else {
+                    dot.style.backgroundColor = '#ccc';
+                    input.style.color = '';
+                    input.style.backgroundColor = '';
+                    input.classList.add('text-primary');
+                    if (td) td.style.backgroundColor = '';
+                }
+            }
         </script>
 
         <div class="global-footer no-print">
@@ -3047,3 +3125,6 @@
 </body>
 
 </html>
+
+
+
