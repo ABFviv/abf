@@ -246,20 +246,17 @@
                 <div class="action-group">
                     <div class="action-group-title"><i class="bi bi-clipboard-check me-1"></i> تۆماری ڕۆژانە</div>
                     <div class="action-btn-container">
-                        <button class="modern-action-btn btn-work quick-record-only" id="quickRecordBtn"
-                            style="display: none;">
+                        <button class="modern-action-btn btn-work quick-record-only" id="quickRecordBtn">
                             <i class="bi bi-lightning-charge-fill"></i> تۆماری خێرا
                         </button>
                         <button class="modern-action-btn btn-special electrical-mechanical-only"
-                            id="specialDailyWorkBtn" style="display: none;">
+                            id="specialDailyWorkBtn">
                             <i class="bi bi-tools"></i> کاری تایبەت
                         </button>
-                        <button class="modern-action-btn btn-work cleaning-work-only" id="cleaningWorkBtn"
-                            style="display: none;">
+                        <button class="modern-action-btn btn-work cleaning-work-only" id="cleaningWorkBtn">
                             <i class="bi bi-stars"></i> پاککردنەوە
                         </button>
-                        <button class="modern-action-btn btn-special greasing-work-only" id="greasingWorkBtn"
-                            style="display: none;">
+                        <button class="modern-action-btn btn-special greasing-work-only" id="greasingWorkBtn">
                             <i class="bi bi-gear-wide-connected"></i> گریسین
                         </button>
                     </div>
@@ -1511,7 +1508,8 @@
             unemp: { password: 'un1717', role: 'employee', department: 'unsetting', displayName: 'Unsetting Employee' },
             cutemp: { password: 'cut7788', role: 'employee', department: 'cutting-setting', displayName: 'Cutting Employee' },
             electrical: { password: 'elec2244', role: 'employee', department: 'electrical-ac', displayName: 'Electrical Employee' },
-            kilnemp: { password: 'kiln8899', role: 'employee', department: 'klin', displayName: 'Kiln Employee' }
+            kilnemp: { password: 'kiln8899', role: 'employee', department: 'klin', displayName: 'Kiln Employee' },
+            hr: { password: 'hr2024', role: 'hr', department: 'all', displayName: 'HR' }
         };
 
         const USER_PERMISSIONS = {
@@ -1620,9 +1618,24 @@
 
             if (currentUser) {
                 const storedUserInfo = users[currentUser.username];
-                if (!currentUser.displayName) {
-                    currentUser.displayName = storedUserInfo && storedUserInfo.displayName ? storedUserInfo.displayName : currentUser.username;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                if (storedUserInfo) {
+                    // Sync missing or outdated fields from local users object
+                    let needsUpdate = false;
+                    if (!currentUser.displayName && storedUserInfo.displayName) {
+                        currentUser.displayName = storedUserInfo.displayName;
+                        needsUpdate = true;
+                    }
+                    if (!currentUser.department && storedUserInfo.department) {
+                        currentUser.department = storedUserInfo.department;
+                        needsUpdate = true;
+                    }
+                    if (!currentUser.role && storedUserInfo.role) {
+                        currentUser.role = storedUserInfo.role;
+                        needsUpdate = true;
+                    }
+                    if (needsUpdate) {
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
                 }
                 
                 // Immediately update header to avoid showing "..."
@@ -2309,64 +2322,63 @@
             // Update user info
             document.getElementById('userInfo').querySelector('span').innerText = currentUser.displayName || currentUser.username;
 
-            // Show/hide admin-only elements
-            const adminElements = document.querySelectorAll('.admin-only');
-            adminElements.forEach(element => {
-                element.style.display = currentUser.role === 'admin' ? 'inline-block' : 'none';
+            // --- ACTION BUTTON VISIBILITY ---
+            const isAdmin = currentUser.role === 'admin';
+            const isManager = currentUser.role === 'manager';
+            const isSupervisor = currentUser.role === 'supervisor';
+
+            // 1. Quick Record Only
+            const canSeeQuickRecord = isAdmin || ['himat', 'hemn', 'samdar', 'kiln'].includes(currentUser.username);
+            
+            document.querySelectorAll('.quick-record-only').forEach(el => {
+                el.style.display = canSeeQuickRecord ? '' : 'none';
             });
 
-            // Show/hide admin and supervisor elements
-            const adminAndSupervisorElements = document.querySelectorAll('.admin-and-supervisor-only');
-            adminAndSupervisorElements.forEach(element => {
-                element.style.display = (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
+            // 2. Cleaning Work Only
+            // Everyone sees cleaning
+            const canSeeCleaningWork = true;
+
+            document.querySelectorAll('.cleaning-work-only').forEach(el => {
+                el.style.display = canSeeCleaningWork ? '' : 'none';
             });
 
-            // Show electrical/mechanical only elements
-            const electricalMechanicalElements = document.querySelectorAll('.electrical-mechanical-only');
-            electricalMechanicalElements.forEach(element => {
-                element.style.display = ((currentUser.department === 'electrical-ac' || currentUser.department === 'mechanical') && currentUser.username !== 'mechanic') ? 'inline-block' : 'none';
+            // 3. Greasing Work Only
+            const canSeeGreasingWork = isAdmin || currentUser.username === 'shalaw';
+
+            document.querySelectorAll('.greasing-work-only').forEach(el => {
+                el.style.display = canSeeGreasingWork ? '' : 'none';
             });
 
+            // 4. Electrical/Mechanical/Special Only
+            const canSeeSpecialWork = isAdmin || ['shalaw', 'sarezh'].includes(currentUser.username);
 
-            // Show quick record button for specific departments - ADD 'klin' to the list
-            const quickRecordElements = document.querySelectorAll('.quick-record-only');
-            const showQuickRecord = ['crushing-prep', 'cutting-setting', 'unsetting', 'klin'].includes(currentUser.department) && currentUser.username !== 'cutemp' && currentUser.username !== 'mechanic';
-            quickRecordElements.forEach(element => {
-                element.style.display = showQuickRecord ? 'inline-block' : 'none';
+            document.querySelectorAll('.electrical-mechanical-only').forEach(el => {
+                el.style.display = canSeeSpecialWork ? '' : 'none';
             });
 
-            // Show notifications button for supervisors and admin only (not manager)
-            document.getElementById('notificationsBtn').style.display =
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor') ? 'inline-block' : 'none';
-
-            // Show department filter for admin and manager
-            const totalsDepartmentFilter = document.getElementById('totalsDepartmentFilter');
-            totalsDepartmentFilter.style.display = (currentUser.role === 'admin' || currentUser.role === 'manager') ? 'block' : 'none';
-
-            // Show export and print for admin, supervisor, and manager
-            document.getElementById('exportBtn').style.display =
-                (currentUser.role === 'admin' || currentUser.role === 'manager') ? 'inline-block' : 'none';
-
-            document.getElementById('printBtn').style.display =
-                (currentUser.role === 'admin' || currentUser.role === 'supervisor' || currentUser.role === 'manager') ? 'inline-block' : 'none';
-
-            // Inside showDashboard() ...
-
-            // Show Cleaning Work button ONLY for Cutting and Unsetting (and Admin)
-            const cleaningWorkElements = document.querySelectorAll('.cleaning-work-only');
-            const showCleaningWork = (['cutting-setting', 'unsetting'].includes(currentUser.department) || currentUser.role === 'admin') && currentUser.username !== 'cutemp';
-            cleaningWorkElements.forEach(element => {
-                element.style.display = showCleaningWork ? 'inline-block' : 'none';
+            // 5. Admin Only
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
             });
 
-            // Inside showDashboard() ...
-
-            // Show Greasing Work button ONLY for Mechanical (and Admin)
-            const greasingWorkElements = document.querySelectorAll('.greasing-work-only');
-            const showGreasingWork = (currentUser.department === 'mechanical' && currentUser.username !== 'mechanic') || currentUser.role === 'admin';
-            greasingWorkElements.forEach(element => {
-                element.style.display = showGreasingWork ? 'inline-block' : 'none';
+            // 6. Admin and Supervisor Only
+            document.querySelectorAll('.admin-and-supervisor-only').forEach(el => {
+                el.style.display = (isAdmin || isSupervisor) ? '' : 'none';
             });
+
+            // 7. General Buttons by ID
+            if (document.getElementById('notificationsBtn')) {
+                document.getElementById('notificationsBtn').style.display = (isAdmin || isSupervisor) ? '' : 'none';
+            }
+            if (document.getElementById('totalsDepartmentFilter')) {
+                document.getElementById('totalsDepartmentFilter').style.display = (isAdmin || isManager) ? '' : 'none';
+            }
+            if (document.getElementById('exportBtn')) {
+                document.getElementById('exportBtn').style.display = (isAdmin || isManager) ? '' : 'none';
+            }
+            if (document.getElementById('printBtn')) {
+                document.getElementById('printBtn').style.display = (isAdmin || isSupervisor || isManager) ? '' : 'none';
+            }
 
             // Show Electrical Rating Info (Exclude Admin as requested, only for Sarezh/Electrical)
             const electricalInfo = document.getElementById('electricalRatingInfo');
@@ -7921,8 +7933,11 @@
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) return;
 
+            // Admin and Manager should NEVER be restricted
+            if (currentUser.role === 'admin' || currentUser.role === 'manager') return;
+
             // Check if user is a restricted employee account
-            const restrictedAccounts = ['electrical', 'cutemp', 'unemp', 'kilnemp'];
+            const restrictedAccounts = ['electrical', 'cutemp', 'unemp', 'kilnemp', 'kiln'];
             const isRestricted = restrictedAccounts.includes(currentUser.username) || currentUser.role === 'employee';
 
             if (isRestricted) {
@@ -7958,7 +7973,9 @@
                 ];
 
                 buttonsToHide.forEach(btn => {
-                    if (btn) btn.style.display = 'none';
+                    if (btn && btn.id !== 'cleaningWorkBtn') {
+                        btn.style.display = 'none';
+                    }
                 });
 
                 // Disable all form inputs in modals
