@@ -1408,7 +1408,8 @@
                             <div class="form-text text-center">دەتوانیت زیاتر لە یەک بەش هەڵبژێریت</div>
                         </div>
 
-                        <!-- Global greasing rating slider removed. Per-employee inputs are generated dynamically. -->                        <div class="mb-3">
+                        <!-- Global greasing rating slider removed. Per-employee inputs are generated dynamically. -->
+                        <div class="mb-3">
                             <label for="greasingWorkNote" class="form-label text-center w-100">تێبینی</label>
                             <textarea class="form-control text-center" id="greasingWorkNote" rows="3"></textarea>
                         </div>
@@ -1622,6 +1623,15 @@
                 if (!currentUser.displayName) {
                     currentUser.displayName = storedUserInfo && storedUserInfo.displayName ? storedUserInfo.displayName : currentUser.username;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                // Immediately update header to avoid showing "..."
+                const userInfoEl = document.getElementById('userInfo');
+                if (userInfoEl) {
+                    const spanEl = userInfoEl.querySelector('span');
+                    if (spanEl) {
+                        spanEl.innerText = currentUser.displayName || currentUser.username;
+                    }
                 }
             }
 
@@ -3276,7 +3286,7 @@
 
             if (periodFilter.type !== 'all') {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border spinner-border-sm text-primary me-2"></div>بارکردن...</td></tr>';
-                
+
                 const promises = employeesToShow.map(async (employee) => {
                     const tempDynamic = {
                         dailyRating: 0,
@@ -3284,17 +3294,17 @@
                         dailyWorkCount: 0,
                         otherWorkCount: 0
                     };
-                    
+
                     try {
                         const q = db.collection('employees').doc(employee.id).collection('workRecords')
                             .where('date', '>=', periodFilter.startDate)
                             .where('date', '<=', periodFilter.endDate);
-                            
+
                         const snapshot = await q.get();
-                        
+
                         let dailyWork = [];
                         let otherWork = [];
-                        
+
                         snapshot.forEach(doc => {
                             const record = doc.data();
                             if (record.type === 'daily') {
@@ -3309,26 +3319,26 @@
                                 }
                             }
                         });
-                        
+
                         tempDynamic.dailyWorkCount = dailyWork.length;
                         tempDynamic.otherWorkCount = otherWork.length;
-                        
+
                         let dailyTotal = 0;
                         dailyWork.forEach(w => dailyTotal += parseFloat(w.rate || 0));
                         tempDynamic.dailyRating = dailyWork.length > 0 ? Math.round((dailyTotal / dailyWork.length) * 10) / 10 : 0;
-                        
+
                         let otherTotal = 0;
                         otherWork.forEach(w => otherTotal += parseFloat(w.rate || 0));
                         tempDynamic.otherRating = otherWork.length > 0 ? Math.round((otherTotal / otherWork.length) * 10) / 10 : 0;
-                        
+
                     } catch (err) {
                         console.error("Error fetching dynamic records for", employee.id, err);
                     }
-                    
+
                     employee.tempDynamic = tempDynamic;
                     return employee;
                 });
-                
+
                 await Promise.all(promises);
                 tbody.innerHTML = '';
             } else {
@@ -3362,20 +3372,20 @@
                 // ✅ USE CACHED RATINGS OR DYNAMIC DEPENDING ON FILTER
                 let rawDailyRating = employee.tempDynamic ? employee.tempDynamic.dailyRating : parseFloat(employee.dailyRating || 0);
                 let rawOtherRating = employee.tempDynamic ? employee.tempDynamic.otherRating : parseFloat(employee.otherRating || 0);
-                
+
                 let dailyRating = Math.round(rawDailyRating * 10) / 10;
                 let otherRating = Math.round(rawOtherRating * 10) / 10;
-                
+
                 const dailyWorkCount = employee.tempDynamic ? employee.tempDynamic.dailyWorkCount : parseInt(employee.dailyWorkCount || 0);
                 const otherWorkCount = employee.tempDynamic ? employee.tempDynamic.otherWorkCount : parseInt(employee.otherWorkCount || 0);
 
                 // Get rating class for styling of the base average
                 const dailyRatingClass = getRatingClass(dailyRating);
                 const otherRatingClass = getRatingClass(otherRating);
-                
+
                 // Construct Daily Rating Display visually separating the +0.20 bonus if applicable
                 let dailyRatingDisplay = `<span class="employee-rating-value ${dailyRatingClass}">${dailyRating}</span>`;
-                
+
                 if ((employee.department === 'electrical-ac' || employee.department === 'mechanical') && dailyWorkCount > 0) {
                     const bonus = dailyWorkCount * 0.20;
                     dailyRatingDisplay = `<div class="d-flex flex-column align-items-center justify-content-center" style="line-height:1.2;">
@@ -7733,7 +7743,7 @@
                 mechEmployees.forEach(employee => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'grease-emp-wrapper mb-2 border rounded p-2';
-                    
+
                     const div = document.createElement('div');
                     div.className = 'employee-checkbox-label w-100 mb-0';
                     div.innerHTML = `
@@ -7827,7 +7837,7 @@
 
             // Create a string from selected departments, e.g., "فڕن، داگرتن"
             const locationString = selectedDepartments.join('، ');
-            
+
             // Set button to loading state
             const saveBtn = document.getElementById('saveGreasingWorkBtn');
             const originalBtnText = saveBtn.innerHTML;
@@ -7868,7 +7878,7 @@
                     // Subcollection Save
                     workRecord.type = 'daily';
                     workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
-                    
+
                     const savePromise = db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord)
                         .then(async () => {
                             // Optionally update single cache since rating is provided
@@ -7883,10 +7893,10 @@
                                 }, 'add');
                             }
                         });
-                        
+
                     updatePromises.push(savePromise);
                 }
-                
+
                 await Promise.all(updatePromises);
 
                 showNotification(`کاری گریسین بۆ ${selectedEmployees.length} کارمەند لە ${selectedDepartments.length} شوێن تۆمارکرا`, 'success');
