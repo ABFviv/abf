@@ -23,30 +23,7 @@
         <img src="logo.png" alt="ASOBRICK" class="splash-logo">
     </div>
 
-    <!-- Login Page -->
-    <div class="login-container" id="loginPage">
-        <div class="login-card">
-            <div class="text-center mb-4">
-                <img src="https://z-cdn-media.chatglm.cn/files/588e3070-4da2-4621-a23a-c3797a169aba_Aso-Brick-Factory.jpg?auth_key=1863555089-bc9d1e326da44c9cb276be8d7a836996-0-f6131313ba165c0b30ea85ee637714fe"
-                    alt="ASOBRICK FACTORY" class="login-logo">
-                <h3 class="red-accent">سیستەمی بەڕێوبردنی کارمەند</h3>
-                <p class="text-muted">تکایە بچۆ ژوورەوە بۆ بەردەوامبوون</p>
-            </div>
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label for="username" class="form-label">ناوی بەکارهێنەر</label>
-                    <input type="text" class="form-control" id="username" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">وشەی تێپەڕ</label>
-                    <input type="password" class="form-control" id="password" required>
-                </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">چوونە ژوورەوە</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardPage">
@@ -65,7 +42,7 @@
             <div class="d-flex align-items-center gap-2">
                 <div class="user-badge" id="userInfo">
                     <i class="bi bi-person-circle fs-5"></i>
-                    <span>User</span>
+                    <span>...</span>
                 </div>
 
                 <button class="btn btn-header position-relative" id="notificationsBtn" onclick="showNotificationsPage()"
@@ -78,7 +55,7 @@
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
 
-                <button class="btn btn-secondary" disabled title="لە ژێر کارکردنەوە - دوای بڵێیز پلان"
+                <button class="btn btn-secondary" disabled title="لە ژێر کارکردندایە -"
                     style="display: none !important;">
                     <i class="bi bi-bar-chart-line"></i>
                     <span class="d-none d-md-inline ms-1" style="font-size: 0.75rem;">بارکردنی ئامارەکان</span>
@@ -1431,30 +1408,7 @@
                             <div class="form-text text-center">دەتوانیت زیاتر لە یەک بەش هەڵبژێریت</div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="greasingWorkRating" class="form-label text-center w-100">هەڵسەنگاندن (-100 بۆ
-                                100)</label>
-                            <div class="rating-control">
-                                <div class="rating-slider-container">
-                                    <div class="rating-arrows">
-                                        <button type="button" class="rating-arrow-btn"
-                                            onclick="adjustRating('greasingWorkRating', 1)">
-                                            <i class="bi bi-arrow-up"></i>
-                                        </button>
-                                        <button type="button" class="rating-arrow-btn"
-                                            onclick="adjustRating('greasingWorkRating', -1)">
-                                            <i class="bi bi-arrow-down"></i>
-                                        </button>
-                                    </div>
-                                    <input type="range" class="form-range" id="greasingWorkRating" min="-100" max="100"
-                                        value="0" required>
-                                    <span id="greasingWorkRatingValue"
-                                        class="employee-rating-value text-center">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
+                        <!-- Global greasing rating slider removed. Per-employee inputs are generated dynamically. -->                        <div class="mb-3">
                             <label for="greasingWorkNote" class="form-label text-center w-100">تێبینی</label>
                             <textarea class="form-control text-center" id="greasingWorkNote" rows="3"></textarea>
                         </div>
@@ -1552,7 +1506,11 @@
             kiln: { password: 'kiln2626', role: 'supervisor', department: 'klin', displayName: 'Kiln Supervisor' },
             sarezh: { password: 'sarezh1919', role: 'supervisor', department: 'electrical-ac', displayName: 'Sarezh' },
             shalaw: { password: 'shalaw0198', role: 'supervisor', department: 'mechanical', displayName: 'Shalaw' },
-            mechanic: { password: 'mech20', role: 'supervisor', department: 'mechanical', displayName: 'Mechanic View' }
+            mechanic: { password: 'mech20', role: 'supervisor', department: 'mechanical', displayName: 'Mechanic View' },
+            unemp: { password: 'un1717', role: 'employee', department: 'unsetting', displayName: 'Unsetting Employee' },
+            cutemp: { password: 'cut7788', role: 'employee', department: 'cutting-setting', displayName: 'Cutting Employee' },
+            electrical: { password: 'elec2244', role: 'employee', department: 'electrical-ac', displayName: 'Electrical Employee' },
+            kilnemp: { password: 'kiln8899', role: 'employee', department: 'klin', displayName: 'Kiln Employee' }
         };
 
         const USER_PERMISSIONS = {
@@ -1917,8 +1875,7 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Login form
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
 
             // Logout button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -2311,42 +2268,11 @@
             }
         }
 
-        // Handle login
-        function handleLogin(e) {
-            e.preventDefault();
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (users[username] && users[username].password === password) {
-                const userInfo = users[username];
-                currentUser = {
-                    username: username,
-                    role: userInfo.role,
-                    department: userInfo.department,
-                    displayName: userInfo.displayName || username
-                };
-
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showDashboard();
-                showNotification('چوونەژوورەوە سەرکەوتوو بوو', 'success');
-            } else {
-                showNotification('ناوی بەکارهێنەر یاخوود وشەی تێپەڕ هەڵەیە', 'danger');
-            }
-        }
-
         // Handle logout
         function handleLogout() {
             currentUser = null;
             localStorage.removeItem('currentUser');
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('dashboardPage').style.display = 'none';
-            document.getElementById('workRecordsPage').style.display = 'none';
-            document.getElementById('projectsPage').style.display = 'none';
-            document.getElementById('notificationsPage').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            showNotification('چوونەوە دەرەوە سەرکەوتوو بوو', 'success');
+            window.location.href = 'index.html';
         }
 
         // Refresh data - Clear cache and reload from Firebase
@@ -2363,7 +2289,6 @@
 
         // Show dashboard
         async function showDashboard() {
-            document.getElementById('loginPage').style.display = 'none';
             document.getElementById('dashboardPage').style.display = 'block';
             document.getElementById('workRecordsPage').style.display = 'none';
             document.getElementById('projectsPage').style.display = 'none';
@@ -2372,7 +2297,7 @@
             document.getElementById('totalsPage').style.display = 'none'
 
             // Update user info
-            document.getElementById('userInfo').querySelector('span').innerText = currentUser.username;
+            document.getElementById('userInfo').querySelector('span').innerText = currentUser.displayName || currentUser.username;
 
             // Show/hide admin-only elements
             const adminElements = document.querySelectorAll('.admin-only');
@@ -3435,23 +3360,29 @@
                 const row = document.createElement('tr');
 
                 // ✅ USE CACHED RATINGS OR DYNAMIC DEPENDING ON FILTER
-                let dailyRating = employee.tempDynamic ? employee.tempDynamic.dailyRating : parseFloat(employee.dailyRating || 0);
-                const otherRating = employee.tempDynamic ? employee.tempDynamic.otherRating : employee.otherRating || 0;
+                let rawDailyRating = employee.tempDynamic ? employee.tempDynamic.dailyRating : parseFloat(employee.dailyRating || 0);
+                let rawOtherRating = employee.tempDynamic ? employee.tempDynamic.otherRating : parseFloat(employee.otherRating || 0);
+                
+                let dailyRating = Math.round(rawDailyRating * 10) / 10;
+                let otherRating = Math.round(rawOtherRating * 10) / 10;
+                
                 const dailyWorkCount = employee.tempDynamic ? employee.tempDynamic.dailyWorkCount : parseInt(employee.dailyWorkCount || 0);
-                const otherWorkCount = employee.tempDynamic ? employee.tempDynamic.otherWorkCount : employee.otherWorkCount || 0;
+                const otherWorkCount = employee.tempDynamic ? employee.tempDynamic.otherWorkCount : parseInt(employee.otherWorkCount || 0);
 
-                // SPECIAL RATING LOGIC FOR ELECTRICAL DEPARTMENT
-                // Formula: Average Rating + (Total Count * 0.20)
-                // Example: 50 (avg) + (100 (count) * 0.20) = 70
-                if (employee.department === 'electrical-ac') {
-                    dailyRating = dailyRating + (dailyWorkCount * 0.20);
-                    // Round to 1 decimal place
-                    dailyRating = Math.round(dailyRating * 10) / 10;
-                }
-
-                // Get rating class for styling
+                // Get rating class for styling of the base average
                 const dailyRatingClass = getRatingClass(dailyRating);
                 const otherRatingClass = getRatingClass(otherRating);
+                
+                // Construct Daily Rating Display visually separating the +0.20 bonus if applicable
+                let dailyRatingDisplay = `<span class="employee-rating-value ${dailyRatingClass}">${dailyRating}</span>`;
+                
+                if ((employee.department === 'electrical-ac' || employee.department === 'mechanical') && dailyWorkCount > 0) {
+                    const bonus = dailyWorkCount * 0.20;
+                    dailyRatingDisplay = `<div class="d-flex flex-column align-items-center justify-content-center" style="line-height:1.2;">
+                        <span class="employee-rating-value ${dailyRatingClass}">${dailyRating}</span>
+                        <span class="text-success small fw-bold mt-1" style="font-size:0.75rem;">(+${bonus.toFixed(1)})</span>
+                    </div>`;
+                }
 
                 // Format daily and other work for display
                 let dailyWorkDisplay, otherWorkDisplay;
@@ -3488,7 +3419,7 @@
             <td>${employee.name}</td>
             <td><span class="position-badge">${employee.position}</span></td>
             <td>${departmentDisplay}</td>
-            <td class="text-center"><span class="employee-rating-value ${dailyRatingClass}">${dailyRating}</span></td>
+            <td class="text-center">${dailyRatingDisplay}</td>
             <td class="text-center"><span class="employee-rating-value ${otherRatingClass}">${otherRating}</span></td>
             <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">${dailyWorkDisplay}</span></td>
             <td class="text-center"><span class="text-muted" style="font-size: 0.85rem;">${otherWorkDisplay}</span></td>
@@ -3597,11 +3528,11 @@
                         valueA = a.tempDynamic ? a.tempDynamic.dailyRating : parseFloat(a.dailyRating || 0);
                         valueB = b.tempDynamic ? b.tempDynamic.dailyRating : parseFloat(b.dailyRating || 0);
 
-                        // SPECIAL SORT LOGIC FOR ELECTRICAL
-                        if (a.department === 'electrical-ac') {
+                        // SPECIAL SORT LOGIC FOR ELECTRICAL & MECHANICAL
+                        if (a.department === 'electrical-ac' || a.department === 'mechanical') {
                             valueA += ((a.tempDynamic ? a.tempDynamic.dailyWorkCount : parseInt(a.dailyWorkCount || 0)) * 0.20);
                         }
-                        if (b.department === 'electrical-ac') {
+                        if (b.department === 'electrical-ac' || b.department === 'mechanical') {
                             valueB += ((b.tempDynamic ? b.tempDynamic.dailyWorkCount : parseInt(b.dailyWorkCount || 0)) * 0.20);
                         }
                         break;
@@ -7788,7 +7719,7 @@
         // Open Greasing Work Modal (Updated)
         function openGreasingWorkModal() {
             document.getElementById('greasingWorkForm').reset();
-            document.getElementById('greasingWorkRatingValue').textContent = '0';
+            // Removed global rating reset
             document.getElementById('greasingWorkDate').valueAsDate = new Date();
 
             // 1. Populate Employees (Mechanical Only)
@@ -7800,13 +7731,41 @@
                 employeesContainer.innerHTML = '<p class="text-muted text-center">هیچ کارمەندێکی میکانیک نییە</p>';
             } else {
                 mechEmployees.forEach(employee => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'grease-emp-wrapper mb-2 border rounded p-2';
+                    
                     const div = document.createElement('div');
-                    div.className = 'employee-checkbox-label';
+                    div.className = 'employee-checkbox-label w-100 mb-0';
                     div.innerHTML = `
-                <input type="checkbox" class="employee-checkbox" id="grease-emp-${employee.id}" value="${employee.id}">
-                <label for="grease-emp-${employee.id}">${employee.name}</label>
-            `;
-                    employeesContainer.appendChild(div);
+                        <input type="checkbox" class="employee-checkbox" id="grease-emp-${employee.id}" value="${employee.id}">
+                        <label for="grease-emp-${employee.id}" class="w-100 m-0">${employee.name}</label>
+                    `;
+                    wrapper.appendChild(div);
+
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.id = `grease-emp-details-${employee.id}`;
+                    detailsDiv.className = 'mt-2 pt-2 border-top';
+                    detailsDiv.style.display = 'none';
+                    detailsDiv.innerHTML = `
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label text-center w-100" style="font-size: 0.8rem;">هەڵسەنگاندن (-100 تا 100)</label>
+                                <input type="number" class="form-control form-control-sm text-center grease-emp-rate" id="grease-rate-${employee.id}" value="0" min="-100" max="100">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-center w-100" style="font-size: 0.8rem;">کاتژمێر کارکردن</label>
+                                <input type="number" class="form-control form-control-sm text-center grease-emp-hours" id="grease-hours-${employee.id}" value="0" min="0" step="0.5">
+                            </div>
+                        </div>
+                    `;
+                    wrapper.appendChild(detailsDiv);
+
+                    // Add listener to toggle details
+                    div.querySelector('input').addEventListener('change', (e) => {
+                        detailsDiv.style.display = e.target.checked ? 'block' : 'none';
+                    });
+
+                    employeesContainer.appendChild(wrapper);
                 });
             }
 
@@ -7845,7 +7804,6 @@
         // Save Greasing Work (Updated)
         async function saveGreasingWork() {
             const date = document.getElementById('greasingWorkDate').value;
-            const rate = document.getElementById('greasingWorkRating').value;
             const note = document.getElementById('greasingWorkNote').value;
 
             // Get selected employees
@@ -7869,43 +7827,83 @@
 
             // Create a string from selected departments, e.g., "فڕن، داگرتن"
             const locationString = selectedDepartments.join('، ');
+            
+            // Set button to loading state
+            const saveBtn = document.getElementById('saveGreasingWorkBtn');
+            const originalBtnText = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> سەرقاڵی هەڵگرتن...';
 
-            // Save for each employee
-            for (const employeeId of selectedEmployees) {
-                const employee = employees.find(emp => emp.id === employeeId);
-                if (!employee) continue;
+            try {
+                // Save for each employee
+                const updatePromises = [];
 
-                if (!employee.dailyWork) {
-                    employee.dailyWork = [];
+                for (const employeeId of selectedEmployees) {
+                    const employee = employees.find(emp => emp.id === employeeId);
+                    if (!employee) continue;
+
+                    if (!employee.dailyWork) {
+                        employee.dailyWork = [];
+                    }
+
+                    // Pull distinct per-employee stats
+                    const empRate = document.getElementById(`grease-rate-${employeeId}`).value || 0;
+                    const empHours = document.getElementById(`grease-hours-${employeeId}`).value || 0;
+                    const parsedHours = parseFloat(empHours);
+
+                    const workRecord = {
+                        date: date,
+                        name: `گریسین: ${locationString} `, // Saves as "Greasing: Klin, Unsetting"
+                        rate: empRate,
+                        note: note,
+                        createdAt: new Date().toISOString(),
+                        isGreasing: true,
+                        totalHours: parsedHours,
+                        addedBy: currentUser ? currentUser.username : 'admin',
+                        addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
+                    };
+
+                    employee.dailyWork.push(workRecord);
+
+                    // Subcollection Save
+                    workRecord.type = 'daily';
+                    workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
+                    
+                    const savePromise = db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord)
+                        .then(async () => {
+                            // Optionally update single cache since rating is provided
+                            if (typeof updateEmployeeCachedRating === 'function') {
+                                await updateEmployeeCachedRating(employee.id, 'daily', empRate, 'add');
+                            }
+                            if (typeof updateEmployeeAggregateTotals === 'function') {
+                                await updateEmployeeAggregateTotals(employee.id, {
+                                    hours: parsedHours,
+                                    department: 'mechanical',
+                                    date: date
+                                }, 'add');
+                            }
+                        });
+                        
+                    updatePromises.push(savePromise);
                 }
+                
+                await Promise.all(updatePromises);
 
-                const workRecord = {
-                    date: date,
-                    name: `گریسین: ${locationString} `, // Saves as "Greasing: Klin, Unsetting"
-                    rate: rate,
-                    note: note,
-                    createdAt: new Date().toISOString(),
-                    isGreasing: true,
-                    addedBy: currentUser ? currentUser.username : 'admin',
-                    addedByName: currentUser ? (currentUser.displayName || currentUser.username) : 'ئەدمین'
-                };
+                showNotification(`کاری گریسین بۆ ${selectedEmployees.length} کارمەند لە ${selectedDepartments.length} شوێن تۆمارکرا`, 'success');
 
-                employee.dailyWork.push(workRecord);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('greasingWorkModal'));
+                if (modal) modal.hide();
 
-                // Subcollection Save
-                workRecord.type = 'daily';
-                workRecord.last_updated = firebase.firestore.FieldValue.serverTimestamp();
-                await db.collection('employees').doc(employee.id).collection('workRecords').add(workRecord);
+                // Refresh tables
+                renderEmployeeTable();
+                if (typeof updateElectricalMechanicalTotals === 'function') updateElectricalMechanicalTotals();
+            } catch (error) {
+                console.error("Error saving greasing work:", error);
+                showNotification('هەڵەیەک ڕوویدا لە کاتی هەڵگرتنی زانیاریەکان', 'danger');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalBtnText;
             }
-
-            showNotification(`کاری گریسین بۆ ${selectedEmployees.length} کارمەند لە ${selectedDepartments.length} شوێن تۆمارکرا`, 'success');
-
-            const modal = bootstrap.Modal.getInstance(document.getElementById('greasingWorkModal'));
-            modal.hide();
-
-            // Refresh tables
-            renderEmployeeTable();
-            updateElectricalMechanicalTotals();
         }
 
         // Permission Control for Restricted Accounts (electrical, cutemp, kilnemp)
