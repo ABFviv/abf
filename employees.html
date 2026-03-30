@@ -1586,9 +1586,8 @@
 
             if (department === 'klin') {
                 const employee = employees.find(emp => emp.id === employeeId);
-                const klinCartEmployees = ['020', '021', '022', '023']; // Specific employees who handle carts
 
-                if (employee && employee.position === 'کارپێکەر' && klinCartEmployees.includes(employeeId)) {
+                if (employee && employee.position === 'کارپێکەر') {
                     return Math.round(departmentScaling.klin.equation(inputValue) * 100) / 100;
                 }
             }
@@ -4596,18 +4595,13 @@
             console.log('Opening modal for employee:', employee.id, employee.name, employee.department, employee.position);
             // First apply department-based logic
             if (employee.department === 'klin') {
-                // Define which employees in klin should have carts
-                // CHANGE THESE IDs TO YOUR ACTUAL EMPLOYEE IDs
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
                 console.log('Klin employee check:', {
                     employeeId: employee.id,
                     position: employee.position,
-                    hasCarts: klinCartEmployees.includes(employee.id),
                     isKarpekker: employee.position === 'کارپێکەر'
                 });
 
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                if (employee.position === 'کارپێکەر') {
                     // These specific employees show carts field with auto rating
                     console.log('Showing carts field for:', employee.id);
                     document.getElementById('dailyWorkCartsContainer').style.display = 'block';
@@ -4920,10 +4914,7 @@
             let errorMessage = '';
 
             if (employee.department === 'klin') {
-                // Define which employees in klin should have carts
-                const klinCartEmployees = ['020', '021', '022', '023']; // Replace with your actual IDs
-
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                if (employee.position === 'کارپێکەر') {
                     // These employees need carts
                     if (carts) isValid = true;
                     else errorMessage = 'تکایە ژمارەی عەرەبانەکان بنووسە';
@@ -4978,8 +4969,7 @@
             if (employee.id === '014') {
                 workRecord.name = name;
             } else if (employee.department === 'klin') {
-                const klinCartEmployees = ['020', '021', '022', '023'];
-                if (employee.position === 'کارپێکەر' && klinCartEmployees.includes(employee.id)) {
+                if (employee.position === 'کارپێکەر') {
                     workRecord.carts = carts;
                 } else {
                     workRecord.name = name;
@@ -5368,10 +5358,8 @@
                 const inputValue = parseFloat(fieldValue);
 
                 if (currentUser.department === 'klin') {
-                    // For klin, check if the employee is in the cart list
-                    const klinCartEmployees = ['020', '021', '022', '023']; // Specific employees who handle carts
-                    if (klinCartEmployees.includes(employee.id) && !isNaN(inputValue)) {
-                        // Try to get automatic rating if cart employee
+                    // Try to get automatic rating if cart employee
+                    if (employee.position === 'کارپێکەر' && !isNaN(inputValue)) {
                         const automaticRating = getAutomaticRating(employee.id, employee.department, inputValue);
                         if (automaticRating !== null) {
                             finalRating = automaticRating;
@@ -5398,7 +5386,11 @@
                 if (currentUser.department === 'crushing-prep') {
                     workRecord.clayTons = fieldValue;
                 } else if (currentUser.department === 'klin') {
-                    workRecord.name = fieldValue; // For klin, save as "ناوی کار"
+                    if (employee.position === 'کارپێکەر') {
+                        workRecord.carts = fieldValue;
+                    } else {
+                        workRecord.name = fieldValue; // For non-cart klin, save as "ناوی کار"
+                    }
                 } else {
                     workRecord.carts = fieldValue;
                 }
@@ -7936,7 +7928,7 @@
             if (currentUser.role === 'admin' || currentUser.role === 'manager') return;
 
             // Check if user is a restricted employee account
-            const restrictedAccounts = ['electrical', 'cutemp', 'unemp', 'kilnemp', 'kiln'];
+            const restrictedAccounts = ['electrical', 'cutemp', 'unemp', 'kilnemp'];
             const isRestricted = restrictedAccounts.includes(currentUser.username) || currentUser.role === 'employee';
 
             if (isRestricted) {
