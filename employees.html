@@ -34,7 +34,7 @@
                         style="height: 40px; border-radius: 8px; background: white; padding: 4px;">
                 </div>
                 <div>
-                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px;">بەڕێوبردنی کارمەند</h5>
+                    <h5 class="m-0 fw-bold" style="letter-spacing: 0.5px; font-size: 1.5rem;">بەڕێوبردنی کارمەند</h5>
                     <div style="font-size: 0.65rem; opacity: 0.8; font-weight: 600;">EMPLOYEE MANAGEMENT</div>
                 </div>
             </div>
@@ -45,8 +45,7 @@
                     <span>...</span>
                 </div>
 
-                <button class="btn btn-header position-relative" id="notificationsBtn" onclick="showNotificationsPage()"
-                    style="display: none;">
+                <button class="btn btn-header position-relative" id="notificationsBtn" onclick="showNotificationsPage()">
                     <i class="bi bi-bell"></i>
                     <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
                 </button>
@@ -2368,7 +2367,7 @@
 
             // 7. General Buttons by ID
             if (document.getElementById('notificationsBtn')) {
-                document.getElementById('notificationsBtn').style.display = (isAdmin || isSupervisor) ? '' : 'none';
+                document.getElementById('notificationsBtn').style.display = '';
             }
             if (document.getElementById('totalsDepartmentFilter')) {
                 document.getElementById('totalsDepartmentFilter').style.display = (isAdmin || isManager) ? '' : 'none';
